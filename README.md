@@ -1,154 +1,191 @@
-# Gems Assist — Backend
+# Gems Assist
 
-Production-grade backend for the **Gems Assist** education platform. It powers AI
-grading, content differentiation, smart teacher substitution, lab booking, a
-parent mailer, and a student token economy.
+**Gems Assist** is an education platform for AI-powered grading, differentiated content, smart teacher substitution, lab booking, parent communication, and a student token economy.
 
-**Stack:** Node.js · TypeScript · Express · Prisma (SQLite by default) · OpenAI-compatible LLM.
+**Repository:** [FARHANMOHAMMED-R/Gems-Hackathon](https://github.com/FARHANMOHAMMED-R/Gems-Hackathon)
+
+---
+
+## Architecture
+
+| Layer | Stack | Role |
+|-------|-------|------|
+| **Backend** | Node.js · TypeScript · Express · Prisma · SQLite | REST API, persistence, LLM orchestration |
+| **Frontend** | React · Vite · TypeScript (`frontend/`) | Responsive UI for all six platform domains |
+
+The frontend talks to the backend over HTTP. In development, the Vite dev server proxies `/api` and `/health` to `http://localhost:4000`, so the browser stays same-origin.
+
+```
+┌─────────────────┐     /api, /health      ┌──────────────────────────┐
+│  React + Vite   │ ─────────────────────► │  Express API  (:4000)  │
+│  (:5173)        │                        │  Prisma + SQLite         │
+└─────────────────┘                        └──────────┬───────────────┘
+                                                      │
+                                                      ▼
+                                           OpenAI-compatible LLM
+                                           (grading, OCR, mail, content)
+```
+
+---
+
+## Prerequisites
+
+- **Node.js** 18+ (LTS recommended)
+- **npm** 9+
 
 ---
 
 ## Quick start
 
 ```bash
-# 1. Install
+# 1. Clone
+git clone https://github.com/FARHANMOHAMMED-R/Gems-Hackathon.git
+cd Gems-Hackathon
+
+# 2. Install backend dependencies
 npm install
 
-# 2. Configure environment (then add your OPENAI_API_KEY)
+# 3. Configure environment (add OPENAI_API_KEY for AI features)
 cp .env.example .env
 
-# 3. Create the database + generate the client
+# 4. Database setup
 npm run prisma:generate
 npm run prisma:push
 
-# 4. (optional) Seed demo data — CBSE Class 11 students, teachers, labs
+# 5. (Optional) Seed demo data — CBSE Class 11 students, teachers, labs
 npm run seed
 
-# 5. Run
-npm run dev        # hot-reload dev server
-# or
-npm run build && npm start
+# 6. Start the backend (terminal 1)
+npm run dev          # http://localhost:4000
+
+# 7. Start the frontend (terminal 2)
+cd frontend
+npm install
+npm run dev          # http://localhost:5173
 ```
 
-Server boots on `http://localhost:4000`. Health check: `GET /health`.
+Health check: `GET http://localhost:4000/health`
 
-> The AI endpoints return `503 LLM_NOT_CONFIGURED` until `OPENAI_API_KEY` is set —
-> the deterministic endpoints (substitution, labs, tokens) work without a key.
+> **AI endpoints** return `503 LLM_NOT_CONFIGURED` until `OPENAI_API_KEY` is set in `.env`. Deterministic endpoints (substitution, labs, tokens) work without a key.
+
+---
+
+## Environment variables
+
+Copy `.env.example` to `.env` at the repo root.
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `PORT` | `4000` | Backend HTTP port |
+| `DATABASE_URL` | `file:./dev.db` | Prisma datasource (SQLite locally; swap for Postgres/MySQL in production) |
+| `OPENAI_API_KEY` | *(empty)* | LLM authentication — **required for AI endpoints** |
+| `OPENAI_BASE_URL` | `https://api.openai.com/v1` | OpenAI-compatible gateway (OpenAI, Azure, etc.) |
+| `LLM_TEXT_MODEL` | `gpt-4o` | Text model for grading, differentiation, and mail drafting |
+| `LLM_VISION_MODEL` | `gpt-4o` | Multimodal model for scan OCR |
+
+**Frontend (optional):** set `VITE_API_BASE` to point at a non-proxied backend origin (e.g. `http://localhost:4000`) when deploying without the Vite dev proxy. Defaults to `""` (relative URLs via proxy).
+
+---
+
+## API endpoints
+
+| Domain | Method | Path | Description |
+|--------|--------|------|-------------|
+| Health | `GET` | `/health` | Liveness probe |
+| Scan Analyzer | `POST` | `/api/analyze-scan` | Vision OCR + CBSE examiner grading (exam or notebook) |
+| Content Differentiator | `POST` | `/api/differentiate-content` | Rewrite lesson for a learner track (markdown) |
+| Substitution Finder | `GET` | `/api/substitution/check-free` | Free teachers by period (`?period=&department=`) |
+| Lab Booking | `POST` | `/api/labs/reserve` | Reserve a lab slot (409 on double-booking) |
+| Lab Booking | `GET` | `/api/labs/availability` | Availability grid (`?date=YYYY-MM-DD`) |
+| Parent Mailer | `POST` | `/api/generate-mail` | Draft compassionate parent update email |
+| Token Matrix | `POST` | `/api/tokens/award` | Award tokens (`answering` +1, `kindness` +5, `peer_support` +3) |
+| Token Matrix | `GET` | `/api/tokens/leaderboard` | Ranked student leaderboard |
+
+System prompts live in [`src/lib/prompts.ts`](src/lib/prompts.ts). See the existing route files under `src/routes/` for full request/response schemas.
+
+---
+
+## Frontend screens
+
+| Screen | Features |
+|--------|----------|
+| **Dashboard** | Token leaderboard, award tokens by reason |
+| **Scan Analyzer** | Upload scanned pages or paste text; exam vs. notebook modes |
+| **Content Differentiator** | Adapt lessons (Advanced, Standard, Simplified Visual, Neurodivergent) |
+| **Substitution Finder** | Query free teachers by period and department |
+| **Lab Booking** | Reserve rooms and view daily availability |
+| **Parent Mailer** | Generate and copy parent update emails |
+
+Each screen includes loading, empty, and error states, plus toast notifications. The sidebar shows live backend health.
+
+---
+
+## Project structure
+
+```
+Gems-Hackathon/
+├── .env.example              # Backend environment template
+├── package.json              # Backend scripts & dependencies
+├── prisma/
+│   ├── schema.prisma         # StudentProfile, GradingRecord, LabReservation, TeacherAvailability
+│   └── seed.ts               # Demo data seeder
+├── src/
+│   ├── index.ts              # Express app + route wiring
+│   ├── lib/                  # prisma, llm, prompts, json, http helpers
+│   └── routes/               # analyzeScan, differentiateContent, substitution,
+│                             # labs, mail, tokens
+└── frontend/
+    ├── package.json
+    ├── vite.config.ts        # Dev proxy: /api & /health → :4000
+    └── src/
+        ├── App.tsx           # Sidebar nav + screen routing
+        ├── api/              # Typed fetch client
+        ├── components/       # Toast, shared UI primitives
+        └── pages/            # Dashboard, ScanAnalyzer, ContentDifferentiator,
+                              # SubstitutionFinder, LabBooking, ParentMailer
+```
+
+---
+
+## Development scripts
+
+### Backend (repo root)
+
+| Script | Command | Description |
+|--------|---------|-------------|
+| Dev server | `npm run dev` | Hot-reload via `tsx watch` |
+| Build | `npm run build` | Compile TypeScript to `dist/` |
+| Start | `npm start` | Run compiled `dist/index.js` |
+| Typecheck | `npm run typecheck` | `tsc --noEmit` |
+| Prisma generate | `npm run prisma:generate` | Regenerate Prisma client |
+| Prisma push | `npm run prisma:push` | Sync schema to SQLite |
+| Prisma migrate | `npm run prisma:migrate` | Create migration (`init`) |
+| Seed | `npm run seed` | Load demo students, teachers, labs |
+
+### Frontend (`frontend/`)
+
+| Script | Command | Description |
+|--------|---------|-------------|
+| Dev server | `npm run dev` | Vite on `:5173`, proxies API to `:4000` |
+| Build | `npm run build` | Typecheck + production bundle |
+| Preview | `npm run preview` | Serve production build locally |
+| Typecheck | `npm run typecheck` | `tsc --noEmit` |
 
 ---
 
 ## Data model
 
-Defined in [`prisma/schema.prisma`](prisma/schema.prisma). SQLite is the default
-for zero-config local dev; it has no native `enum`/`Json` columns, so enum-like
-fields are `String` and JSON/array fields are stored as serialized JSON strings
-(handled by [`src/lib/json.ts`](src/lib/json.ts)). On Postgres/MySQL you can
-promote these back to native enums and `Json`.
+Defined in [`prisma/schema.prisma`](prisma/schema.prisma). SQLite is the default for zero-config local dev; enum-like fields are stored as `String` and JSON fields as serialized strings (handled by [`src/lib/json.ts`](src/lib/json.ts)).
 
-| Model | Key fields |
-|-------|-----------|
-| `StudentProfile` | `name`, `grade`, `section`, `total_tokens`, `adaptive_preference_profile` |
-| `GradingRecord` | `student_id`, `type` (`Exam`\|`Notebook`), `raw_scanned_text`, `scores`, `ai_feedback_text`, `date_timestamp` |
-| `LabReservation` | `room_name`, `period_number`, `date`, `reserved_by_teacher_id`, `status` (`Free`\|`Occupied`) — **unique** on `(room, date, period)` |
-| `TeacherAvailability` | `teacher_name`, `department`, `current_period_free_status` (7-bool array, periods 1–7) |
+| Model | Purpose |
+|-------|---------|
+| `StudentProfile` | Learner profile, token balance, adaptive preference |
+| `GradingRecord` | AI-graded exam or notebook artifacts |
+| `LabReservation` | Lab room slots with unique `(room, date, period)` constraint |
+| `TeacherAvailability` | Per-teacher 7-period free/busy status |
 
 ---
 
-## API reference
+## License
 
-All system prompts live verbatim in [`src/lib/prompts.ts`](src/lib/prompts.ts).
-A shared grounding guardrail (no hallucination, no boilerplate) is appended to
-every LLM call, with low temperature for deterministic output.
-
-### 2. Document Vision & Notebook Analyzer — `POST /api/analyze-scan`
-Two-stage pipeline: **Vision OCR → Senior CBSE Examiner**.
-
-```jsonc
-// Request (either images OR rawScannedText)
-{
-  "mode": "Exam Paper",           // or "Notebook"
-  "studentId": "…",               // optional — persists a GradingRecord
-  "markingScheme": "…",           // used in Exam Paper mode
-  "images": ["data:image/png;base64,…"],  // base64 scanned pages
-  "rawScannedText": "…"           // skip OCR if text already extracted
-}
-// Response
-{ "score_breakdown": {…}, "constructive_feedback": "…", "concept_gaps": [...], "rawScannedText": "…", "recordId": "…" }
-```
-Notebook mode scores **Handwriting / Creativity / Content** (5 each).
-
-### 3. Differentiated Content — `POST /api/differentiate-content`
-Rewrites a lesson for a learner track. Returns markdown.
-
-```jsonc
-{ "content": "…lesson text…", "target": "Advanced" }
-// target ∈ "Advanced" | "Standard" | "Simplified Visual" | "Neurodivergent"
-```
-
-### 4a. Smart Substitution — `GET /api/substitution/check-free`
-Returns teachers free in a period, department-matched first.
-
-```
-GET /api/substitution/check-free?period=3&department=Physics
-```
-
-### 4b. Lab Booking — `POST /api/labs/reserve`
-Strict double-booking prevention via a DB unique constraint → `409 DOUBLE_BOOKING`.
-
-```jsonc
-{ "roomName": "Physics Lab 1", "date": "2026-07-01", "periodNumber": 4, "reservedByTeacherId": "…" }
-```
-Also: `GET /api/labs/availability?date=YYYY-MM-DD`.
-
-### 5a. Parent Mailer — `POST /api/generate-mail`
-Aggregates recent `GradingRecord`s + token balance, drafts a compassionate
-parent email.
-
-```jsonc
-{ "studentId": "…", "recentLimit": 5 }
-```
-
-### 5b. Token Matrix — `POST /api/tokens/award`
-Atomic increment + recomputed leaderboard. Rewards: `answering` +1, `kindness`
-+5, `peer_support` +3.
-
-```jsonc
-{ "studentId": "…", "reason": "kindness" }
-```
-Also: `GET /api/tokens/leaderboard`.
-
----
-
-## Project layout
-
-```
-prisma/
-  schema.prisma        # data models
-  seed.ts              # demo data
-src/
-  index.ts             # express app + route wiring
-  lib/
-    prisma.ts          # shared Prisma client
-    llm.ts             # OpenAI-compatible client (text + vision, JSON mode)
-    prompts.ts         # verbatim system prompts
-    json.ts            # JSON-column (de)serialization
-    http.ts            # async wrapper + central error handling
-  routes/
-    analyzeScan.ts          # /api/analyze-scan
-    differentiateContent.ts # /api/differentiate-content
-    substitution.ts         # /api/substitution/check-free
-    labs.ts                 # /api/labs/reserve, /availability
-    mail.ts                 # /api/generate-mail
-    tokens.ts               # /api/tokens/award, /leaderboard
-```
-
-## Environment
-
-| Var | Purpose |
-|-----|---------|
-| `PORT` | HTTP port (default 4000) |
-| `DATABASE_URL` | Prisma datasource (default `file:./dev.db`) |
-| `OPENAI_API_KEY` | LLM auth — required for AI endpoints |
-| `OPENAI_BASE_URL` | OpenAI-compatible gateway URL |
-| `LLM_TEXT_MODEL` | Model for grading/mail/differentiation |
-| `LLM_VISION_MODEL` | Multimodal model for scan OCR |
+MIT
