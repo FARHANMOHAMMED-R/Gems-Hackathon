@@ -1,77 +1,28 @@
 import { ApiError } from "./http";
 import { isGuruPdfConfigured, guruPdfOcrImages } from "./gurupdfOcr";
-import { isLlmConfigured, transcribeDocument } from "./llm";
+import {
+  aiTranscribeImages,
+  isAnyAiConfigured,
+  isClaudeConfigured,
+  isGeminiConfigured,
+  isOpenAiConfigured,
+} from "./aiProviders";
 import { ocrImages } from "./ocr";
 import { VISION_TRANSCRIBE_SYSTEM_PROMPT } from "./prompts";
 
-export type OcrMode = "pasted" | "gurupdf" | "openai" | "gemini" | "tesseract";
-
-export function isGeminiConfigured(): boolean {
-  return Boolean(process.env.GEMINI_API_KEY?.trim());
-}
+export type OcrMode = "pasted" | "gurupdf" | "openai" | "gemini" | "claude" | "tesseract";
 
 /** Which OCR backends are available on this server. */
 export function getOcrStatus() {
   return {
-    openai: isLlmConfigured(),
-    gurupdf: isGuruPdfConfigured(),
+    openai: isOpenAiConfigured(),
     gemini: isGeminiConfigured(),
+    claude: isClaudeConfigured(),
+    gurupdf: isGuruPdfConfigured(),
     tesseract: true,
     recommended:
-      isLlmConfigured() || isGeminiConfigured() || isGuruPdfConfigured()
-        ? "ai"
-        : "tesseract",
+      isAnyAiConfigured() || isGuruPdfConfigured() ? "ai" : "tesseract",
   };
-}
-
-async function transcribeWithGemini(dataUrls: string[]): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
-  if (!apiKey) throw new Error("GEMINI_API_KEY not set.");
-
-  const parts: { text?: string; inline_data?: { mime_type: string; data: string } }[] = [
-    {
-      text:
-        "Transcribe all handwritten and printed text from these document images exactly as written. " +
-        "Do not grade, summarize, or add commentary. Output only the raw transcribed text.",
-    },
-  ];
-
-  for (const url of dataUrls) {
-    const match = url.match(/^data:([^;]+);base64,(.+)$/s);
-    if (!match) continue;
-    parts.push({
-      inline_data: { mime_type: match[1], data: match[2] },
-    });
-  }
-
-  const model = process.env.GEMINI_VISION_MODEL?.trim() || "gemini-2.0-flash";
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts }],
-        generationConfig: { temperature: 0 },
-      }),
-    },
-  );
-
-  const body = (await res.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
-    error?: { message?: string };
-  };
-
-  if (!res.ok) {
-    throw new ApiError(
-      502,
-      body.error?.message ?? `Gemini OCR failed (${res.status}).`,
-      "GEMINI_OCR_FAILED",
-    );
-  }
-
-  const text = body.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
-  return text.trim();
 }
 
 async function tryProvider(
@@ -91,7 +42,6 @@ async function tryProvider(
 
 /**
  * Extract text from scan images using every configured backend, best-first.
- * Always attempts Tesseract last so notebook/exam uploads work offline.
  */
 export async function digitizeScanImages(
   dataUrls: string[],
@@ -102,14 +52,26 @@ export async function digitizeScanImages(
   if (isGuruPdfConfigured()) {
     attempts.push({ name: "gurupdf", fn: () => guruPdfOcrImages(dataUrls) });
   }
-  if (isLlmConfigured()) {
+  if (isOpenAiConfigured()) {
     attempts.push({
       name: "openai",
-      fn: () => transcribeDocument(VISION_TRANSCRIBE_SYSTEM_PROMPT, dataUrls),
+      fn: async () =>
+        (await aiTranscribeImages(VISION_TRANSCRIBE_SYSTEM_PROMPT, dataUrls, "openai")).text,
     });
   }
   if (isGeminiConfigured()) {
-    attempts.push({ name: "gemini", fn: () => transcribeWithGemini(dataUrls) });
+    attempts.push({
+      name: "gemini",
+      fn: async () =>
+        (await aiTranscribeImages(VISION_TRANSCRIBE_SYSTEM_PROMPT, dataUrls, "gemini")).text,
+    });
+  }
+  if (isClaudeConfigured()) {
+    attempts.push({
+      name: "claude",
+      fn: async () =>
+        (await aiTranscribeImages(VISION_TRANSCRIBE_SYSTEM_PROMPT, dataUrls, "claude")).text,
+    });
   }
   attempts.push({ name: "tesseract", fn: () => ocrImages(dataUrls) });
 
@@ -120,9 +82,9 @@ export async function digitizeScanImages(
 
   const status = getOcrStatus();
   const hints: string[] = [];
-  if (!status.openai && !status.gemini && !status.gurupdf) {
+  if (!status.openai && !status.gemini && !status.claude && !status.gurupdf) {
     hints.push(
-      "Add OPENAI_API_KEY or GEMINI_API_KEY (free at ai.google.dev) to your backend .env for handwriting OCR.",
+      "Add OPENAI_API_KEY, GEMINI_API_KEY, or ANTHROPIC_API_KEY to .env for handwriting OCR.",
     );
   }
   hints.push("Use a clear photo of the notebook page (not a screen screenshot).");

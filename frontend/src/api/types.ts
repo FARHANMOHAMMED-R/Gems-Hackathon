@@ -49,13 +49,14 @@ export interface AnalyzeScanResponse {
   /** `local` = offline notebook analysis without OpenAI */
   analysisMode?: "ai" | "local";
   /** How scanned images were read */
-  ocrMode?: "pasted" | "gurupdf" | "openai" | "gemini" | "tesseract";
+  ocrMode?: "pasted" | "gurupdf" | "openai" | "gemini" | "claude" | "tesseract";
 }
 
 export interface ScanOcrStatusResponse {
   openai: boolean;
   gurupdf: boolean;
   gemini: boolean;
+  claude: boolean;
   tesseract: boolean;
   recommended: "ai" | "tesseract";
 }
@@ -192,6 +193,59 @@ export interface AssessmentRecipientsResponse {
     parentEmail: string;
     canSend: boolean;
   }[];
+}
+
+// --- AI providers ---
+export type AiProvider = "openai" | "gemini" | "claude";
+
+export interface AiProviderInfo {
+  id: AiProvider;
+  label: string;
+  configured: boolean;
+  textModel: string;
+}
+
+export interface AiProvidersResponse {
+  providers: AiProviderInfo[];
+}
+
+// --- PPT generator ---
+export interface PptSlide {
+  layout: "title" | "section" | "bullets" | "content" | "closing";
+  title: string;
+  subtitle?: string;
+  bullets?: string[];
+  body?: string;
+  speakerNotes?: string;
+}
+
+export interface PptDeck {
+  title: string;
+  subtitle: string;
+  subject: string;
+  grade: string;
+  slides: PptSlide[];
+}
+
+export interface GeneratePptRequest {
+  classManaged: string;
+  grade: string;
+  subject?: string;
+  topic: string;
+  chapters: string;
+  slideCount?: number;
+  audience?: "students" | "teachers";
+  additionalNotes?: string;
+  provider?: AiProvider;
+}
+
+export interface PptGenerateResponse {
+  deck: PptDeck;
+  fileName: string;
+  pptxBase64: string;
+  analysisMode: "ai" | "local";
+  providerUsed: AiProvider | "local";
+  slideCount: number;
 }
 
 // --- Content differentiation ---

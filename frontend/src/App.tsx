@@ -10,6 +10,7 @@ import { LabBooking } from "./pages/LabBooking";
 import { ThreeDLab } from "./pages/ThreeDLab";
 import { ParentMailer } from "./pages/ParentMailer";
 import { AssessmentAssigner } from "./pages/AssessmentAssigner";
+import { PptGenerator } from "./pages/PptGenerator";
 import { SignIn } from "./pages/SignIn";
 import { ClassRosterSetup } from "./pages/ClassRosterSetup";
 import { ClassStudents } from "./pages/ClassStudents";
@@ -101,6 +102,13 @@ function buildTeacherNav(teacher: TeacherSession): NavItem[] {
       icon: "💬",
       blurb: "Message other teachers",
       render: () => <TeacherChat teacher={teacher} />,
+    },
+    {
+      id: "ppt",
+      label: "PPT Generator",
+      icon: "📊",
+      blurb: "AI lesson slides — ChatGPT, Gemini, Claude",
+      render: () => <PptGenerator classManaged={classManaged} />,
     },
     {
       id: "assessment",

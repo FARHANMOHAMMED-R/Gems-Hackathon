@@ -25,6 +25,9 @@ import type {
   SendAssessmentRequest,
   SendAssessmentResponse,
   AssessmentRecipientsResponse,
+  AiProvidersResponse,
+  GeneratePptRequest,
+  PptGenerateResponse,
   HealthResponse,
   LeaderboardResponse,
   ReservationsListResponse,
@@ -274,6 +277,15 @@ export const api = {
     ),
   sendAssessment: (body: SendAssessmentRequest, signal?: AbortSignal) =>
     request<SendAssessmentResponse>("/api/send-assessment", {
+      method: "POST",
+      body,
+      signal,
+    }),
+
+  // AI providers & PPT
+  getAiProviders: () => request<AiProvidersResponse>("/api/ai/providers"),
+  generatePpt: (body: GeneratePptRequest, signal?: AbortSignal) =>
+    request<PptGenerateResponse>("/api/generate-ppt", {
       method: "POST",
       body,
       signal,

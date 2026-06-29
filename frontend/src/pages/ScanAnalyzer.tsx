@@ -132,17 +132,22 @@ export function ScanAnalyzer({ classManaged }: { classManaged: string }) {
           {mode === "Notebook" && (
             <span className="field-hint">
               Upload a clear photo of the notebook page (not a screen screenshot). OCR tries
-              OpenAI → Gemini → PDF Guru → Tesseract automatically.
+              OpenAI → Gemini → Claude → PDF Guru → Tesseract automatically.
             </span>
           )}
-          {ocrStatus && !ocrStatus.openai && !ocrStatus.gemini && !ocrStatus.gurupdf && (
+          {ocrStatus &&
+            !ocrStatus.openai &&
+            !ocrStatus.gemini &&
+            !ocrStatus.claude &&
+            !ocrStatus.gurupdf && (
             <div className="info-note">
-              No AI OCR key detected. Add <code>OPENAI_API_KEY</code> or free{" "}
+              No AI OCR key detected. Add <code>OPENAI_API_KEY</code>, free{" "}
               <code>GEMINI_API_KEY</code> ({" "}
               <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
                 get one here
               </a>
-              ) to backend <code>.env</code>, then restart the server.
+              ), or <code>ANTHROPIC_API_KEY</code> (Claude) to backend <code>.env</code>, then
+              restart the server.
             </div>
           )}
           {mode === "Exam Paper" && (
@@ -261,6 +266,9 @@ export function ScanAnalyzer({ classManaged }: { classManaged: string }) {
             )}
             {result.ocrMode === "gemini" && (
               <span className="pill pill-primary">📝 OCR via Google Gemini</span>
+            )}
+            {result.ocrMode === "claude" && (
+              <span className="pill pill-primary">📝 OCR via Anthropic Claude</span>
             )}
             {result.ocrMode === "gurupdf" && (
               <span className="pill pill-primary">📝 OCR via PDF Guru image-to-text</span>

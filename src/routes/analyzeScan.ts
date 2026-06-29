@@ -4,7 +4,7 @@ import { prisma } from "../lib/prisma";
 import { asyncHandler, ApiError } from "../lib/http";
 import { completeJSON, isLlmConfigured } from "../lib/llm";
 import { analyzeNotebookLocally } from "../lib/localNotebookAnalyzer";
-import { digitizeScanImages, getOcrStatus } from "../lib/scanOcr";
+import { digitizeScanImages, getOcrStatus, type OcrMode } from "../lib/scanOcr";
 import { toJsonColumn } from "../lib/json";
 import { EXAMINER_SYSTEM_PROMPT } from "../lib/prompts";
 
@@ -42,7 +42,7 @@ analyzeScanRouter.post(
     const hasLlm = isLlmConfigured();
 
     let rawText = body.rawScannedText?.trim() ?? "";
-    let ocrMode: "pasted" | "gurupdf" | "openai" | "gemini" | "tesseract" = "pasted";
+    let ocrMode: OcrMode = "pasted";
 
     if (!rawText && body.images?.length) {
       const digitized = await digitizeScanImages(body.images, body.mode);

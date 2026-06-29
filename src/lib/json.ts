@@ -20,3 +20,18 @@ export function fromJsonColumn<T>(value: string | null | undefined, fallback: T)
     return fallback;
   }
 }
+
+/** Parse model JSON output, tolerating markdown code fences. */
+export function safeParseJSON<T = unknown>(raw: string): T {
+  const cleaned = raw
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/i, "")
+    .trim();
+  try {
+    return JSON.parse(cleaned) as T;
+  } catch {
+    const match = cleaned.match(/[{[][\s\S]*[}\]]/);
+    if (match) return JSON.parse(match[0]) as T;
+    throw new Error("Model did not return valid JSON.");
+  }
+}

@@ -2022,3 +2022,39 @@ textarea:focus {
 .roster-text-import .btn {
   margin-top: 10px;
 }
+
+/* ---- PPT generator preview ---- */
+.ppt-slide-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.ppt-preview-card {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.ppt-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.ppt-preview-bullets {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.ppt-preview-bullets li {
+  margin-bottom: 4px;
+}
