@@ -29,15 +29,36 @@
 
 ## Universal link — works on any device
 
-Use this URL on **any phone, tablet, or laptop** — no Wi‑Fi setup, no local install, no network password:
+### Hosted (always on)
 
 | | URL |
 |---|---|
 | **🌐 Open Gems Assist** | [**https://gems-class-flow.base44.app**](https://gems-class-flow.base44.app) |
 
-Bookmark it or share it with your team. It works on school Wi‑Fi, mobile data, or home internet.
+### Your local app → public share link (full website + API)
 
-> **Note:** The live site runs the frontend. For full AI features (scan OCR, assessments, lecture transcription), run the backend locally or deploy the API and set `VITE_API_BASE` — see [Deploy](#deploy).
+Turn **http://localhost:5173** into a link anyone can open:
+
+```bash
+npm run share
+```
+
+This command:
+1. Starts Gems Assist at **http://localhost:5173** (builds first if needed)
+2. Prints a public **https://…** link that forwards to your local `:5173`
+
+Share that link on any phone, tablet, or laptop — any network, no Wi‑Fi password.
+
+```
+══════════════════════════════════════════════════
+  Local:   http://localhost:5173
+  Share:   https://your-name.loca.lt
+══════════════════════════════════════════════════
+```
+
+Keep the terminal open while others use the Share link. Press **Ctrl+C** to stop.
+
+> **Note:** The hosted base44 link is frontend-only. `npm run share` runs the **full stack** locally (API + AI keys from your `.env`).
 
 ---
 
@@ -47,6 +68,7 @@ Bookmark it or share it with your team. It works on school Wi‑Fi, mobile data,
 |---|---|
 | **Universal app (recommended)** | [**https://gems-class-flow.base44.app**](https://gems-class-flow.base44.app) |
 | **GitHub repository** | [github.com/FARHANMOHAMMED-R/Gems-Hackathon](https://github.com/FARHANMOHAMMED-R/Gems-Hackathon) |
+| **Share local :5173 publicly** | Run `npm run share` → get https link |
 | **Local website** | [http://localhost:5173](http://localhost:5173) |
 | **Local API** | [http://localhost:4000](http://localhost:4000) |
 | **Health check** | [http://localhost:4000/health](http://localhost:4000/health) |
@@ -160,25 +182,20 @@ cd frontend && npm install && npm run dev   # → http://localhost:5173
 
 Open **http://localhost:5173**, sign in as a teacher, set up your class roster, and explore.
 
-### Run as one accessible site on :5173 (recommended)
-
-Builds the frontend and serves **website + API together** on port **5173**:
+### Run as one accessible site on :5173
 
 ```bash
 npm run site
-# → http://localhost:5173  (also http://YOUR-LAN-IP:5173 on same Wi‑Fi)
+# → http://localhost:5173  (same Wi‑Fi: http://YOUR-LAN-IP:5173)
 ```
 
-**Share on the public internet** (any network):
+### Turn localhost:5173 into a public share link (one command)
 
 ```bash
-# Terminal 1
-npm run site
-
-# Terminal 2
 npm run share
-# Prints a public https:// link — open on any phone or laptop
 ```
+
+Starts **http://localhost:5173** and prints a public **https://** URL for any device.
 
 ### Share on other devices (same Wi‑Fi only)
 
@@ -281,8 +298,8 @@ Gems-Hackathon/
 
 | Location | Command | Description |
 |----------|---------|-------------|
+| Root | `npm run share` | **Local :5173 → public https link** (one command) |
 | Root | `npm run site` | Build + run full app at **http://localhost:5173** |
-| Root | `npm run share` | Public tunnel to :5173 (run `site` first) |
 | Root | `npm run dev` | Backend with hot reload |
 | Root | `npm run seed` | Load demo students & labs |
 | `frontend/` | `npm run dev` | Website at **http://localhost:5173** |
