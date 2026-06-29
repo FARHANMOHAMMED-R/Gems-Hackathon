@@ -2,7 +2,14 @@
 
 **Gems Assist** is an education platform for AI-powered grading, differentiated content, smart teacher substitution, lab booking, parent communication, and a student token economy.
 
-**Repository:** [FARHANMOHAMMED-R/Gems-Hackathon](https://github.com/FARHANMOHAMMED-R/Gems-Hackathon)
+## Links
+
+- **GitHub Repository:** https://github.com/FARHANMOHAMMED-R/Gems-Hackathon
+- **Local Website (Frontend):** http://localhost:5173 (run `cd frontend && npm run dev`)
+- **Local API (Backend):** http://localhost:4000
+- **Health Check:** http://localhost:4000/health
+
+> **Public live URL:** There is no default hosted site in this repository. Deploy `frontend/dist` to Vercel or Netlify — see [Deploying the frontend](#deploying-the-frontend) below.
 
 ---
 
@@ -97,9 +104,35 @@ Copy `.env.example` to `.env` at the repo root.
 | Substitution Finder | `GET` | `/api/substitution/check-free` | Free teachers by period (`?period=&department=`) |
 | Lab Booking | `POST` | `/api/labs/reserve` | Reserve a lab slot (409 on double-booking) |
 | Lab Booking | `GET` | `/api/labs/availability` | Availability grid (`?date=YYYY-MM-DD`) |
+| Lab Booking | `GET` | `/api/labs/reservations` | List all reservations (`?date=` optional); requires `X-Admin-Passcode` header |
+| Lab Booking | `PATCH` | `/api/labs/reservations/:id` | Update reservation; requires `X-Admin-Passcode` header |
+| Lab Booking | `DELETE` | `/api/labs/reservations/:id` | Delete/cancel reservation; requires `X-Admin-Passcode` header |
 | Parent Mailer | `POST` | `/api/generate-mail` | Draft compassionate parent update email |
 | Token Matrix | `POST` | `/api/tokens/award` | Award tokens (`answering` +1, `kindness` +5, `peer_support` +3) |
 | Token Matrix | `GET` | `/api/tokens/leaderboard` | Ranked student leaderboard |
+| Teacher Sign-In | `POST` | `/api/teachers/sign-in` | Upsert teacher profile by email |
+| Teacher Sign-In | `GET` | `/api/teachers/me` | Restore session (`?email=`) |
+
+**Admin lab APIs** require header `X-Admin-Passcode: farhan` (hackathon MVP — passcode is also validated client-side on sign-in).
+
+### Admin lab API examples
+
+```bash
+# List all reservations
+curl -s -H "X-Admin-Passcode: farhan" http://localhost:4000/api/labs/reservations
+
+# Filter by date
+curl -s -H "X-Admin-Passcode: farhan" "http://localhost:4000/api/labs/reservations?date=2026-06-29"
+
+# Update a reservation (replace RESERVATION_ID)
+curl -s -X PATCH -H "Content-Type: application/json" -H "X-Admin-Passcode: farhan" \
+  -d '{"roomName":"Physics Lab 2","status":"Occupied"}' \
+  http://localhost:4000/api/labs/reservations/RESERVATION_ID
+
+# Delete a reservation
+curl -s -X DELETE -H "X-Admin-Passcode: farhan" \
+  http://localhost:4000/api/labs/reservations/RESERVATION_ID
+```
 
 System prompts live in [`src/lib/prompts.ts`](src/lib/prompts.ts). See the existing route files under `src/routes/` for full request/response schemas.
 
@@ -109,6 +142,8 @@ System prompts live in [`src/lib/prompts.ts`](src/lib/prompts.ts). See the exist
 
 | Screen | Features |
 |--------|----------|
+| **Sign-In** | Teacher (name, class, email) or Admin (passcode `farhan`) |
+| **Admin Dashboard** | Manage all lab reservations — view, edit, delete, add |
 | **Dashboard** | Token leaderboard, award tokens by reason |
 | **Scan Analyzer** | Upload scanned pages or paste text; exam vs. notebook modes |
 | **Content Differentiator** | Adapt lessons (Advanced, Standard, Simplified Visual, Neurodivergent) |
@@ -117,6 +152,15 @@ System prompts live in [`src/lib/prompts.ts`](src/lib/prompts.ts). See the exist
 | **Parent Mailer** | Generate and copy parent update emails |
 
 Each screen includes loading, empty, and error states, plus toast notifications. The sidebar shows live backend health.
+
+### Sign-in flows
+
+| Role | How to sign in | After login |
+|------|----------------|-------------|
+| **Teacher** | Select **Teacher** tab → name, class, email | Teacher tools (dashboard, labs, etc.) |
+| **Admin** | Select **Admin** tab → passcode `farhan` | **Admin Dashboard** + all teacher tools |
+
+Sign out clears the session for either role.
 
 ---
 
@@ -133,7 +177,7 @@ Gems-Hackathon/
 │   ├── index.ts              # Express app + route wiring
 │   ├── lib/                  # prisma, llm, prompts, json, http helpers
 │   └── routes/               # analyzeScan, differentiateContent, substitution,
-│                             # labs, mail, tokens
+│                             # labs, mail, tokens, teachers
 └── frontend/
     ├── package.json
     ├── vite.config.ts        # Dev proxy: /api & /health → :4000
@@ -141,8 +185,9 @@ Gems-Hackathon/
         ├── App.tsx           # Sidebar nav + screen routing
         ├── api/              # Typed fetch client
         ├── components/       # Toast, shared UI primitives
-        └── pages/            # Dashboard, ScanAnalyzer, ContentDifferentiator,
-                              # SubstitutionFinder, LabBooking, ParentMailer
+        ├── lib/              # authSession (teacher + admin roles)
+        └── pages/            # SignIn, AdminDashboard, Dashboard, ScanAnalyzer,
+                              # ContentDifferentiator, SubstitutionFinder, LabBooking, ParentMailer
 ```
 
 ---
@@ -209,6 +254,7 @@ Defined in [`prisma/schema.prisma`](prisma/schema.prisma). SQLite is the default
 | `GradingRecord` | AI-graded exam or notebook artifacts |
 | `LabReservation` | Lab room slots with unique `(room, date, period)` constraint |
 | `TeacherAvailability` | Per-teacher 7-period free/busy status |
+| `TeacherProfile` | Signed-in teacher (name, class, email) |
 
 ---
 

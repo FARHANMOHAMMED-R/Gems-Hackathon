@@ -4,6 +4,15 @@ A React + Vite + TypeScript web app for the **Gems Assist** education platform.
 It talks to the existing Node/Express/Prisma backend and surfaces every domain
 through a clean, responsive UI.
 
+## Links
+
+- **GitHub Repository:** https://github.com/FARHANMOHAMMED-R/Gems-Hackathon
+- **Local Website (Frontend):** http://localhost:5173 (run `cd frontend && npm run dev`)
+- **Local API (Backend):** http://localhost:4000
+- **Health Check:** http://localhost:4000/health
+
+> **Public live URL:** Deploy `frontend/dist` to Vercel or Netlify. See the root [README](../README.md#deploying-the-frontend) for build and hosting steps.
+
 ## Prerequisites
 
 The backend must be running on **http://localhost:4000**. From the repo root:
