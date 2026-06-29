@@ -40,6 +40,9 @@ npm run dev
 
 Then open the printed URL (default **http://localhost:5173**).
 
+Vite also prints a **Network** URL (e.g. `http://192.168.1.42:5173`). Open that on
+any phone or laptop on the same Wi‑Fi so others can use the app while you develop.
+
 The Vite dev server proxies `/api` and `/health` to `http://localhost:4000`, so
 the browser stays same-origin and there are no CORS issues.
 

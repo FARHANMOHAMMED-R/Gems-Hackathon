@@ -367,9 +367,8 @@ export function App() {
 
         {status === "offline" && (
           <div className="banner banner-warn" role="alert">
-            Can't reach the backend on <code>http://localhost:4000</code>. Start
-            it with <code>npm run dev</code> in the project root, then this
-            banner will clear automatically.
+            Can't reach the backend. Start it with <code>npm run dev</code> in the
+            project root, then this banner will clear automatically.
           </div>
         )}
 

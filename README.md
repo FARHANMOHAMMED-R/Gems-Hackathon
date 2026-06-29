@@ -76,6 +76,18 @@ npm run dev          # http://localhost:5173
 
 Health check: `GET http://localhost:4000/health`
 
+### Open on other devices (same Wi‑Fi)
+
+Both dev servers bind to all network interfaces (`0.0.0.0`), so phones, tablets, and other laptops on your LAN can use the app:
+
+1. Start backend and frontend as above.
+2. In the frontend terminal, Vite prints a **Network** URL, e.g. `http://192.168.1.42:5173`.
+3. Open that URL on any device on the same Wi‑Fi.
+
+The Vite dev server proxies `/api` to the backend on your machine, so other devices do **not** need direct access to port `4000` — only port `5173`.
+
+> If a device cannot connect, allow incoming connections for Node in your Mac firewall (System Settings → Network → Firewall).
+
 > **AI endpoints** return `503 LLM_NOT_CONFIGURED` until `OPENAI_API_KEY` is set in `.env`. Deterministic endpoints (substitution, labs, tokens) work without a key.
 
 ---

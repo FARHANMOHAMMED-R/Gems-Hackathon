@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 
 import { errorMiddleware } from "./lib/http";
+import { getLanIPv4 } from "./lib/lanAddress";
 import { analyzeScanRouter } from "./routes/analyzeScan";
 import { blueprintRouter } from "./routes/blueprint";
 import { differentiateContentRouter } from "./routes/differentiateContent";
@@ -60,9 +61,16 @@ app.use((_req, res) => res.status(404).json({ error: "Not found" }));
 app.use(errorMiddleware);
 
 const PORT = Number(process.env.PORT) || 4000;
-app.listen(PORT, () => {
+const HOST = process.env.HOST || "0.0.0.0";
+
+app.listen(PORT, HOST, () => {
+  const lan = getLanIPv4();
   // eslint-disable-next-line no-console
   console.log(`Gems Assist backend listening on http://localhost:${PORT}`);
+  if (lan) {
+    // eslint-disable-next-line no-console
+    console.log(`  Network:  http://${lan}:${PORT}`);
+  }
 });
 
 export { app };
