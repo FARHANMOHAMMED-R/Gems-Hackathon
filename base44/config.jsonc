@@ -1,0 +1,10 @@
+// Base44 site hosting — deploy with: npm run deploy:base44
+{
+  "name": "gems-class-flow",
+  "description": "Gems Assist — Group 3 (NEPTUNE)",
+  "site": {
+    "installCommand": "npm install --prefix frontend",
+    "buildCommand": "npm run build --prefix frontend",
+    "outputDirectory": "./frontend/dist"
+  }
+}

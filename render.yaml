@@ -1,0 +1,15 @@
+# Deploy: Render Dashboard → New → Blueprint → connect this repo → Deploy
+# Then rebuild base44: npm run deploy:base44
+services:
+  - type: web
+    name: gems-assist-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build && npx prisma generate && npx prisma db push
+    startCommand: node dist/src/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DATABASE_URL
+        value: file:./data/prod.db

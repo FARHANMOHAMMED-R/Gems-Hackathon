@@ -417,8 +417,18 @@ export function App() {
 
         {status === "offline" && (
           <div className="banner banner-warn" role="alert">
-            Can't reach the backend. Start it with <code>npm run dev</code> in the
-            project root, then this banner will clear automatically.
+            {window.location.hostname.endsWith(".base44.app") ? (
+              <>
+                API server is starting or offline. Hosted frontend needs{" "}
+                <code>gems-assist-api.onrender.com</code> — first visit may take ~1 min
+                after deploy. Or run <code>npm run share</code> for the full local stack.
+              </>
+            ) : (
+              <>
+                Can't reach the backend. Start it with <code>npm run dev</code> in the
+                project root, then this banner will clear automatically.
+              </>
+            )}
           </div>
         )}
 

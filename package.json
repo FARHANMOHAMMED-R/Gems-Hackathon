@@ -17,7 +17,8 @@
     "build:all": "npm run build && npm run build --prefix frontend",
     "start:site": "SERVE_FRONTEND=true PORT=5173 HOST=0.0.0.0 node dist/src/index.js",
     "site": "npm run build:all && npm run start:site",
-    "share": "node scripts/site-share.mjs"
+    "share": "node scripts/site-share.mjs",
+    "deploy:base44": "node scripts/deploy-base44.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

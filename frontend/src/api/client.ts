@@ -1,4 +1,5 @@
 import { ADMIN_PASSCODE } from "../lib/authSession";
+import { apiFetchHeaders, resolveApiBase } from "../lib/apiBase";
 import type {
   AnalyzeScanRequest,
   AnalyzeScanResponse,
@@ -64,11 +65,8 @@ import type {
   DeleteStudentResponse,
 } from "./types";
 
-// Single source of truth for the API base. The Vite dev proxy (vite.config.ts)
-// forwards /api and /health to http://localhost:4000, so a relative base keeps
-// the browser same-origin and avoids CORS entirely. Override at build time with
-// VITE_API_BASE if the frontend is ever served separately from the backend.
-export const API_BASE = import.meta.env.VITE_API_BASE ?? "";
+// Relative base on localhost (Vite proxy). On Base44/static hosts, points at PRODUCTION_API_URL.
+export const API_BASE = resolveApiBase();
 
 /**
  * Rich error that preserves the HTTP status and the backend's machine `code`
@@ -108,7 +106,7 @@ interface RequestOptions {
 }
 
 async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
-  const headers: Record<string, string> = { ...opts.headers };
+  const headers: Record<string, string> = { ...apiFetchHeaders(), ...opts.headers };
   if (opts.body) headers["Content-Type"] = "application/json";
 
   let res: Response;
@@ -120,11 +118,16 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
       signal: opts.signal,
     });
   } catch (err) {
-    // Network-level failure (backend down, proxy refused, etc).
     if (err instanceof DOMException && err.name === "AbortError") throw err;
+    const onLive =
+      typeof window !== "undefined" &&
+      (window.location.hostname.endsWith(".base44.app") ||
+        window.location.hostname.endsWith(".loca.lt"));
     throw new ApiError(
       0,
-      "Could not reach the backend. Make sure it is running on http://localhost:4000.",
+      onLive
+        ? "Could not reach the API server. If this is a new deploy, wait for Render to finish starting (gems-assist-api.onrender.com)."
+        : "Could not reach the backend. Start it with npm run dev in the project root.",
     );
   }
 
