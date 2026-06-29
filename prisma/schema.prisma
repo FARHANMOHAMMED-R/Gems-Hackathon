@@ -1,0 +1,92 @@
+// Gems Assist — data model
+// Default datasource is SQLite for zero-config local dev. For production, switch
+// `provider` to "postgresql" / "mysql" and point DATABASE_URL at your cluster.
+// This SQLite connector supports neither native enums nor a `Json` column, so
+// JSON/array-shaped fields are stored as serialized `String` (JSON text) and
+// (de)serialized via src/lib/json.ts on the application layer. On Postgres/MySQL
+// you can switch these back to `Json` and the string columns to enums.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// A learner. `adaptivePreferenceProfile` holds the differentiation profile
+/// (e.g. { "track": "Neurodivergent", "subtype": "ADHD", "pace": "micro" }).
+model StudentProfile {
+  id                        String          @id @default(cuid())
+  name                      String
+  grade                     String
+  section                   String
+  totalTokens               Int             @default(0) @map("total_tokens")
+  /// JSON string, e.g. {"track":"Neurodivergent","subtype":"ADHD","pace":"micro"}
+  adaptivePreferenceProfile String?         @map("adaptive_preference_profile")
+  gradingRecords            GradingRecord[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([grade, section])
+  @@index([totalTokens]) // supports leaderboard ordering
+  @@map("student_profiles")
+}
+
+/// An AI-graded artifact (exam paper or notebook).
+/// `scores` is a JSON breakdown, e.g. { "Handwriting": 4, "Creativity": 3, "Content": 5 }
+/// or per-question marks for exams.
+model GradingRecord {
+  id             String   @id @default(cuid())
+  studentId      String   @map("student_id")
+  /// Allowed values: "Exam" | "Notebook" (enforced at the application layer;
+  /// SQLite has no native enum — switch to a Prisma enum on Postgres/MySQL).
+  type           String
+  rawScannedText String   @map("raw_scanned_text")
+  /// JSON string score breakdown, e.g. {"Handwriting":4,"Creativity":3,"Content":5}
+  scores         String
+  aiFeedbackText String   @map("ai_feedback_text")
+  dateTimestamp  DateTime @default(now()) @map("date_timestamp")
+
+  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId, dateTimestamp])
+  @@map("grading_records")
+}
+
+/// A bookable lab room slot. Uniqueness on (room, date, period) is the
+/// hard guarantee that powers double-booking prevention.
+model LabReservation {
+  id                  String  @id @default(cuid())
+  roomName            String  @map("room_name")
+  periodNumber        Int     @map("period_number")
+  date                String // ISO date (YYYY-MM-DD) — date-only granularity
+  reservedByTeacherId String? @map("reserved_by_teacher_id")
+  /// Allowed values: "Free" | "Occupied" (application-enforced; see note above).
+  status              String  @default("Free")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([roomName, date, periodNumber], name: "room_date_period")
+  @@index([date])
+  @@map("lab_reservations")
+}
+
+/// A teacher's per-period availability for the current day.
+/// `currentPeriodFreeStatus` is a 7-element boolean array (periods 1..7),
+/// stored as Json. `department` enables department-matched substitution.
+model TeacherAvailability {
+  id                      String  @id @default(cuid())
+  teacherName             String  @map("teacher_name")
+  department              String  @default("General")
+  /// JSON string: 7-element boolean array for periods 1..7, e.g. "[true,false,...]"
+  currentPeriodFreeStatus String  @map("current_period_free_status")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([department])
+  @@map("teacher_availability")
+}
