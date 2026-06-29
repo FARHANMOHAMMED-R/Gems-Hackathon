@@ -120,10 +120,8 @@ export function generateAssessmentLocally(input: {
       "Time allowed as stated. All questions are compulsory unless marked optional.",
     questions,
     teacherNotes:
-      (input.additionalNotes?.trim()
-        ? `${input.additionalNotes.trim()}\n\n`
-        : "") +
-      "Local template assessment — add OPENAI_API_KEY for fully customized AI questions.",
+      input.additionalNotes?.trim() ||
+      "Review question stems before class. Add MCQ options and numerical values where needed.",
   };
 }
 
