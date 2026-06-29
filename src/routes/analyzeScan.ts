@@ -2,15 +2,11 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { asyncHandler, ApiError } from "../lib/http";
-import { completeJSON, transcribeDocument, isLlmConfigured } from "../lib/llm";
+import { completeJSON, isLlmConfigured } from "../lib/llm";
 import { analyzeNotebookLocally } from "../lib/localNotebookAnalyzer";
-import { guruPdfOcrImages, isGuruPdfConfigured } from "../lib/gurupdfOcr";
-import { ocrImages } from "../lib/ocr";
+import { digitizeScanImages, getOcrStatus } from "../lib/scanOcr";
 import { toJsonColumn } from "../lib/json";
-import {
-  EXAMINER_SYSTEM_PROMPT,
-  VISION_TRANSCRIBE_SYSTEM_PROMPT,
-} from "../lib/prompts";
+import { EXAMINER_SYSTEM_PROMPT } from "../lib/prompts";
 
 export const analyzeScanRouter = Router();
 
@@ -32,46 +28,36 @@ interface ExaminerResult {
   concept_gaps: string[];
 }
 
+analyzeScanRouter.get(
+  "/scan/ocr-status",
+  asyncHandler(async (_req, res) => {
+    res.json(getOcrStatus());
+  }),
+);
+
 analyzeScanRouter.post(
   "/analyze-scan",
   asyncHandler(async (req, res) => {
     const body = schema.parse(req.body);
     const hasLlm = isLlmConfigured();
-    const hasGuruPdf = isGuruPdfConfigured();
 
-    // 1) Digitization: pasted text, PDF Guru OCR, AI vision, or local Tesseract.
     let rawText = body.rawScannedText?.trim() ?? "";
-    let ocrMode: "pasted" | "gurupdf" | "openai" | "tesseract" = "pasted";
+    let ocrMode: "pasted" | "gurupdf" | "openai" | "gemini" | "tesseract" = "pasted";
+
     if (!rawText && body.images?.length) {
-      if (hasGuruPdf) {
-        rawText = await guruPdfOcrImages(body.images);
-        ocrMode = "gurupdf";
-      } else if (hasLlm) {
-        rawText = await transcribeDocument(
-          VISION_TRANSCRIBE_SYSTEM_PROMPT,
-          body.images,
-        );
-        ocrMode = "openai";
-      } else if (body.mode === "Notebook") {
-        rawText = await ocrImages(body.images);
-        ocrMode = "tesseract";
-      } else {
-        throw new ApiError(
-          503,
-          "Upload OCR needs GURUPDF_API_KEY (PDF Guru image-to-text) or OPENAI_API_KEY. Notebook mode also works with local Tesseract.",
-          "OCR_NOT_CONFIGURED",
-        );
-      }
+      const digitized = await digitizeScanImages(body.images, body.mode);
+      rawText = digitized.rawText;
+      ocrMode = digitized.ocrMode;
     }
 
     if (!rawText.trim()) {
       throw new ApiError(
         422,
-        "Could not extract any text from the scan. Try a clearer image or paste the note text.",
+        "Could not extract any text from the scan. Try a clearer photo of the notebook page or paste the text.",
+        "OCR_EMPTY",
       );
     }
 
-    // 2) Grading: AI examiner or local notebook analyzer.
     let result: ExaminerResult;
     let analysisMode: "ai" | "local" = "ai";
 
@@ -81,7 +67,7 @@ analyzeScanRouter.post(
     } else if (!hasLlm) {
       throw new ApiError(
         503,
-        "OPENAI_API_KEY is not set. Notebook mode works offline; exam grading needs a key.",
+        "Exam grading needs OPENAI_API_KEY in .env. Notebook mode works without it once text is extracted.",
         "LLM_NOT_CONFIGURED",
       );
     } else {
@@ -99,7 +85,6 @@ analyzeScanRouter.post(
       });
     }
 
-    // 3) Persist grading record when linked to a student.
     let recordId: string | undefined;
     if (body.studentId) {
       const student = await prisma.studentProfile.findUnique({

@@ -78,6 +78,7 @@ studentsRouter.get(
         section: true,
         classManaged: true,
         totalTokens: true,
+        parentEmail: true,
       },
     });
     res.json({ classManaged, students });
@@ -126,6 +127,7 @@ studentsRouter.post(
               section: true,
               classManaged: true,
               totalTokens: true,
+              parentEmail: true,
             },
           }),
         );
@@ -196,12 +198,14 @@ const studentFields = {
   section: true,
   classManaged: true,
   totalTokens: true,
+  parentEmail: true,
 } as const;
 
 const updateStudentSchema = z.object({
   name: z.string().trim().min(1).optional(),
   rollNumber: z.string().trim().min(1).optional(),
   schoolId: z.string().trim().min(1).optional(),
+  parentEmail: z.string().trim().email().optional().or(z.literal("")),
 });
 
 const addStudentSchema = z.object({
@@ -255,7 +259,7 @@ studentsRouter.patch(
     const id = z.string().min(1).parse(req.params.id);
     const updates = updateStudentSchema.parse(req.body);
 
-    if (!updates.name && !updates.rollNumber && !updates.schoolId) {
+    if (!updates.name && !updates.rollNumber && !updates.schoolId && updates.parentEmail === undefined) {
       throw new ApiError(400, "Provide at least one field to update.");
     }
 

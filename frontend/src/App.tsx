@@ -9,6 +9,7 @@ import { SubstitutionFinder } from "./pages/SubstitutionFinder";
 import { LabBooking } from "./pages/LabBooking";
 import { ThreeDLab } from "./pages/ThreeDLab";
 import { ParentMailer } from "./pages/ParentMailer";
+import { AssessmentAssigner } from "./pages/AssessmentAssigner";
 import { SignIn } from "./pages/SignIn";
 import { ClassRosterSetup } from "./pages/ClassRosterSetup";
 import { ClassStudents } from "./pages/ClassStudents";
@@ -102,11 +103,30 @@ function buildTeacherNav(teacher: TeacherSession): NavItem[] {
       render: () => <TeacherChat teacher={teacher} />,
     },
     {
+      id: "assessment",
+      label: "Assessment Assigner",
+      icon: "📑",
+      blurb: "AI assessments by topic & chapter",
+      render: () => (
+        <AssessmentAssigner
+          classManaged={classManaged}
+          teacherEmail={teacher.email}
+          teacherName={teacher.name}
+        />
+      ),
+    },
+    {
       id: "mailer",
       label: "Parent Mailer",
       icon: "✉️",
       blurb: "Draft parent update emails",
-      render: () => <ParentMailer classManaged={classManaged} />,
+      render: () => (
+        <ParentMailer
+          classManaged={classManaged}
+          teacherEmail={teacher.email}
+          teacherName={teacher.name}
+        />
+      ),
     },
   ];
 }

@@ -1,15 +1,38 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../api/client";
 import { fetchClassStudents } from "../api/classData";
-import type { StudentRosterEntry } from "../api/types";
+import type { MailDraftItem, StudentRosterEntry } from "../api/types";
 import { draftBatchMailsLocally } from "../lib/localParentMailer";
 import { Card, EmptyState, ErrorNote, Field, Spinner } from "../components/ui";
 import { useToast } from "../components/Toast";
 
-export function ParentMailer({ classManaged }: { classManaged: string }) {
+type SendStatus = "idle" | "sending" | "sent" | "failed";
+
+interface DraftRow extends MailDraftItem {
+  sendStatus: SendStatus;
+  sendError?: string;
+}
+
+interface ParentMailerProps {
+  classManaged: string;
+  teacherEmail: string;
+  teacherName: string;
+}
+
+function toDraftRows(items: MailDraftItem[]): DraftRow[] {
+  return items.map((item) => ({
+    ...item,
+    body: item.body ?? item.email,
+    email: item.email ?? item.body,
+    sendStatus: "idle" as const,
+  }));
+}
+
+export function ParentMailer({ classManaged, teacherEmail, teacherName }: ParentMailerProps) {
   const toast = useToast();
   const [students, setStudents] = useState<StudentRosterEntry[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
+  const [mailConfigured, setMailConfigured] = useState<boolean | null>(null);
 
   const [teacherSummary, setTeacherSummary] = useState("");
   const [scope, setScope] = useState<"all" | "selected">("all");
@@ -17,9 +40,8 @@ export function ParentMailer({ classManaged }: { classManaged: string }) {
   const [recentLimit, setRecentLimit] = useState(5);
 
   const [loading, setLoading] = useState(false);
-  const [emails, setEmails] = useState<
-    { studentId: string; name: string; rollNumber: string; email: string }[] | null
-  >(null);
+  const [sendingAll, setSendingAll] = useState(false);
+  const [drafts, setDrafts] = useState<DraftRow[] | null>(null);
   const [localMode, setLocalMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -34,6 +56,10 @@ export function ParentMailer({ classManaged }: { classManaged: string }) {
       .finally(() => setLoadingStudents(false));
   }, [classManaged]);
 
+  useEffect(() => {
+    api.getMailStatus().then((s) => setMailConfigured(s.configured)).catch(() => setMailConfigured(false));
+  }, []);
+
   function toggleStudent(id: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -41,6 +67,12 @@ export function ParentMailer({ classManaged }: { classManaged: string }) {
       else next.add(id);
       return next;
     });
+  }
+
+  function updateDraft(studentId: string, patch: Partial<DraftRow>) {
+    setDrafts((prev) =>
+      prev?.map((d) => (d.studentId === studentId ? { ...d, ...patch } : d)) ?? null,
+    );
   }
 
   async function generate() {
@@ -54,7 +86,7 @@ export function ParentMailer({ classManaged }: { classManaged: string }) {
     }
 
     setLoading(true);
-    setEmails(null);
+    setDrafts(null);
     setLocalMode(false);
     setError(null);
 
@@ -66,7 +98,7 @@ export function ParentMailer({ classManaged }: { classManaged: string }) {
         studentIds: scope === "selected" ? Array.from(selectedIds) : undefined,
         recentLimit,
       });
-      setEmails(res.emails);
+      setDrafts(toDraftRows(res.emails));
       setLocalMode(res.analysisMode === "local");
       toast.success(`Drafted ${res.count} email(s).`);
     } catch (err) {
@@ -76,12 +108,13 @@ export function ParentMailer({ classManaged }: { classManaged: string }) {
           teacherSummary.trim(),
           scope,
           selectedIds,
+          classManaged,
         );
         if (drafted.length === 0) {
           setError("No students selected.");
           return;
         }
-        setEmails(drafted);
+        setDrafts(toDraftRows(drafted));
         setLocalMode(true);
         toast.success(`Drafted ${drafted.length} email(s) locally.`);
       } else {
@@ -89,6 +122,99 @@ export function ParentMailer({ classManaged }: { classManaged: string }) {
       }
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function sendOne(draft: DraftRow) {
+    if (!draft.parentEmail.trim()) {
+      toast.error(`Add a parent email for ${draft.name}.`);
+      return;
+    }
+    updateDraft(draft.studentId, { sendStatus: "sending", sendError: undefined });
+    try {
+      await api.sendMail({
+        studentId: draft.studentId,
+        to: draft.parentEmail.trim(),
+        subject: draft.subject.trim(),
+        body: draft.body,
+        replyTo: teacherEmail,
+      });
+      updateDraft(draft.studentId, { sendStatus: "sent" });
+      toast.success(`Sent to ${draft.parentEmail}.`);
+    } catch (err) {
+      const msg =
+        err instanceof ApiError && err.isMailNotConfigured
+          ? "Add RESEND_API_KEY or SMTP settings to the backend .env to send emails."
+          : err instanceof Error
+            ? err.message
+            : "Send failed.";
+      updateDraft(draft.studentId, { sendStatus: "failed", sendError: msg });
+      toast.error(msg);
+    }
+  }
+
+  async function sendAll() {
+    if (!drafts?.length) return;
+    const ready = drafts.filter((d) => d.parentEmail.trim() && d.sendStatus !== "sent");
+    if (ready.length === 0) {
+      toast.error("Add parent emails for at least one student.");
+      return;
+    }
+
+    setSendingAll(true);
+    setDrafts((prev) =>
+      prev?.map((d) =>
+        d.parentEmail.trim() && d.sendStatus !== "sent"
+          ? { ...d, sendStatus: "sending", sendError: undefined }
+          : d,
+      ) ?? null,
+    );
+
+    try {
+      const res = await api.sendMailBatch({
+        classManaged,
+        replyTo: teacherEmail,
+        messages: ready.map((d) => ({
+          studentId: d.studentId,
+          to: d.parentEmail.trim(),
+          subject: d.subject.trim(),
+          body: d.body,
+        })),
+      });
+
+      setDrafts((prev) =>
+        prev?.map((d) => {
+          const result = res.results.find((r) => r.studentId === d.studentId);
+          if (!result) return d;
+          return {
+            ...d,
+            sendStatus: result.ok ? "sent" : "failed",
+            sendError: result.error,
+          };
+        }) ?? null,
+      );
+
+      if (res.sent > 0) {
+        toast.success(`Sent ${res.sent} email(s) via ${res.provider}.`);
+      }
+      if (res.failed > 0) {
+        toast.error(`${res.failed} email(s) failed to send.`);
+      }
+    } catch (err) {
+      const msg =
+        err instanceof ApiError && err.isMailNotConfigured
+          ? "Add RESEND_API_KEY or SMTP settings to the backend .env to send emails."
+          : err instanceof Error
+            ? err.message
+            : "Batch send failed.";
+      setDrafts((prev) =>
+        prev?.map((d) =>
+          d.sendStatus === "sending" ? { ...d, sendStatus: "failed", sendError: msg } : d,
+        ) ?? null,
+      );
+      toast.error(msg);
+    } finally {
+      setSendingAll(false);
     }
   }
 
@@ -103,15 +229,31 @@ export function ParentMailer({ classManaged }: { classManaged: string }) {
     }
   }
 
+  const pendingCount =
+    drafts?.filter((d) => d.sendStatus !== "sent" && d.parentEmail.trim()).length ?? 0;
+
   return (
     <div className="grid grid-2">
-      <Card title="Parent Mailer" subtitle="Step 1 — your summary, then who receives it">
+      <Card title="Parent Mailer" subtitle="Draft with AI, then send to parent inboxes">
         {loadingStudents ? (
           <Spinner label="Loading class…" />
         ) : students.length === 0 ? (
           <EmptyState icon="✉️" title="No students" hint="Set up your class roster first." />
         ) : (
           <>
+            {mailConfigured === false && (
+              <div className="info-note">
+                Sending is off until you add <code>RESEND_API_KEY</code> (or SMTP) to the backend{" "}
+                <code>.env</code>. You can still draft and copy emails.
+              </div>
+            )}
+            {mailConfigured && (
+              <div className="info-note">
+                ✉️ Email API connected — replies go to <strong>{teacherEmail}</strong> (
+                {teacherName}).
+              </div>
+            )}
+
             <Field
               label="Your summary / prompt"
               hint="What should parents know? Focus areas, positives, next steps…"
@@ -119,7 +261,7 @@ export function ParentMailer({ classManaged }: { classManaged: string }) {
               <textarea
                 value={teacherSummary}
                 onChange={(e) => setTeacherSummary(e.target.value)}
-                placeholder="This week we focused on kinematics. Several students improved in problem-solving. Please encourage practice on graph interpretation…"
+                placeholder="This week we focused on kinematics. Several students improved in problem-solving…"
                 rows={5}
               />
             </Field>
@@ -157,6 +299,7 @@ export function ParentMailer({ classManaged }: { classManaged: string }) {
                       />
                       <span>
                         {s.name} · Roll {s.rollNumber}
+                        {s.parentEmail ? ` · ${s.parentEmail}` : ""}
                       </span>
                     </label>
                   ))}
@@ -183,19 +326,18 @@ export function ParentMailer({ classManaged }: { classManaged: string }) {
         )}
       </Card>
 
-      <Card title="Drafted emails" subtitle="One per student — copy and send">
+      <Card title="Draft & send" subtitle="Review, edit parent addresses, then send">
         {loading && <Spinner label="Composing emails…" />}
 
-        {localMode && emails && !loading && (
+        {localMode && drafts && !loading && (
           <div className="info-note">
-            📧 Local draft — add <code>OPENAI_API_KEY</code> to the backend for fully
-            AI-personalized emails.
+            📧 Local draft — add <code>OPENAI_API_KEY</code> for fully AI-personalized content.
           </div>
         )}
 
         {error && !loading && <ErrorNote>{error}</ErrorNote>}
 
-        {!loading && !error && !emails && (
+        {!loading && !error && !drafts && (
           <EmptyState
             icon="✉️"
             title="No emails yet"
@@ -203,23 +345,79 @@ export function ParentMailer({ classManaged }: { classManaged: string }) {
           />
         )}
 
-        {emails && !loading && (
+        {drafts && !loading && (
           <div className="stack" style={{ gap: 16 }}>
-            {emails.map((item) => (
+            {mailConfigured && pendingCount > 0 && (
+              <button
+                type="button"
+                className="btn btn-primary btn-block"
+                onClick={sendAll}
+                disabled={sendingAll}
+              >
+                {sendingAll ? "Sending…" : `Send ${pendingCount} email(s) now`}
+              </button>
+            )}
+
+            {drafts.map((item) => (
               <div key={item.studentId} className="mail-draft-card">
                 <div className="mail-draft-head">
                   <strong>
                     {item.name} (Roll {item.rollNumber})
                   </strong>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => copy(item.email, item.studentId)}
-                  >
-                    {copiedId === item.studentId ? "✓ Copied" : "⧉ Copy"}
-                  </button>
+                  <div className="mail-draft-actions">
+                    {item.sendStatus === "sent" && (
+                      <span className="pill pill-success">✓ Sent</span>
+                    )}
+                    {item.sendStatus === "failed" && (
+                      <span className="pill pill-warn" title={item.sendError}>
+                        Failed
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => copy(item.body, item.studentId)}
+                    >
+                      {copiedId === item.studentId ? "✓ Copied" : "⧉ Copy"}
+                    </button>
+                    {mailConfigured && item.sendStatus !== "sent" && (
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => sendOne(item)}
+                        disabled={item.sendStatus === "sending" || sendingAll}
+                      >
+                        {item.sendStatus === "sending" ? "…" : "Send"}
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="text-block">{item.email}</div>
+
+                <Field label="Parent email">
+                  <input
+                    type="email"
+                    value={item.parentEmail}
+                    placeholder="parent@example.com"
+                    onChange={(e) =>
+                      updateDraft(item.studentId, { parentEmail: e.target.value })
+                    }
+                  />
+                </Field>
+
+                <Field label="Subject">
+                  <input
+                    type="text"
+                    value={item.subject}
+                    onChange={(e) => updateDraft(item.studentId, { subject: e.target.value })}
+                  />
+                </Field>
+
+                <div className="text-block">{item.body}</div>
+                {item.sendError && (
+                  <p className="field-error" role="alert">
+                    {item.sendError}
+                  </p>
+                )}
               </div>
             ))}
           </div>

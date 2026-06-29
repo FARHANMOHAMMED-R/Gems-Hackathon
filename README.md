@@ -50,6 +50,7 @@ Gems Assist gives teachers one place to run a modern classroom:
 | **3D Lab** | 64 embedded PhET physics simulations |
 | **Teacher Chat** | Staff lounge for cross-class messages |
 | **Parent Mailer** | Batch draft compassionate parent update emails |
+| **Assessment Assigner** | AI-generated assessments by chapter, topic & difficulty — email to parents |
 | **Token Matrix** | Award points for answering, kindness & peer support |
 | **Admin Dashboard** | Manage labs, broadcast notices, monitor teachers online |
 
@@ -161,6 +162,8 @@ Browser  →  React + Vite (:5173)  →  /api proxy  →  Express + Prisma (:400
 | `POST` | `/api/labs/reserve` | Book a lab slot |
 | `GET` | `/api/labs/availability` | Daily availability grid |
 | `POST` | `/api/generate-mail` | Draft parent email |
+| `POST` | `/api/generate-assessment` | AI assessment from topics & chapters |
+| `POST` | `/api/send-assessment` | Email assessment to all parents |
 | `POST` | `/api/tokens/award` | Award student tokens |
 | `GET` | `/api/tokens/leaderboard` | Class leaderboard |
 | `POST` | `/api/teachers/sign-in` | Teacher session |

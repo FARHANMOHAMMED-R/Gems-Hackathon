@@ -12,6 +12,7 @@ export interface LocalStudent {
   section: string;
   classManaged: string;
   totalTokens: number;
+  parentEmail?: string;
 }
 
 const KEY = "gems-class-roster";
@@ -88,7 +89,7 @@ export function getLocalLeaderboard(classManaged: string): LocalStudent[] {
 export function updateLocalStudent(
   classManaged: string,
   studentId: string,
-  updates: { name?: string; rollNumber?: string; schoolId?: string },
+  updates: { name?: string; rollNumber?: string; schoolId?: string; parentEmail?: string },
 ): LocalStudent | null {
   const all = store();
   const list = all[classManaged];
@@ -101,6 +102,7 @@ export function updateLocalStudent(
       ...(updates.name !== undefined ? { name: updates.name.trim() } : {}),
       ...(updates.rollNumber !== undefined ? { rollNumber: updates.rollNumber.trim() } : {}),
       ...(updates.schoolId !== undefined ? { schoolId: updates.schoolId.trim() } : {}),
+      ...(updates.parentEmail !== undefined ? { parentEmail: updates.parentEmail.trim() } : {}),
     };
     return updated;
   });

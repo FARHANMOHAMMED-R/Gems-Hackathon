@@ -26,6 +26,8 @@ model StudentProfile {
   schoolId                  String          @default("") @map("school_id")
   /// Class key matching TeacherProfile.classManaged, e.g. "11-A"
   classManaged              String          @default("") @map("class_managed")
+  /// Parent/guardian email for Parent Mailer delivery
+  parentEmail               String          @default("") @map("parent_email")
   totalTokens               Int             @default(0) @map("total_tokens")
   /// JSON string, e.g. {"track":"Neurodivergent","subtype":"ADHD","pace":"micro"}
   adaptivePreferenceProfile String?         @map("adaptive_preference_profile")

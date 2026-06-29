@@ -5,6 +5,11 @@ import { asyncHandler, ApiError } from "../lib/http";
 import { complete, isLlmConfigured } from "../lib/llm";
 import { PARENT_MAIL_SYSTEM_PROMPT } from "../lib/prompts";
 import { draftParentMailLocally } from "../lib/localParentMailer";
+import {
+  defaultMailSubject,
+  isMailConfigured,
+  sendEmail,
+} from "../lib/emailSend";
 
 export const mailRouter = Router();
 
@@ -20,6 +25,31 @@ const batchSchema = z.object({
   scope: z.enum(["all", "selected"]),
   studentIds: z.array(z.string()).optional(),
   recentLimit: z.coerce.number().int().min(1).max(20).default(5),
+});
+
+const sendOneSchema = z.object({
+  studentId: z.string().min(1),
+  to: z.string().trim().email(),
+  subject: z.string().trim().min(1),
+  body: z.string().trim().min(1),
+  replyTo: z.string().trim().email().optional(),
+  saveParentEmail: z.boolean().optional(),
+});
+
+const sendBatchSchema = z.object({
+  classManaged: z.string().min(1),
+  replyTo: z.string().trim().email().optional(),
+  messages: z
+    .array(
+      z.object({
+        studentId: z.string().min(1),
+        to: z.string().trim().email(),
+        subject: z.string().trim().min(1),
+        body: z.string().trim().min(1),
+        saveParentEmail: z.boolean().optional(),
+      }),
+    )
+    .min(1),
 });
 
 function buildStudentDataString(
@@ -57,7 +87,7 @@ function buildStudentDataString(
   return lines.join("\n");
 }
 
-async function generateEmail(
+async function generateEmailBody(
   student: {
     name: string;
     grade: string;
@@ -73,21 +103,43 @@ async function generateEmail(
     }[];
   },
   teacherSummary?: string,
-): Promise<{ email: string; analysisMode: "ai" | "local" }> {
+): Promise<{ body: string; analysisMode: "ai" | "local" }> {
   if (!isLlmConfigured()) {
     return {
-      email: draftParentMailLocally(student, teacherSummary),
+      body: draftParentMailLocally(student, teacherSummary),
       analysisMode: "local",
     };
   }
   const dataString = buildStudentDataString(student, teacherSummary);
-  const email = await complete({
+  const body = await complete({
     systemPrompt: PARENT_MAIL_SYSTEM_PROMPT,
     userContent: `Student performance data:\n\n${dataString}`,
     temperature: 0.5,
   });
-  return { email, analysisMode: "ai" };
+  return { body, analysisMode: "ai" };
 }
+
+async function maybeSaveParentEmail(studentId: string, to: string, save?: boolean) {
+  if (!save) return;
+  await prisma.studentProfile.update({
+    where: { id: studentId },
+    data: { parentEmail: to },
+  });
+}
+
+mailRouter.get(
+  "/mail/status",
+  asyncHandler(async (_req, res) => {
+    res.json({
+      configured: isMailConfigured(),
+      provider: process.env.RESEND_API_KEY?.trim()
+        ? "resend"
+        : process.env.SMTP_HOST?.trim()
+          ? "smtp"
+          : null,
+    });
+  }),
+);
 
 mailRouter.post(
   "/generate-mail",
@@ -105,9 +157,17 @@ mailRouter.post(
     });
     if (!student) throw new ApiError(404, "Student not found.");
 
-    const { email, analysisMode } = await generateEmail(student, teacherSummary);
+    const { body, analysisMode } = await generateEmailBody(student, teacherSummary);
 
-    res.json({ studentId, name: student.name, email, analysisMode });
+    res.json({
+      studentId,
+      name: student.name,
+      parentEmail: student.parentEmail,
+      subject: defaultMailSubject(student.name, student.classManaged),
+      body,
+      email: body,
+      analysisMode,
+    });
   }),
 );
 
@@ -137,6 +197,9 @@ mailRouter.post(
       studentId: string;
       name: string;
       rollNumber: string;
+      parentEmail: string;
+      subject: string;
+      body: string;
       email: string;
     }[] = [];
     let analysisMode: "ai" | "local" = isLlmConfigured() ? "ai" : "local";
@@ -153,13 +216,16 @@ mailRouter.post(
       });
       if (!student || student.classManaged !== body.classManaged) continue;
 
-      const result = await generateEmail(student, body.teacherSummary);
+      const result = await generateEmailBody(student, body.teacherSummary);
       analysisMode = result.analysisMode;
       emails.push({
         studentId: student.id,
         name: student.name,
         rollNumber: student.rollNumber,
-        email: result.email,
+        parentEmail: student.parentEmail,
+        subject: defaultMailSubject(student.name, student.classManaged),
+        body: result.body,
+        email: result.body,
       });
     }
 
@@ -173,6 +239,110 @@ mailRouter.post(
       count: emails.length,
       emails,
       analysisMode,
+    });
+  }),
+);
+
+mailRouter.post(
+  "/send-mail",
+  asyncHandler(async (req, res) => {
+    if (!isMailConfigured()) {
+      throw new ApiError(
+        503,
+        "Email is not configured. Set RESEND_API_KEY or SMTP credentials in .env.",
+        "MAIL_NOT_CONFIGURED",
+      );
+    }
+
+    const payload = sendOneSchema.parse(req.body);
+    const student = await prisma.studentProfile.findUnique({
+      where: { id: payload.studentId },
+    });
+    if (!student) throw new ApiError(404, "Student not found.");
+
+    const sent = await sendEmail({
+      to: payload.to,
+      subject: payload.subject,
+      text: payload.body,
+      replyTo: payload.replyTo,
+    });
+
+    await maybeSaveParentEmail(payload.studentId, payload.to, payload.saveParentEmail ?? true);
+
+    res.json({
+      ok: true,
+      studentId: payload.studentId,
+      to: payload.to,
+      messageId: sent.messageId,
+      provider: sent.provider,
+    });
+  }),
+);
+
+mailRouter.post(
+  "/send-mail/batch",
+  asyncHandler(async (req, res) => {
+    if (!isMailConfigured()) {
+      throw new ApiError(
+        503,
+        "Email is not configured. Set RESEND_API_KEY or SMTP credentials in .env.",
+        "MAIL_NOT_CONFIGURED",
+      );
+    }
+
+    const payload = sendBatchSchema.parse(req.body);
+    const results: {
+      studentId: string;
+      to: string;
+      ok: boolean;
+      messageId?: string;
+      error?: string;
+    }[] = [];
+
+    for (const msg of payload.messages) {
+      const student = await prisma.studentProfile.findUnique({
+        where: { id: msg.studentId },
+      });
+      if (!student || student.classManaged !== payload.classManaged) {
+        results.push({
+          studentId: msg.studentId,
+          to: msg.to,
+          ok: false,
+          error: "Student not found in this class.",
+        });
+        continue;
+      }
+
+      try {
+        const sent = await sendEmail({
+          to: msg.to,
+          subject: msg.subject,
+          text: msg.body,
+          replyTo: payload.replyTo,
+        });
+        await maybeSaveParentEmail(msg.studentId, msg.to, msg.saveParentEmail ?? true);
+        results.push({
+          studentId: msg.studentId,
+          to: msg.to,
+          ok: true,
+          messageId: sent.messageId,
+        });
+      } catch (err) {
+        results.push({
+          studentId: msg.studentId,
+          to: msg.to,
+          ok: false,
+          error: err instanceof Error ? err.message : "Send failed.",
+        });
+      }
+    }
+
+    const sent = results.filter((r) => r.ok).length;
+    res.json({
+      sent,
+      failed: results.length - sent,
+      results,
+      provider: process.env.RESEND_API_KEY?.trim() ? "resend" : "smtp",
     });
   }),
 );

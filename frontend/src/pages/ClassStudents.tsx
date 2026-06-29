@@ -15,6 +15,7 @@ interface EditForm {
   name: string;
   rollNumber: string;
   schoolId: string;
+  parentEmail: string;
 }
 
 function toEditForm(s: StudentRosterEntry): EditForm {
@@ -22,6 +23,7 @@ function toEditForm(s: StudentRosterEntry): EditForm {
     name: s.name,
     rollNumber: s.rollNumber,
     schoolId: s.schoolId,
+    parentEmail: s.parentEmail ?? "",
   };
 }
 
@@ -91,6 +93,7 @@ export function ClassStudents({ classManaged }: { classManaged: string }) {
         name,
         rollNumber,
         schoolId,
+        parentEmail: editForm.parentEmail.trim(),
       });
       setStudents((prev) =>
         prev
@@ -193,6 +196,7 @@ export function ClassStudents({ classManaged }: { classManaged: string }) {
                   <th>Name</th>
                   <th>Roll no.</th>
                   <th>School ID</th>
+                  <th>Parent email</th>
                   <th>Tokens</th>
                   <th aria-label="Actions" />
                 </tr>
@@ -201,7 +205,7 @@ export function ClassStudents({ classManaged }: { classManaged: string }) {
                 {students.map((s) =>
                   editingId === s.id && editForm ? (
                     <tr key={s.id}>
-                      <td colSpan={5}>
+                      <td colSpan={6}>
                         <form
                           onSubmit={saveEdit}
                           style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}
@@ -231,6 +235,14 @@ export function ClassStudents({ classManaged }: { classManaged: string }) {
                             placeholder="School ID"
                             required
                           />
+                          <input
+                            type="email"
+                            value={editForm.parentEmail}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, parentEmail: e.target.value })
+                            }
+                            placeholder="Parent email"
+                          />
                           <button type="submit" className="btn btn-primary btn-sm" disabled={saving}>
                             {saving ? "Saving…" : "Save"}
                           </button>
@@ -250,6 +262,7 @@ export function ClassStudents({ classManaged }: { classManaged: string }) {
                       <td>{s.name}</td>
                       <td>{s.rollNumber}</td>
                       <td>{s.schoolId}</td>
+                      <td className="muted">{s.parentEmail || "—"}</td>
                       <td>{s.totalTokens}</td>
                       <td>
                         <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>

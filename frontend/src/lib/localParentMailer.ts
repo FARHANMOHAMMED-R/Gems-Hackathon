@@ -55,16 +55,24 @@ export function draftBatchMailsLocally(
   teacherSummary: string,
   scope: "all" | "selected",
   selectedIds?: Set<string>,
+  classManaged?: string,
 ) {
   const targets =
     scope === "all"
       ? students
       : students.filter((s) => selectedIds?.has(s.id));
 
-  return targets.map((s) => ({
-    studentId: s.id,
-    name: s.name,
-    rollNumber: s.rollNumber,
-    email: draftParentMailLocally(s, teacherSummary),
-  }));
+  return targets.map((s) => {
+    const body = draftParentMailLocally(s, teacherSummary);
+    const classLabel = classManaged ?? `${s.grade}-${s.section}`;
+    return {
+      studentId: s.id,
+      name: s.name,
+      rollNumber: s.rollNumber,
+      parentEmail: s.parentEmail ?? "",
+      subject: `Class update for ${s.name} — ${classLabel}`,
+      body,
+      email: body,
+    };
+  });
 }

@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
 import { LlmConfigError } from "./llm";
 import { GuruPdfConfigError } from "./gurupdfOcr";
+import { MailConfigError } from "./emailSend";
 
 /** Wrap an async route handler so rejected promises hit the error middleware. */
 export function asyncHandler(
@@ -42,6 +43,9 @@ export function errorMiddleware(
   }
   if (err instanceof GuruPdfConfigError) {
     return res.status(503).json({ error: err.message, code: "GURUPDF_NOT_CONFIGURED" });
+  }
+  if (err instanceof MailConfigError) {
+    return res.status(503).json({ error: err.message, code: "MAIL_NOT_CONFIGURED" });
   }
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === "P2002") {

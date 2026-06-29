@@ -84,7 +84,7 @@ export async function addClassStudent(
 export async function updateClassStudent(
   classManaged: string,
   studentId: string,
-  updates: { name?: string; rollNumber?: string; schoolId?: string },
+  updates: { name?: string; rollNumber?: string; schoolId?: string; parentEmail?: string },
 ): Promise<StudentRosterEntry> {
   try {
     const res = await api.updateStudent(studentId, updates);

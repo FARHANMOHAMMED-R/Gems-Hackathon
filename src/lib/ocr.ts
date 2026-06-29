@@ -7,19 +7,35 @@ function dataUrlToBuffer(dataUrl: string): Buffer {
   return Buffer.from(match[1], "base64");
 }
 
+let workerPromise: ReturnType<typeof Tesseract.createWorker> | null = null;
+
+async function getWorker() {
+  if (!workerPromise) {
+    workerPromise = (async () => {
+      const worker = await Tesseract.createWorker("eng", 1, { logger: () => {} });
+      await worker.setParameters({
+        tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+      });
+      return worker;
+    })();
+  }
+  return workerPromise;
+}
+
 /**
  * Extract text from scanned notebook/exam images using local Tesseract OCR.
- * Used when OPENAI_API_KEY is not set so teachers can still analyze notes.
+ * Uses a reused worker and auto page segmentation for photos & screenshots.
  */
 export async function ocrImages(dataUrls: string[]): Promise<string> {
+  const worker = await getWorker();
   const parts: string[] = [];
+
   for (let i = 0; i < dataUrls.length; i++) {
     const buffer = dataUrlToBuffer(dataUrls[i]);
-    const { data } = await Tesseract.recognize(buffer, "eng", {
-      logger: () => {}, // suppress progress spam
-    });
+    const { data } = await worker.recognize(buffer);
     const text = data.text?.trim();
     if (text) parts.push(text);
   }
+
   return parts.join("\n\n--- page break ---\n\n");
 }

@@ -49,7 +49,15 @@ export interface AnalyzeScanResponse {
   /** `local` = offline notebook analysis without OpenAI */
   analysisMode?: "ai" | "local";
   /** How scanned images were read */
-  ocrMode?: "pasted" | "gurupdf" | "openai" | "tesseract";
+  ocrMode?: "pasted" | "gurupdf" | "openai" | "gemini" | "tesseract";
+}
+
+export interface ScanOcrStatusResponse {
+  openai: boolean;
+  gurupdf: boolean;
+  gemini: boolean;
+  tesseract: boolean;
+  recommended: "ai" | "tesseract";
 }
 
 // --- Exam blueprint ---
@@ -100,6 +108,90 @@ export interface GenerateBlueprintResponse {
   rawScannedText: string;
   analysisMode: "ai" | "local";
   blueprint: ExamBlueprint;
+}
+
+// --- Assessment assigner ---
+export type AssessmentDifficulty = "Easy" | "Medium" | "Hard" | "Mixed";
+
+export interface AssessmentQuestion {
+  number: string;
+  marks: number;
+  topic: string;
+  chapter: string;
+  questionType: string;
+  difficulty: string;
+  questionText: string;
+}
+
+export interface GeneratedAssessment {
+  title: string;
+  grade: string;
+  subject: string;
+  difficulty: string;
+  chapters: string[];
+  topics: string[];
+  totalMarks: number;
+  durationMinutes: number;
+  instructions: string;
+  questions: AssessmentQuestion[];
+  teacherNotes: string;
+}
+
+export interface GenerateAssessmentRequest {
+  classManaged: string;
+  grade: string;
+  subject?: string;
+  chapters: string;
+  topics: string;
+  difficulty: AssessmentDifficulty;
+  questionCount?: number;
+  durationMinutes?: number;
+  additionalNotes?: string;
+}
+
+export interface GenerateAssessmentResponse {
+  assessment: GeneratedAssessment;
+  studentBody: string;
+  emailSubject: string;
+  analysisMode: "ai" | "local";
+}
+
+export interface SendAssessmentRequest {
+  classManaged: string;
+  replyTo?: string;
+  subject: string;
+  body: string;
+  scope?: "all" | "selected";
+  studentIds?: string[];
+}
+
+export interface SendAssessmentResponse {
+  sent: number;
+  failed: number;
+  skipped: number;
+  provider: "resend" | "smtp";
+  results: {
+    studentId: string;
+    name: string;
+    to: string;
+    ok: boolean;
+    messageId?: string;
+    error?: string;
+  }[];
+}
+
+export interface AssessmentRecipientsResponse {
+  classManaged: string;
+  total: number;
+  withEmail: number;
+  withoutEmail: number;
+  students: {
+    id: string;
+    name: string;
+    rollNumber: string;
+    parentEmail: string;
+    canSend: boolean;
+  }[];
 }
 
 // --- Content differentiation ---
@@ -195,6 +287,21 @@ export interface GenerateMailRequest {
 export interface GenerateMailResponse {
   studentId: string;
   name?: string;
+  parentEmail?: string;
+  subject?: string;
+  body?: string;
+  email: string;
+  analysisMode?: "ai" | "local";
+}
+
+export interface MailDraftItem {
+  studentId: string;
+  name: string;
+  rollNumber: string;
+  parentEmail: string;
+  subject: string;
+  body: string;
+  /** @deprecated use body */
   email: string;
 }
 
@@ -210,8 +317,55 @@ export interface GenerateMailBatchResponse {
   scope: "all" | "selected";
   classManaged: string;
   count: number;
-  emails: { studentId: string; name: string; rollNumber: string; email: string }[];
+  emails: MailDraftItem[];
   analysisMode?: "ai" | "local";
+}
+
+export interface SendMailRequest {
+  studentId: string;
+  to: string;
+  subject: string;
+  body: string;
+  replyTo?: string;
+  saveParentEmail?: boolean;
+}
+
+export interface SendMailResponse {
+  ok: boolean;
+  studentId: string;
+  to: string;
+  messageId: string;
+  provider: "resend" | "smtp";
+}
+
+export interface SendMailBatchRequest {
+  classManaged: string;
+  replyTo?: string;
+  messages: {
+    studentId: string;
+    to: string;
+    subject: string;
+    body: string;
+    saveParentEmail?: boolean;
+  }[];
+}
+
+export interface SendMailBatchResponse {
+  sent: number;
+  failed: number;
+  provider: "resend" | "smtp";
+  results: {
+    studentId: string;
+    to: string;
+    ok: boolean;
+    messageId?: string;
+    error?: string;
+  }[];
+}
+
+export interface MailStatusResponse {
+  configured: boolean;
+  provider: "resend" | "smtp" | null;
 }
 
 // --- Teachers ---
@@ -320,6 +474,7 @@ export interface StudentRosterEntry {
   section: string;
   classManaged: string;
   totalTokens: number;
+  parentEmail?: string;
 }
 
 export interface RosterStatusResponse {

@@ -13,6 +13,7 @@ const FEATURES = [
   { id: "labs", icon: "🔬", label: "Lab Booking", blurb: "Reserve labs, avoid clashes" },
   { id: "3dlab", icon: "🧪", label: "3D Lab", blurb: "PhET physics simulations" },
   { id: "chat", icon: "💬", label: "Teacher Chat", blurb: "Message other teachers" },
+  { id: "assessment", icon: "📑", label: "Assessment Assigner", blurb: "AI assessments by topic" },
   { id: "mailer", icon: "✉️", label: "Parent Mailer", blurb: "Draft parent update emails" },
 ] as const;
 

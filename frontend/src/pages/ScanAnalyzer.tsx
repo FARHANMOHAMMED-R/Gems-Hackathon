@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../api/client";
 import { fetchClassStudents } from "../api/classData";
-import type { AnalyzeScanResponse, ScanMode, StudentRosterEntry } from "../api/types";
+import type { AnalyzeScanResponse, ScanMode, ScanOcrStatusResponse, StudentRosterEntry } from "../api/types";
 import { Card, EmptyState, ErrorNote, Field, Spinner } from "../components/ui";
 import { useToast } from "../components/Toast";
 
@@ -33,6 +33,11 @@ export function ScanAnalyzer({ classManaged }: { classManaged: string }) {
   const [result, setResult] = useState<AnalyzeScanResponse | null>(null);
   const [llmDown, setLlmDown] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ocrStatus, setOcrStatus] = useState<ScanOcrStatusResponse | null>(null);
+
+  useEffect(() => {
+    api.getScanOcrStatus().then(setOcrStatus).catch(() => setOcrStatus(null));
+  }, []);
 
   useEffect(() => {
     setLoadingStudents(true);
@@ -126,10 +131,19 @@ export function ScanAnalyzer({ classManaged }: { classManaged: string }) {
           </div>
           {mode === "Notebook" && (
             <span className="field-hint">
-              Upload notebook photos — OCR uses PDF Guru when{" "}
-              <code>GURUPDF_API_KEY</code> is set, otherwise local Tesseract. Scores
-              Handwriting, Creativity & Content (5 each).
+              Upload a clear photo of the notebook page (not a screen screenshot). OCR tries
+              OpenAI → Gemini → PDF Guru → Tesseract automatically.
             </span>
+          )}
+          {ocrStatus && !ocrStatus.openai && !ocrStatus.gemini && !ocrStatus.gurupdf && (
+            <div className="info-note">
+              No AI OCR key detected. Add <code>OPENAI_API_KEY</code> or free{" "}
+              <code>GEMINI_API_KEY</code> ({" "}
+              <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
+                get one here
+              </a>
+              ) to backend <code>.env</code>, then restart the server.
+            </div>
           )}
           {mode === "Exam Paper" && (
             <span className="field-hint">
@@ -242,6 +256,12 @@ export function ScanAnalyzer({ classManaged }: { classManaged: string }) {
         )}
         {result && !loading && (
           <div className="stack">
+            {result.ocrMode === "openai" && (
+              <span className="pill pill-primary">📝 OCR via OpenAI vision</span>
+            )}
+            {result.ocrMode === "gemini" && (
+              <span className="pill pill-primary">📝 OCR via Google Gemini</span>
+            )}
             {result.ocrMode === "gurupdf" && (
               <span className="pill pill-primary">📝 OCR via PDF Guru image-to-text</span>
             )}

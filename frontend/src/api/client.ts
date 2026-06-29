@@ -2,6 +2,7 @@ import { ADMIN_PASSCODE } from "../lib/authSession";
 import type {
   AnalyzeScanRequest,
   AnalyzeScanResponse,
+  ScanOcrStatusResponse,
   GenerateBlueprintRequest,
   GenerateBlueprintResponse,
   AvailabilityResponse,
@@ -14,6 +15,16 @@ import type {
   GenerateMailResponse,
   GenerateMailBatchRequest,
   GenerateMailBatchResponse,
+  SendMailRequest,
+  SendMailResponse,
+  SendMailBatchRequest,
+  SendMailBatchResponse,
+  MailStatusResponse,
+  GenerateAssessmentRequest,
+  GenerateAssessmentResponse,
+  SendAssessmentRequest,
+  SendAssessmentResponse,
+  AssessmentRecipientsResponse,
   HealthResponse,
   LeaderboardResponse,
   ReservationsListResponse,
@@ -71,6 +82,11 @@ export class ApiError extends Error {
   /** True when a lab slot is already taken. */
   get isDoubleBooking(): boolean {
     return this.code === "DOUBLE_BOOKING";
+  }
+
+  /** True when email sending is not configured on the backend. */
+  get isMailNotConfigured(): boolean {
+    return this.code === "MAIL_NOT_CONFIGURED";
   }
 }
 
@@ -165,6 +181,7 @@ export const api = {
       body,
       signal,
     }),
+  getScanOcrStatus: () => request<ScanOcrStatusResponse>("/api/scan/ocr-status"),
 
   generateBlueprint: (body: GenerateBlueprintRequest, signal?: AbortSignal) =>
     request<GenerateBlueprintResponse>("/api/generate-blueprint", {
@@ -234,6 +251,33 @@ export const api = {
       body,
       signal,
     }),
+  getMailStatus: () => request<MailStatusResponse>("/api/mail/status"),
+  sendMail: (body: SendMailRequest, signal?: AbortSignal) =>
+    request<SendMailResponse>("/api/send-mail", { method: "POST", body, signal }),
+  sendMailBatch: (body: SendMailBatchRequest, signal?: AbortSignal) =>
+    request<SendMailBatchResponse>("/api/send-mail/batch", {
+      method: "POST",
+      body,
+      signal,
+    }),
+
+  // Assessment assigner
+  generateAssessment: (body: GenerateAssessmentRequest, signal?: AbortSignal) =>
+    request<GenerateAssessmentResponse>("/api/generate-assessment", {
+      method: "POST",
+      body,
+      signal,
+    }),
+  getAssessmentRecipients: (classManaged: string) =>
+    request<AssessmentRecipientsResponse>(
+      `/api/assessment/recipients?classManaged=${encodeURIComponent(classManaged)}`,
+    ),
+  sendAssessment: (body: SendAssessmentRequest, signal?: AbortSignal) =>
+    request<SendAssessmentResponse>("/api/send-assessment", {
+      method: "POST",
+      body,
+      signal,
+    }),
 
   // Students / roster
   getRosterStatus: (classManaged: string) =>
@@ -261,7 +305,7 @@ export const api = {
     }),
   updateStudent: (
     id: string,
-    body: { name?: string; rollNumber?: string; schoolId?: string },
+    body: { name?: string; rollNumber?: string; schoolId?: string; parentEmail?: string },
   ) =>
     request<StudentMutationResponse>(`/api/students/${encodeURIComponent(id)}`, {
       method: "PATCH",

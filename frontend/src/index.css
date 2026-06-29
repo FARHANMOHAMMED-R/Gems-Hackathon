@@ -1329,6 +1329,61 @@ textarea:focus {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mail-draft-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pill-warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+/* ---- Assessment Assigner ---- */
+.assessment-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.assessment-q {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  background: var(--surface-2);
+}
+
+.assessment-q-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.send-results-list {
+  margin: 8px 0 0;
+  padding-left: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.send-results-list li {
+  padding: 4px 0;
+}
+
+.send-ok {
+  color: var(--success);
+}
+
+.send-fail {
+  color: var(--danger);
 }
 
 /* ---- 3D Lab (PhET simulations) ---- */
