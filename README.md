@@ -5,13 +5,13 @@
 <h1 align="center">Gems Assist</h1>
 
 <p align="center">
-  AI-powered education platform for CBSE teachers — grading, differentiation, labs, parent mail, and a student token economy.
+  AI-powered education platform for CBSE teachers — grading, differentiation, labs, parent mail, performance tracking, and a student token economy.
 </p>
 
 <p align="center">
-  <a href="http://localhost:5173"><strong>Open local app →</strong></a>
+  <a href="https://gems-class-flow.base44.app"><strong>🌐 Open app (any device) →</strong></a>
   &nbsp;·&nbsp;
-  <a href="https://gems-class-flow.base44.app">Live demo</a>
+  <a href="http://localhost:5173">Local dev</a>
   &nbsp;·&nbsp;
   <a href="https://github.com/FARHANMOHAMMED-R/Gems-Hackathon">GitHub</a>
 </p>
@@ -22,16 +22,40 @@
 
 ---
 
+## Universal link — works on any device
+
+Use this URL on **any phone, tablet, or laptop** — no Wi‑Fi setup, no local install, no network password:
+
+| | URL |
+|---|---|
+| **🌐 Open Gems Assist** | [**https://gems-class-flow.base44.app**](https://gems-class-flow.base44.app) |
+
+Bookmark it or share it with your team. It works on school Wi‑Fi, mobile data, or home internet.
+
+> **Note:** The live site runs the frontend. For full AI features (scan OCR, assessments, lecture transcription), run the backend locally or deploy the API and set `VITE_API_BASE` — see [Deploy](#deploy).
+
+---
+
 ## Quick links
 
 | | URL |
 |---|---|
-| **Local website** | [**http://localhost:5173**](http://localhost:5173) |
+| **Universal app (recommended)** | [**https://gems-class-flow.base44.app**](https://gems-class-flow.base44.app) |
+| **GitHub repository** | [github.com/FARHANMOHAMMED-R/Gems-Hackathon](https://github.com/FARHANMOHAMMED-R/Gems-Hackathon) |
+| **Local website** | [http://localhost:5173](http://localhost:5173) |
 | **Local API** | [http://localhost:4000](http://localhost:4000) |
 | **Health check** | [http://localhost:4000/health](http://localhost:4000/health) |
-| **Live demo** | [https://gems-class-flow.base44.app](https://gems-class-flow.base44.app) |
 
-> Start backend + frontend (see [Quick start](#quick-start)), then open **http://localhost:5173** in your browser.
+---
+
+## Clone the repo
+
+```bash
+gh repo clone FARHANMOHAMMED-R/Gems-Hackathon
+# or
+git clone https://github.com/FARHANMOHAMMED-R/Gems-Hackathon.git
+cd Gems-Hackathon
+```
 
 ---
 
@@ -41,15 +65,18 @@ Gems Assist gives teachers one place to run a modern classroom:
 
 | Feature | What you get |
 |---------|----------------|
-| **Class Roster** | Add, edit, import students by roll number & school ID |
-| **Scan Analyzer** | OCR exam papers & notebooks (PDF Guru, OpenAI, or local Tesseract) |
+| **Class Roster** | Add, edit, import students by roll number, school ID & parent email |
+| **Scan Analyzer** | OCR exam papers & notebooks (OpenAI, Gemini, Claude, PDF Guru, Tesseract) |
 | **Blueprint Generator** | Upload a past paper → topic & marks breakdown |
 | **Content Differentiator** | Rewrite lessons for Advanced, Standard, Visual, or Neurodivergent tracks |
 | **Substitution Finder** | See which teachers are free by period |
 | **Lab Booking** | Reserve rooms with double-booking protection |
 | **3D Lab** | 64 embedded PhET physics simulations |
 | **Teacher Chat** | Staff lounge for cross-class messages |
-| **Parent Mailer** | Batch draft compassionate parent update emails |
+| **Lecture Recorder** | Record class audio, pin timestamped notes, AI timeline & summary |
+| **Performance Tracker** | Enter PT1 → Half Yearly → PT2 → Final marks per subject; line graphs per student |
+| **PPT Generator** | AI lesson slides (ChatGPT, Gemini, Claude) or offline template `.pptx` |
+| **Parent Mailer** | Draft & send parent update emails (Resend or SMTP) |
 | **Assessment Assigner** | AI-generated assessments by chapter, topic & difficulty — email to parents |
 | **Token Matrix** | Award points for answering, kindness & peer support |
 | **Admin Dashboard** | Manage labs, broadcast notices, monitor teachers online |
@@ -60,6 +87,20 @@ Gems Assist gives teachers one place to run a modern classroom:
 |------|-----|
 | Teacher | Name, class (e.g. `11-A`), email |
 | Admin | Passcode `farhan` |
+
+---
+
+## AI providers
+
+Configure one or more keys in backend `.env` — the app picks the best available provider:
+
+| Provider | Env variable | Used for |
+|----------|--------------|----------|
+| **ChatGPT** | `OPENAI_API_KEY` | Grading, PPT, mail, assessments, Whisper OCR |
+| **Gemini** | `GEMINI_API_KEY` | Free-tier text, vision OCR, audio transcription |
+| **Claude** | `ANTHROPIC_API_KEY` | Text, vision OCR, summaries |
+
+Set `LLM_DEFAULT_PROVIDER=openai|gemini|claude` when multiple keys are present.
 
 ---
 
@@ -90,7 +131,7 @@ Gems Assist gives teachers one place to run a modern classroom:
 
 ---
 
-## Quick start
+## Quick start (local development)
 
 **Requirements:** Node.js 18+, npm 9+
 
@@ -100,7 +141,7 @@ cd Gems-Hackathon
 
 # Backend
 npm install
-cp .env.example .env          # add OPENAI_API_KEY & GURUPDF_API_KEY for AI features
+cp .env.example .env          # add API keys for AI features (see below)
 npm run prisma:generate
 npm run prisma:push
 npm run seed                  # optional demo data
@@ -114,10 +155,12 @@ cd frontend && npm install && npm run dev   # → http://localhost:5173
 
 Open **http://localhost:5173**, sign in as a teacher, set up your class roster, and explore.
 
-### Share on other devices (same Wi‑Fi)
+### Share on other devices (same Wi‑Fi only)
 
 Vite prints a **Network** URL when the frontend starts, e.g. `http://192.168.1.42:5173`.  
-Other phones and laptops on the same Wi‑Fi can open that link — the dev server proxies `/api` to your machine.
+Other phones and laptops on the **same Wi‑Fi** can open that link — the dev server proxies `/api` to your machine.
+
+For access **outside your Wi‑Fi**, use the universal link: **https://gems-class-flow.base44.app**
 
 ---
 
@@ -127,8 +170,13 @@ Copy [`.env.example`](.env.example) → `.env` at the repo root.
 
 | Variable | Purpose |
 |----------|---------|
-| `OPENAI_API_KEY` | AI grading, differentiation, mail (optional for offline features) |
-| `GURUPDF_API_KEY` | PDF Guru image-to-text OCR for scans ([get key](https://gurupdf.com/api)) |
+| `OPENAI_API_KEY` | ChatGPT — grading, PPT, mail, Whisper speech-to-text |
+| `GEMINI_API_KEY` | Free Gemini — OCR, transcription, PPT ([get key](https://aistudio.google.com/apikey)) |
+| `ANTHROPIC_API_KEY` | Claude — text & vision OCR |
+| `GURUPDF_API_KEY` | PDF Guru image-to-text for scans ([get key](https://gurupdf.com/api)) |
+| `WHISPER_MODEL` | OpenAI Whisper model (default `whisper-1`) |
+| `LLM_DEFAULT_PROVIDER` | Preferred AI when multiple keys set (`openai` \| `gemini` \| `claude`) |
+| `RESEND_API_KEY` / SMTP | Parent Mailer & Assessment email delivery |
 | `PORT` / `HOST` | Backend port (default `4000`) and bind address (`0.0.0.0` for LAN) |
 | `DATABASE_URL` | SQLite path (default `file:./dev.db`) |
 
@@ -146,7 +194,7 @@ Browser  →  React + Vite (:5173)  →  /api proxy  →  Express + Prisma (:400
 |-------|-------|
 | Frontend | React · Vite · TypeScript |
 | Backend | Node · Express · Prisma · SQLite |
-| AI | OpenAI-compatible API · PDF Guru OCR · local Tesseract fallback |
+| AI | OpenAI · Gemini · Claude · PDF Guru OCR · Whisper · local Tesseract fallback |
 
 ---
 
@@ -156,14 +204,22 @@ Browser  →  React + Vite (:5173)  →  /api proxy  →  Express + Prisma (:400
 |--------|------|-------------|
 | `GET` | `/health` | Liveness |
 | `POST` | `/api/analyze-scan` | OCR + grade exam or notebook |
+| `GET` | `/api/scan/ocr-status` | Which OCR backends are configured |
 | `POST` | `/api/generate-blueprint` | Exam topic & marks blueprint |
 | `POST` | `/api/differentiate-content` | Adapt lesson content |
 | `GET` | `/api/substitution/check-free` | Free teachers by period |
 | `POST` | `/api/labs/reserve` | Book a lab slot |
 | `GET` | `/api/labs/availability` | Daily availability grid |
 | `POST` | `/api/generate-mail` | Draft parent email |
+| `POST` | `/api/send-mail` | Send parent email |
 | `POST` | `/api/generate-assessment` | AI assessment from topics & chapters |
 | `POST` | `/api/send-assessment` | Email assessment to all parents |
+| `POST` | `/api/generate-ppt` | AI or template PowerPoint deck |
+| `GET` | `/api/ai/providers` | Configured AI providers |
+| `GET` | `/api/performance` | Term marks for a class & subject |
+| `POST` | `/api/performance/marks` | Save PT1 / Half Yearly / PT2 / Final marks |
+| `POST` | `/api/lecture/process` | Transcribe recording → timeline & summary |
+| `GET` | `/api/lectures` | List saved lectures |
 | `POST` | `/api/tokens/award` | Award student tokens |
 | `GET` | `/api/tokens/leaderboard` | Class leaderboard |
 | `POST` | `/api/teachers/sign-in` | Teacher session |
@@ -186,7 +242,7 @@ Gems-Hackathon/
 ├── prisma/                 # Schema & seed
 ├── src/
 │   ├── index.ts            # Express app
-│   ├── lib/                # LLM, OCR, PDF Guru, helpers
+│   ├── lib/                # LLM, OCR, audio, PPT, helpers
 │   └── routes/             # REST endpoints
 └── frontend/
     ├── src/pages/          # All app screens
@@ -215,7 +271,9 @@ node scripts/capture-readme-screenshots.mjs
 
 ## Deploy
 
-Build the static frontend:
+**Universal frontend (already live):** [https://gems-class-flow.base44.app](https://gems-class-flow.base44.app)
+
+To deploy your own copy:
 
 ```bash
 cd frontend
