@@ -31,6 +31,10 @@ import type {
   PerformanceDataResponse,
   SavePerformanceMarksRequest,
   SavePerformanceMarksResponse,
+  LecturesListResponse,
+  LectureDetail,
+  LectureStatusResponse,
+  ProcessLectureRequest,
   HealthResponse,
   LeaderboardResponse,
   ReservationsListResponse,
@@ -301,6 +305,20 @@ export const api = {
     ),
   savePerformanceMarks: (body: SavePerformanceMarksRequest, signal?: AbortSignal) =>
     request<SavePerformanceMarksResponse>("/api/performance/marks", {
+      method: "POST",
+      body,
+      signal,
+    }),
+
+  // Lecture recorder
+  getLectureStatus: () => request<LectureStatusResponse>("/api/lectures/status"),
+  listLectures: (classManaged: string) =>
+    request<LecturesListResponse>(
+      `/api/lectures?classManaged=${encodeURIComponent(classManaged)}`,
+    ),
+  getLecture: (id: string) => request<LectureDetail>(`/api/lectures/${encodeURIComponent(id)}`),
+  processLecture: (body: ProcessLectureRequest, signal?: AbortSignal) =>
+    request<LectureDetail>("/api/lecture/process", {
       method: "POST",
       body,
       signal,

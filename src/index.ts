@@ -19,6 +19,7 @@ import { adminMonitorRouter } from "./routes/adminMonitor";
 import { assessmentRouter } from "./routes/assessment";
 import { pptRouter, aiRouter } from "./routes/ppt";
 import { performanceRouter } from "./routes/performance";
+import { lectureRouter } from "./routes/lecture";
 
 const app = express();
 
@@ -54,6 +55,7 @@ app.use("/api", assessmentRouter); // 5c. Assessment Assigner
 app.use("/api", pptRouter); // 5d. PPT Generator
 app.use("/api", aiRouter); // AI provider status
 app.use("/api", performanceRouter); // 5e. Performance tracker
+app.use("/api", lectureRouter); // 5f. Lecture recorder
 app.use("/api", tokensRouter); // 5b. Token Matrix
 app.use("/api", teachersRouter); // Teacher sign-in
 app.use("/api", studentsRouter); // Class roster & students

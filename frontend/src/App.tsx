@@ -12,6 +12,7 @@ import { ParentMailer } from "./pages/ParentMailer";
 import { AssessmentAssigner } from "./pages/AssessmentAssigner";
 import { PptGenerator } from "./pages/PptGenerator";
 import { PerformanceTracker } from "./pages/PerformanceTracker";
+import { LectureRecorder } from "./pages/LectureRecorder";
 import { SignIn } from "./pages/SignIn";
 import { ClassRosterSetup } from "./pages/ClassRosterSetup";
 import { ClassStudents } from "./pages/ClassStudents";
@@ -103,6 +104,19 @@ function buildTeacherNav(teacher: TeacherSession): NavItem[] {
       icon: "💬",
       blurb: "Message other teachers",
       render: () => <TeacherChat teacher={teacher} />,
+    },
+    {
+      id: "lecture",
+      label: "Lecture Recorder",
+      icon: "🎙",
+      blurb: "Record, note & AI timeline",
+      render: () => (
+        <LectureRecorder
+          classManaged={classManaged}
+          teacherEmail={teacher.email}
+          teacherName={teacher.name}
+        />
+      ),
     },
     {
       id: "performance",

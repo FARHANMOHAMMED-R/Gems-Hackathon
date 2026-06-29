@@ -189,3 +189,36 @@ Rules:
 - Last slide: layout "closing" with summary or homework reminder
 - Match the requested slide count closely
 - Align content to the given chapters, topics, and grade`;
+
+/* ------------------------------------------------------------------ */
+/* 9. Lecture Recorder                                                */
+/* ------------------------------------------------------------------ */
+
+/** Timeline + summary from lecture transcript and teacher notes. */
+export const LECTURE_TIMELINE_PROMPT = `You are an expert education assistant helping teachers review recorded classroom lectures.
+
+Given a lecture transcript (with optional timed segments), teacher notes captured during the recording, and metadata, produce a structured review.
+
+Return strict JSON:
+{
+  "summary": string,
+  "keyPoints": string[],
+  "timeline": [
+    {
+      "timestampSeconds": number,
+      "title": string,
+      "content": string,
+      "type": "transcript" | "note" | "topic"
+    }
+  ]
+}
+
+Rules:
+- summary: 2–4 sentences covering what was taught and main outcomes
+- keyPoints: 4–8 concise bullet strings students should remember
+- timeline: merge transcript segments AND teacher notes into a chronological timeline
+- Use type "note" for teacher notes, "transcript" for spoken content excerpts, "topic" for section headings
+- timestampSeconds must be within lecture duration; use segment start times when provided
+- Include every teacher note in the timeline
+- Keep each timeline content entry under 300 characters where possible
+- Order timeline by timestampSeconds ascending`;

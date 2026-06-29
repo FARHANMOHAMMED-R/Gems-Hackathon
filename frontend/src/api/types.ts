@@ -281,6 +281,67 @@ export interface SavePerformanceMarksResponse {
   classManaged: string;
 }
 
+// --- Lecture recorder ---
+export interface LectureNote {
+  timestampSeconds: number;
+  text: string;
+}
+
+export type LectureTimelineType = "transcript" | "note" | "topic";
+
+export interface LectureTimelineEntry {
+  timestampSeconds: number;
+  timestampLabel: string;
+  title: string;
+  content: string;
+  type: LectureTimelineType;
+}
+
+export interface LectureSummary {
+  id: string;
+  title: string;
+  subject: string;
+  durationSeconds: number;
+  summary: string;
+  analysisMode: "ai" | "local";
+  createdAt: string;
+}
+
+export interface LectureDetail extends LectureSummary {
+  classManaged: string;
+  teacherEmail: string;
+  teacherName: string;
+  transcript: string;
+  keyPoints: string[];
+  timeline: LectureTimelineEntry[];
+  notes: LectureNote[];
+  transcriptionProvider?: string;
+  aiProvider?: string;
+}
+
+export interface LecturesListResponse {
+  classManaged: string;
+  lectures: LectureSummary[];
+}
+
+export interface LectureStatusResponse {
+  transcription: boolean;
+  ai: boolean;
+}
+
+export interface ProcessLectureRequest {
+  classManaged: string;
+  teacherEmail?: string;
+  teacherName?: string;
+  title: string;
+  subject?: string;
+  durationSeconds: number;
+  audioBase64: string;
+  audioMimeType: string;
+  notes: LectureNote[];
+  provider?: AiProvider;
+}
+
 // --- Content differentiation ---
 export type DifferentiationTarget =
   | "Advanced"

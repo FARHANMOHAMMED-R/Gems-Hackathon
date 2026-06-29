@@ -85,6 +85,32 @@ model PerformanceMark {
   @@map("performance_marks")
 }
 
+/// Recorded classroom lecture with transcript, timeline, and AI summary.
+model LectureRecording {
+  id              String   @id @default(cuid())
+  classManaged    String   @map("class_managed")
+  teacherEmail    String   @default("") @map("teacher_email")
+  teacherName     String   @default("") @map("teacher_name")
+  title           String
+  subject         String   @default("")
+  durationSeconds Int      @default(0) @map("duration_seconds")
+  transcript      String   @default("")
+  summary         String   @default("")
+  /// JSON string array of key points
+  keyPoints       String   @default("[]") @map("key_points")
+  /// JSON array of timeline entries
+  timeline        String   @default("[]")
+  /// JSON array of teacher notes captured during recording
+  notes           String   @default("[]")
+  /// "ai" | "local"
+  analysisMode    String   @default("local") @map("analysis_mode")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([classManaged, createdAt])
+  @@map("lecture_recordings")
+}
+
 /// A bookable lab room slot. Uniqueness on (room, date, period) is the
 /// hard guarantee that powers double-booking prevention.
 model LabReservation {
