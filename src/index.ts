@@ -1,4 +1,6 @@
 import "dotenv/config";
+import path from "path";
+import { existsSync } from "fs";
 import express from "express";
 import cors from "cors";
 
@@ -23,6 +25,21 @@ import { lectureRouter } from "./routes/lecture";
 
 const app = express();
 
+function resolveFrontendDist(): string | null {
+  const dist = path.resolve(process.cwd(), "frontend/dist");
+  return existsSync(path.join(dist, "index.html")) ? dist : null;
+}
+
+const serveWebsite = process.env.SERVE_FRONTEND === "true";
+const frontendDist = serveWebsite ? resolveFrontendDist() : null;
+
+if (serveWebsite && !frontendDist) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    "SERVE_FRONTEND=true but frontend/dist not found. Run: cd frontend && npm run build",
+  );
+}
+
 app.use(cors());
 // Scanned image/PDF payloads are base64 and can be large — raise the limit.
 app.use(express.json({ limit: "25mb" }));
@@ -30,19 +47,21 @@ app.use(express.json({ limit: "25mb" }));
 // Liveness probe.
 app.get("/health", (_req, res) => res.json({ ok: true, service: "gems-assist" }));
 
-// Root — this server is the API only; the website runs on the frontend.
-app.get("/", (_req, res) => {
-  res.json({
-    service: "gems-assist-api",
-    message: "This is the backend API. Open the website instead.",
-    website: {
-      local: "http://localhost:5173",
-      live: "https://gems-class-flow.base44.app",
-    },
-    health: "/health",
-    docs: "https://github.com/FARHANMOHAMMED-R/Gems-Hackathon#api-reference",
+// API info root — only when not serving the React website from this process.
+if (!frontendDist) {
+  app.get("/", (_req, res) => {
+    res.json({
+      service: "gems-assist-api",
+      message: "This is the backend API. Open the website instead.",
+      website: {
+        local: "http://localhost:5173",
+        live: "https://gems-class-flow.base44.app",
+      },
+      health: "/health",
+      docs: "https://github.com/FARHANMOHAMMED-R/Gems-Hackathon#api-reference",
+    });
   });
-});
+}
 
 // --- Functional domains ---
 app.use("/api", analyzeScanRouter); // 2. Document Vision & Notebook Analyzer
@@ -63,6 +82,15 @@ app.use("/api", teacherChatRouter); // Teacher staff chat
 app.use("/api", notificationsRouter); // Admin → teacher notifications
 app.use("/api", adminMonitorRouter); // Admin monitoring dashboard
 
+// Serve built React app (website + API on one port, e.g. :5173).
+if (frontendDist) {
+  app.use(express.static(frontendDist));
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api") || req.path === "/health") return next();
+    res.sendFile(path.join(frontendDist, "index.html"));
+  });
+}
+
 // 404 fallback for unknown routes.
 app.use((_req, res) => res.status(404).json({ error: "Not found" }));
 
@@ -74,11 +102,22 @@ const HOST = process.env.HOST || "0.0.0.0";
 
 app.listen(PORT, HOST, () => {
   const lan = getLanIPv4();
-  // eslint-disable-next-line no-console
-  console.log(`Gems Assist backend listening on http://localhost:${PORT}`);
-  if (lan) {
+  if (frontendDist) {
     // eslint-disable-next-line no-console
-    console.log(`  Network:  http://${lan}:${PORT}`);
+    console.log(`Gems Assist website + API → http://localhost:${PORT}`);
+    if (lan) {
+      // eslint-disable-next-line no-console
+      console.log(`  Network (same Wi‑Fi): http://${lan}:${PORT}`);
+    }
+    // eslint-disable-next-line no-console
+    console.log(`  Public internet: npm run share (in another terminal)`);
+  } else {
+    // eslint-disable-next-line no-console
+    console.log(`Gems Assist backend listening on http://localhost:${PORT}`);
+    if (lan) {
+      // eslint-disable-next-line no-console
+      console.log(`  Network:  http://${lan}:${PORT}`);
+    }
   }
 });
 

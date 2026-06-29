@@ -185,7 +185,7 @@ export function ClassStudents({ classManaged }: { classManaged: string }) {
         {!loading && error && <ErrorNote>{error}</ErrorNote>}
 
         {!loading && !error && students.length === 0 && (
-          <EmptyState icon="👥" title="No students yet" message="Add students below to get started." />
+          <EmptyState icon="👥" title="No students yet" hint="Add students below to get started." />
         )}
 
         {!loading && students.length > 0 && (

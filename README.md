@@ -160,6 +160,26 @@ cd frontend && npm install && npm run dev   # → http://localhost:5173
 
 Open **http://localhost:5173**, sign in as a teacher, set up your class roster, and explore.
 
+### Run as one accessible site on :5173 (recommended)
+
+Builds the frontend and serves **website + API together** on port **5173**:
+
+```bash
+npm run site
+# → http://localhost:5173  (also http://YOUR-LAN-IP:5173 on same Wi‑Fi)
+```
+
+**Share on the public internet** (any network):
+
+```bash
+# Terminal 1
+npm run site
+
+# Terminal 2
+npm run share
+# Prints a public https:// link — open on any phone or laptop
+```
+
 ### Share on other devices (same Wi‑Fi only)
 
 Vite prints a **Network** URL when the frontend starts, e.g. `http://192.168.1.42:5173`.  
@@ -261,6 +281,8 @@ Gems-Hackathon/
 
 | Location | Command | Description |
 |----------|---------|-------------|
+| Root | `npm run site` | Build + run full app at **http://localhost:5173** |
+| Root | `npm run share` | Public tunnel to :5173 (run `site` first) |
 | Root | `npm run dev` | Backend with hot reload |
 | Root | `npm run seed` | Load demo students & labs |
 | `frontend/` | `npm run dev` | Website at **http://localhost:5173** |

@@ -3,17 +3,21 @@
   "version": "1.0.0",
   "description": "Backend for the Gems Assist education platform: AI grading, content differentiation, smart substitution, lab booking, parent mailer and token economy.",
   "license": "MIT",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "dev": "prisma generate && tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
+    "start": "node dist/src/index.js",
     "typecheck": "tsc --noEmit",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:push": "prisma db push",
     "seed": "tsx prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "build:all": "npm run build && npm run build --prefix frontend",
+    "start:site": "SERVE_FRONTEND=true PORT=5173 HOST=0.0.0.0 node dist/src/index.js",
+    "site": "npm run build:all && npm run start:site",
+    "share": "node scripts/share-dev.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
