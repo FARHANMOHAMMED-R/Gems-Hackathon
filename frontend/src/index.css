@@ -2059,6 +2059,32 @@ textarea:focus {
   margin-bottom: 4px;
 }
 
+.ppt-ai-setup {
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
+.ppt-ai-setup summary {
+  cursor: pointer;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.ppt-ai-setup summary:hover {
+  color: var(--primary);
+}
+
+.ppt-ai-setup p {
+  margin: 8px 0 0;
+}
+
+.info-note.subtle {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
 /* ---- Performance tracker ---- */
 .perf-tracker-layout .perf-marks-table-wrap {
   overflow-x: auto;

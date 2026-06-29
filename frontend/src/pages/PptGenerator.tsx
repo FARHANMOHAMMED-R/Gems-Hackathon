@@ -108,24 +108,15 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
 
   return (
     <div className="grid grid-2">
-      <Card title="PPT Generator" subtitle={`AI lesson slides for Grade ${grade} (${classManaged})`}>
-        {useTemplate ? (
-          <div className="info-note">
-            <strong>Template mode</strong> — no AI key in backend <code>.env</code>, so slides use
-            your topic & chapters as a structured outline. Still downloads a real{" "}
-            <code>.pptx</code>.
-            <br />
-            <br />
-            For AI-written slides, add a free key:
-            <br />
-            <code>GEMINI_API_KEY</code> at{" "}
-            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
-              Google AI Studio
-            </a>
-            , or <code>OPENAI_API_KEY</code> / <code>ANTHROPIC_API_KEY</code> — then restart the
-            backend.
-          </div>
-        ) : (
+      <Card
+        title="PPT Generator"
+        subtitle={
+          useTemplate
+            ? `Lesson slides for Grade ${grade} (${classManaged})`
+            : `AI lesson slides for Grade ${grade} (${classManaged})`
+        }
+      >
+        {!useTemplate && (
           <div className="field">
             <span className="field-label">AI provider</span>
             <div className="chip-group">
@@ -145,9 +136,17 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
         )}
 
         {useTemplate && (
-          <span className="pill pill-primary" style={{ marginBottom: 12, display: "inline-block" }}>
-            📋 Template mode (offline)
-          </span>
+          <details className="ppt-ai-setup">
+            <summary>Enable AI-written slides (optional)</summary>
+            <p className="muted">
+              Add <code>GEMINI_API_KEY</code> from{" "}
+              <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
+                Google AI Studio
+              </a>
+              , or <code>OPENAI_API_KEY</code> / <code>ANTHROPIC_API_KEY</code> to backend{" "}
+              <code>.env</code>, then restart the server.
+            </p>
+          </details>
         )}
 
         <Field label="Subject">
@@ -199,11 +198,7 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
         </Field>
 
         <button className="btn btn-primary btn-block" onClick={generate} disabled={loading}>
-          {loading
-            ? "Generating slides…"
-            : useTemplate
-              ? "Generate template PowerPoint"
-              : "Generate PowerPoint"}
+          {loading ? "Generating slides…" : "Generate PowerPoint"}
         </button>
       </Card>
 
@@ -227,7 +222,7 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
         {result && !loading && (
           <div className="stack" style={{ gap: 16 }}>
             {result.analysisMode === "local" && (
-              <div className="info-note">Template deck — add an AI key for custom slides.</div>
+              <div className="info-note subtle">Outline deck from your topic & chapters.</div>
             )}
             {result.analysisMode === "ai" && (
               <span className="pill pill-primary">
