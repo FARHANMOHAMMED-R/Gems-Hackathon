@@ -28,6 +28,9 @@ import type {
   AiProvidersResponse,
   GeneratePptRequest,
   PptGenerateResponse,
+  PerformanceDataResponse,
+  SavePerformanceMarksRequest,
+  SavePerformanceMarksResponse,
   HealthResponse,
   LeaderboardResponse,
   ReservationsListResponse,
@@ -286,6 +289,18 @@ export const api = {
   getAiProviders: () => request<AiProvidersResponse>("/api/ai/providers"),
   generatePpt: (body: GeneratePptRequest, signal?: AbortSignal) =>
     request<PptGenerateResponse>("/api/generate-ppt", {
+      method: "POST",
+      body,
+      signal,
+    }),
+
+  // Performance tracker
+  getPerformance: (classManaged: string, subject: string) =>
+    request<PerformanceDataResponse>(
+      `/api/performance?classManaged=${encodeURIComponent(classManaged)}&subject=${encodeURIComponent(subject)}`,
+    ),
+  savePerformanceMarks: (body: SavePerformanceMarksRequest, signal?: AbortSignal) =>
+    request<SavePerformanceMarksResponse>("/api/performance/marks", {
       method: "POST",
       body,
       signal,

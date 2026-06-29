@@ -11,6 +11,7 @@ import { ThreeDLab } from "./pages/ThreeDLab";
 import { ParentMailer } from "./pages/ParentMailer";
 import { AssessmentAssigner } from "./pages/AssessmentAssigner";
 import { PptGenerator } from "./pages/PptGenerator";
+import { PerformanceTracker } from "./pages/PerformanceTracker";
 import { SignIn } from "./pages/SignIn";
 import { ClassRosterSetup } from "./pages/ClassRosterSetup";
 import { ClassStudents } from "./pages/ClassStudents";
@@ -102,6 +103,13 @@ function buildTeacherNav(teacher: TeacherSession): NavItem[] {
       icon: "💬",
       blurb: "Message other teachers",
       render: () => <TeacherChat teacher={teacher} />,
+    },
+    {
+      id: "performance",
+      label: "Performance Tracker",
+      icon: "📈",
+      blurb: "PT1 → Final marks & line graphs",
+      render: () => <PerformanceTracker classManaged={classManaged} />,
     },
     {
       id: "ppt",

@@ -2058,3 +2058,67 @@ textarea:focus {
 .ppt-preview-bullets li {
   margin-bottom: 4px;
 }
+
+/* ---- Performance tracker ---- */
+.perf-tracker-layout .perf-marks-table-wrap {
+  overflow-x: auto;
+  margin: 12px 0 16px;
+}
+
+.perf-marks-table th,
+.perf-marks-table td {
+  white-space: nowrap;
+}
+
+.perf-mark-input {
+  width: 64px;
+  padding: 6px 8px;
+  text-align: center;
+}
+
+.perf-chart-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.perf-chart-svg {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.perf-chart-grid {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+.perf-chart-axis-label {
+  fill: var(--text-muted);
+  font-size: 11px;
+}
+
+.perf-chart-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  font-size: 13px;
+}
+
+.perf-chart-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.perf-legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}

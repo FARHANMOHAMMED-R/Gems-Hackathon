@@ -248,6 +248,39 @@ export interface PptGenerateResponse {
   slideCount: number;
 }
 
+// --- Performance tracker ---
+export type ExamPeriod = "PT1" | "Half Yearly" | "PT2" | "Final";
+
+export interface PerformanceStudentRow {
+  id: string;
+  name: string;
+  rollNumber: string;
+  marks: Record<ExamPeriod, number | null>;
+}
+
+export interface PerformanceDataResponse {
+  classManaged: string;
+  subject: string;
+  academicYear: string;
+  maxMarks: number;
+  examPeriods: ExamPeriod[];
+  students: PerformanceStudentRow[];
+}
+
+export interface SavePerformanceMarksRequest {
+  classManaged: string;
+  subject: string;
+  maxMarks: number;
+  academicYear?: string;
+  entries: { studentId: string; examPeriod: ExamPeriod; marks: number }[];
+}
+
+export interface SavePerformanceMarksResponse {
+  saved: number;
+  subject: string;
+  classManaged: string;
+}
+
 // --- Content differentiation ---
 export type DifferentiationTarget =
   | "Advanced"
