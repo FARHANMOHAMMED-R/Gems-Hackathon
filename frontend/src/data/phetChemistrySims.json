@@ -1,0 +1,308 @@
+[
+  {
+    "id": "acid-base-solutions",
+    "name": "Acid-Base Solutions",
+    "description": "How do strong and weak acids differ? Use lab tools on your computer to find out! Dip the paper or the probe into solution to measure the pH, or put in the electrodes to measure the conductivity. Then see how concentratio",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/acid-base-solutions/latest/acid-base-solutions_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/acid-base-solutions"
+  },
+  {
+    "id": "atomic-interactions",
+    "name": "Atomic Interactions",
+    "description": "Explore the interactions between various combinations of two atoms. Observe the total force acting on the atoms or the individual attractive and repulsive forces. Customize the attraction to see how changing the atomic d",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/atomic-interactions/latest/atomic-interactions_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/atomic-interactions"
+  },
+  {
+    "id": "balancing-chemical-equations",
+    "name": "Balancing Chemical Equations",
+    "description": "How do you know if a chemical equation is balanced? What can you change to balance an equation? Play a game to test your ideas!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/balancing-chemical-equations/latest/balancing-chemical-equations_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/balancing-chemical-equations"
+  },
+  {
+    "id": "balloons-and-static-electricity",
+    "name": "Balloons and Static Electricity",
+    "description": "Grab a balloon to explore concepts of static electricity such as charge transfer, attraction, repulsion, and induced charge.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/balloons-and-static-electricity/latest/balloons-and-static-electricity_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/balloons-and-static-electricity"
+  },
+  {
+    "id": "beers-law-lab",
+    "name": "Beer's Law Lab",
+    "description": "“The thicker the glass, the darker the brew, the less the light that passes through.” Make colorful concentrated and dilute solutions and explore how much light they absorb and transmit using a virtual spectrophotometer!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/beers-law-lab/latest/beers-law-lab_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/beers-law-lab"
+  },
+  {
+    "id": "blackbody-spectrum",
+    "name": "Blackbody Spectrum",
+    "description": "How does the blackbody spectrum of the sun compare to visible light? Learn about the blackbody spectrum of Sirius A, the sun, a light bulb, and the earth. Adjust the temperature to see the wavelength and intensity of the",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/blackbody-spectrum/latest/blackbody-spectrum_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/blackbody-spectrum"
+  },
+  {
+    "id": "build-a-molecule",
+    "name": "Build a Molecule",
+    "description": "Starting from atoms, see how many molecules you can build. Collect your molecules and view them in 3D!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/build-a-molecule/latest/build-a-molecule_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/build-a-molecule"
+  },
+  {
+    "id": "build-a-nucleus",
+    "name": "Build a Nucleus",
+    "description": "How does changing the number of neutrons or protons affect the nuclear species, the stability of a nucleus, and its possible decay mechanisms? Explore different species, and learn about the common decay paths! Visualize ",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/build-a-nucleus/latest/build-a-nucleus_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/build-a-nucleus"
+  },
+  {
+    "id": "build-an-atom",
+    "name": "Build an Atom",
+    "description": "Build an atom out of protons, neutrons, and electrons, and see how the element, charge, and mass change. Then play a game to test your ideas!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/build-an-atom/latest/build-an-atom_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/build-an-atom"
+  },
+  {
+    "id": "concentration",
+    "name": "Concentration",
+    "description": "Watch your solution change color as you mix chemicals with water. Then check molarity with the concentration meter. What are all the ways you can change the concentration of your solution? Switch solutes to compare diffe",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/concentration/latest/concentration_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/concentration"
+  },
+  {
+    "id": "coulombs-law",
+    "name": "Coulomb's Law",
+    "description": "Visualize the electrostatic force that two charges exert on each other. Observe how changing the sign and magnitude of the charges and the distance between them affects the electrostatic force.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/coulombs-law/latest/coulombs-law_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/coulombs-law"
+  },
+  {
+    "id": "density",
+    "name": "Density",
+    "description": "Why do some materials like wood float in water, and others don’t? Interact with blocks of different materials, including a custom option by modifying their mass and volume, to explore the effect on the density and discov",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/density/latest/density_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/density"
+  },
+  {
+    "id": "diffusion",
+    "name": "Diffusion",
+    "description": "Mix two gases to explore diffusion! Experiment with concentration, temperature, mass, and radius and determine how these factors affect the rate of diffusion.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/diffusion/latest/diffusion_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/diffusion"
+  },
+  {
+    "id": "energy-forms-and-changes",
+    "name": "Energy Forms and Changes",
+    "description": "Explore how heating and cooling iron, brick, water, and olive oil adds or removes energy. See how energy is transferred between objects. Build your own system, with energy sources, changers, and users. Track and visualiz",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/energy-forms-and-changes/latest/energy-forms-and-changes_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/energy-forms-and-changes"
+  },
+  {
+    "id": "fourier-making-waves",
+    "name": "Fourier: Making Waves",
+    "description": "Add up sines or cosines to make waves of different shapes. Discover how changing the amplitudes of different harmonics changes the sound you hear. Play the Wave Game and combine harmonics to match a target waveform. Cons",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/fourier-making-waves/latest/fourier-making-waves_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/fourier-making-waves"
+  },
+  {
+    "id": "gas-properties",
+    "name": "Gas Properties",
+    "description": "Pump gas molecules to a box and see what happens as you change the volume, add or remove heat, and more. Measure the temperature and pressure, and discover how the properties of the gas vary in relation to each other. Ex",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/gas-properties/latest/gas-properties_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/gas-properties"
+  },
+  {
+    "id": "gases-intro",
+    "name": "Gases Intro",
+    "description": "Pump gas molecules to a box and see what happens as you change the volume, add or remove heat, and more. Measure the temperature and pressure, and discover how the properties of the gas vary in relation to each other.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/gases-intro/latest/gases-intro_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/gases-intro"
+  },
+  {
+    "id": "isotopes-and-atomic-mass",
+    "name": "Isotopes and Atomic Mass",
+    "description": "Are all atoms of an element the same? How can you tell one isotope from another? Use the sim to learn about isotopes and how abundance relates to the average atomic mass of an element.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/isotopes-and-atomic-mass/latest/isotopes-and-atomic-mass_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/isotopes-and-atomic-mass"
+  },
+  {
+    "id": "membrane-transport",
+    "name": "Membrane Transport",
+    "description": "Add different biological solutes to either side of a cell membrane and observe their behavior based on solute properties and concentrations. Add transport proteins and uncover some of the common mechanisms for transporti",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/membrane-transport/latest/membrane-transport_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/membrane-transport"
+  },
+  {
+    "id": "models-of-the-hydrogen-atom",
+    "name": "Models of the Hydrogen Atom",
+    "description": "This simulation is designed for undergraduate level students who are studying atomic structure. The simulation could also be used by high school students in advanced level physical science courses.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/models-of-the-hydrogen-atom/latest/models-of-the-hydrogen-atom_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/models-of-the-hydrogen-atom"
+  },
+  {
+    "id": "molarity",
+    "name": "Molarity",
+    "description": "What determines the concentration of a solution? Learn about the relationships between moles, liters, and molarity by adjusting the amount of solute and solution volume. Change solutes to compare different chemical compo",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/molarity/latest/molarity_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/molarity"
+  },
+  {
+    "id": "molecule-polarity",
+    "name": "Molecule Polarity",
+    "description": "When is a molecule polar? Change the electronegativity of atoms in a molecule to see how it affects polarity. See how the molecule behaves in an electric field. Change the bond angle to see how shape affects polarity.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/molecule-polarity/latest/molecule-polarity_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/molecule-polarity"
+  },
+  {
+    "id": "molecule-shapes",
+    "name": "Molecule Shapes",
+    "description": "Explore molecule shapes by building molecules in 3D! How does molecule shape change with different numbers of bonds and electron pairs? Find out by adding single, double or triple bonds and lone pairs to the central atom",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/molecule-shapes/latest/molecule-shapes_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/molecule-shapes"
+  },
+  {
+    "id": "molecule-shapes-basics",
+    "name": "Molecule Shapes: Basics",
+    "description": "Explore molecule shapes by building molecules in 3D! Find out how a molecule's shape changes as you add atoms to a molecule.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/molecule-shapes-basics/latest/molecule-shapes-basics_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/molecule-shapes-basics"
+  },
+  {
+    "id": "molecules-and-light",
+    "name": "Molecules and Light",
+    "description": "Turn light source on to explore. Observe what happens in the observation window as you set up different combinations of light source and molecule. Note this simulation is the first to support our pan and zoom feature, so",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/molecules-and-light/latest/molecules-and-light_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/molecules-and-light"
+  },
+  {
+    "id": "ph-scale",
+    "name": "pH Scale",
+    "description": "Test the pH of things like coffee, spit, and soap to determine whether each is acidic, basic, or neutral. Visualize the relative number of hydroxide ions and hydronium ions in solution. Switch between logarithmic and lin",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/ph-scale/latest/ph-scale_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/ph-scale"
+  },
+  {
+    "id": "ph-scale-basics",
+    "name": "pH Scale: Basics",
+    "description": "Test the pH of everyday liquids such as coffee, spit, and soap to determine whether each is acidic, basic, or neutral. Investigate how adding more of a liquid or diluting with water affects pH.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/ph-scale-basics/latest/ph-scale-basics_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/ph-scale-basics"
+  },
+  {
+    "id": "quantum-coin-toss",
+    "name": "Quantum Coin Toss",
+    "description": "Compare the similarities and differences between classical biased coins and quantum \"coins\" that can be prepared in a superposition of states!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/quantum-coin-toss/latest/quantum-coin-toss_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/quantum-coin-toss"
+  },
+  {
+    "id": "quantum-measurement",
+    "name": "Quantum Measurement",
+    "description": "Explore 2-level quantum systems and the results of measuring quantum states. Discover the similarities and differences between how a flip of a classical biased coin compares to observations of a quantum \"coin\". Discover ",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/quantum-measurement/latest/quantum-measurement_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/quantum-measurement"
+  },
+  {
+    "id": "reactants-products-and-leftovers",
+    "name": "Reactants, Products and Leftovers",
+    "description": "Create your own sandwich and then see how many sandwiches you can make with different amounts of ingredients. Do the same with chemical reactions. See how many products you can make with different amounts of reactants. P",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/reactants-products-and-leftovers/latest/reactants-products-and-leftovers_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/reactants-products-and-leftovers"
+  },
+  {
+    "id": "rutherford-scattering",
+    "name": "Rutherford Scattering",
+    "description": "How did Rutherford figure out the structure of the atom without being able to see it? Simulate the famous experiment in which he disproved the Plum Pudding model of the atom by observing alpha particles bouncing off atom",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/rutherford-scattering/latest/rutherford-scattering_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/rutherford-scattering"
+  },
+  {
+    "id": "states-of-matter",
+    "name": "States of Matter",
+    "description": "Watch different types of molecules form a solid, liquid, or gas. Add or remove heat and watch the phase change. Change the temperature or volume of a container and see a pressure-temperature diagram respond in real time.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/states-of-matter/latest/states-of-matter_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/states-of-matter"
+  },
+  {
+    "id": "states-of-matter-basics",
+    "name": "States of Matter: Basics",
+    "description": "Heat, cool and compress atoms and molecules and watch as they change between solid, liquid and gas phases.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/states-of-matter-basics/latest/states-of-matter-basics_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/states-of-matter-basics"
+  },
+  {
+    "id": "wave-on-a-string",
+    "name": "Wave on a String",
+    "description": "Explore the wonderful world of waves! Even observe a string vibrate in slow motion. Wiggle the end of the string and make waves, or adjust the frequency and amplitude of an oscillator.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/wave-on-a-string/latest/wave-on-a-string_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/wave-on-a-string"
+  }
+]

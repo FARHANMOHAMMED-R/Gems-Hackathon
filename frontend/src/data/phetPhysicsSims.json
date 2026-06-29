@@ -47,7 +47,7 @@
   {
     "id": "build-a-nucleus",
     "name": "Build a Nucleus",
-    "description": "How does changing the number of neutrons or protons affect the nuclear species, the stability of a nucleus, and its possible decay mechanisms?  Explore different species, and learn about the common decay paths! Visualize",
+    "description": "How does changing the number of neutrons or protons affect the nuclear species, the stability of a nucleus, and its possible decay mechanisms? Explore different species, and learn about the common decay paths! Visualize ",
     "topic": "general",
     "topics": [],
     "runUrl": "https://phet.colorado.edu/sims/html/build-a-nucleus/latest/build-a-nucleus_en.html",
@@ -74,7 +74,7 @@
   {
     "id": "buoyancy-basics",
     "name": "Buoyancy: Basics",
-    "description": "When will objects float, and when will they sink? Learn how buoyancy works by experimenting with different blocks, modifying their volume and mass, and placing them in the pool with fluids of different densities.  Analyz",
+    "description": "When will objects float, and when will they sink? Learn how buoyancy works by experimenting with different blocks, modifying their volume and mass, and placing them in the pool with fluids of different densities. Analyze",
     "topic": "general",
     "topics": [],
     "runUrl": "https://phet.colorado.edu/sims/html/buoyancy-basics/latest/buoyancy-basics_en.html",
@@ -111,10 +111,8 @@
     "id": "circuit-construction-kit-ac",
     "name": "Circuit Construction Kit: AC",
     "description": "Experiment with an electronics kit! Build circuits with batteries, resistors, ideal and non-Ohmic light bulbs, fuses, and switches. Build circuits with AC voltage sources, batteries, resistors, capacitors, inductors, fus",
-    "topic": "electricity-magnets-and-circuits",
-    "topics": [
-      "electricity-magnets-and-circuits"
-    ],
+    "topic": "general",
+    "topics": [],
     "runUrl": "https://phet.colorado.edu/sims/html/circuit-construction-kit-ac/latest/circuit-construction-kit-ac_en.html",
     "pageUrl": "https://phet.colorado.edu/en/simulations/circuit-construction-kit-ac"
   },
@@ -122,10 +120,8 @@
     "id": "circuit-construction-kit-ac-virtual-lab",
     "name": "Circuit Construction Kit: AC - Virtual Lab",
     "description": "Do you like Circuit Construction Kit: AC, but want to use only in-line ammeters? This is the sim for you! Experiment with an electronics kit. Build circuits with AC voltage sources, batteries, resistors, capacitors, indu",
-    "topic": "electricity-magnets-and-circuits",
-    "topics": [
-      "electricity-magnets-and-circuits"
-    ],
+    "topic": "general",
+    "topics": [],
     "runUrl": "https://phet.colorado.edu/sims/html/circuit-construction-kit-ac-virtual-lab/latest/circuit-construction-kit-ac-virtual-lab_en.html",
     "pageUrl": "https://phet.colorado.edu/en/simulations/circuit-construction-kit-ac-virtual-lab"
   },
@@ -133,10 +129,8 @@
     "id": "circuit-construction-kit-dc",
     "name": "Circuit Construction Kit: DC",
     "description": "Experiment with an electronics kit! Build circuits with batteries, resistors, ideal and non-Ohmic light bulbs, fuses, and switches. Determine if everyday objects are conductors or insulators, and take measurements with a",
-    "topic": "electricity-magnets-and-circuits",
-    "topics": [
-      "electricity-magnets-and-circuits"
-    ],
+    "topic": "general",
+    "topics": [],
     "runUrl": "https://phet.colorado.edu/sims/html/circuit-construction-kit-dc/latest/circuit-construction-kit-dc_en.html",
     "pageUrl": "https://phet.colorado.edu/en/simulations/circuit-construction-kit-dc"
   },
@@ -144,10 +138,8 @@
     "id": "circuit-construction-kit-dc-virtual-lab",
     "name": "Circuit Construction Kit: DC - Virtual Lab",
     "description": "Do you like Circuit Construction Kit: DC, but want to use only in-line ammeters? This is the sim for you! Experiment with an electronics kit. Build circuits with batteries, resistors, ideal and non-Ohmic light bulbs, fus",
-    "topic": "electricity-magnets-and-circuits",
-    "topics": [
-      "electricity-magnets-and-circuits"
-    ],
+    "topic": "general",
+    "topics": [],
     "runUrl": "https://phet.colorado.edu/sims/html/circuit-construction-kit-dc-virtual-lab/latest/circuit-construction-kit-dc-virtual-lab_en.html",
     "pageUrl": "https://phet.colorado.edu/en/simulations/circuit-construction-kit-dc-virtual-lab"
   },
@@ -415,7 +407,7 @@
   {
     "id": "models-of-the-hydrogen-atom",
     "name": "Models of the Hydrogen Atom",
-    "description": "This simulation is designed for undergraduate level students who are studying atomic structure.  The simulation could also be used by high school students in advanced level physical science courses.",
+    "description": "This simulation is designed for undergraduate level students who are studying atomic structure. The simulation could also be used by high school students in advanced level physical science courses.",
     "topic": "general",
     "topics": [],
     "runUrl": "https://phet.colorado.edu/sims/html/models-of-the-hydrogen-atom/latest/models-of-the-hydrogen-atom_en.html",
@@ -443,11 +435,8 @@
     "id": "ohms-law",
     "name": "Ohm's Law",
     "description": "See how the equation form of Ohm's law relates to a simple circuit. Adjust the voltage and resistance, and see the current change according to Ohm's law.",
-    "topic": "motion",
-    "topics": [
-      "motion",
-      "electricity-magnets-and-circuits"
-    ],
+    "topic": "general",
+    "topics": [],
     "runUrl": "https://phet.colorado.edu/sims/html/ohms-law/latest/ohms-law_en.html",
     "pageUrl": "https://phet.colorado.edu/en/simulations/ohms-law"
   },
@@ -509,10 +498,8 @@
     "id": "resistance-in-a-wire",
     "name": "Resistance in a Wire",
     "description": "Observe changes to the equation and wire as you play with the resistivity, length, and area sliders.",
-    "topic": "motion",
-    "topics": [
-      "motion"
-    ],
+    "topic": "general",
+    "topics": [],
     "runUrl": "https://phet.colorado.edu/sims/html/resistance-in-a-wire/latest/resistance-in-a-wire_en.html",
     "pageUrl": "https://phet.colorado.edu/en/simulations/resistance-in-a-wire"
   },

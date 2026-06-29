@@ -1,36 +1,46 @@
 import { useMemo, useState } from "react";
 import {
-  PHET_PHYSICS_SIMS,
-  PHET_TOPICS,
+  PHET_ALL_SIMS,
+  PHET_SUBJECTS,
+  simsForSubject,
+  subjectLabel,
+  subjectLabels,
   topicLabel,
+  topicsForSubject,
   type PhetSimulation,
-} from "../data/phetPhysicsSims";
+  type PhetSubject,
+} from "../data/phetSims";
 import { Card, EmptyState, Field } from "../components/ui";
 
 export function ThreeDLab() {
   const [query, setQuery] = useState("");
+  const [subject, setSubject] = useState<PhetSubject | "all">("all");
   const [topic, setTopic] = useState<string>("all");
   const [active, setActive] = useState<PhetSimulation | null>(null);
 
+  const subjectSims = useMemo(() => simsForSubject(subject), [subject]);
+  const availableTopics = useMemo(() => topicsForSubject(subject), [subject]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return PHET_PHYSICS_SIMS.filter((sim) => {
+    return subjectSims.filter((sim) => {
       if (topic !== "all" && sim.topic !== topic) return false;
       if (!q) return true;
       return (
         sim.name.toLowerCase().includes(q) ||
         sim.description.toLowerCase().includes(q) ||
-        sim.id.includes(q)
+        sim.id.includes(q) ||
+        subjectLabel(sim.subject).toLowerCase().includes(q)
       );
     });
-  }, [query, topic]);
+  }, [query, topic, subjectSims]);
 
   if (active) {
     return (
       <div className="phet-lab">
         <Card
           title={active.name}
-          subtitle={`${topicLabel(active.topic)} · Interactive PhET simulation`}
+          subtitle={`${subjectLabels(active)} · ${topicLabel(active.topic)} · Interactive PhET simulation`}
           actions={
             <>
               <a
@@ -65,10 +75,10 @@ export function ThreeDLab() {
     <div className="phet-lab">
       <Card
         title="3D Lab"
-        subtitle={`${PHET_PHYSICS_SIMS.length} interactive physics simulations from PhET Colorado — HTML5, free for classroom use`}
+        subtitle={`${PHET_ALL_SIMS.length} interactive PhET simulations — physics, chemistry & math — HTML5, free for classroom use`}
       >
         <p className="muted" style={{ marginBottom: 16 }}>
-          Explore motion, waves, electricity, optics, thermodynamics, and quantum physics. Click any
+          Explore physics, chemistry, and mathematics simulations from PhET Colorado. Click any
           simulation to run it here — no install required.
         </p>
 
@@ -78,9 +88,39 @@ export function ThreeDLab() {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="e.g. circuit, projectile, waves…"
+              placeholder="e.g. acid, fraction, circuit, waves…"
             />
           </Field>
+
+          <div className="field">
+            <span className="field-label">Subject</span>
+            <div className="chip-group phet-topic-chips">
+              <button
+                type="button"
+                className={`chip${subject === "all" ? " active" : ""}`}
+                onClick={() => {
+                  setSubject("all");
+                  setTopic("all");
+                }}
+              >
+                All ({PHET_ALL_SIMS.length})
+              </button>
+              {PHET_SUBJECTS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  className={`chip${subject === s ? " active" : ""}`}
+                  onClick={() => {
+                    setSubject(s);
+                    setTopic("all");
+                  }}
+                >
+                  {subjectLabel(s)} ({simsForSubject(s).length})
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="field">
             <span className="field-label">Topic</span>
             <div className="chip-group phet-topic-chips">
@@ -89,16 +129,16 @@ export function ThreeDLab() {
                 className={`chip${topic === "all" ? " active" : ""}`}
                 onClick={() => setTopic("all")}
               >
-                All ({PHET_PHYSICS_SIMS.length})
+                All ({subjectSims.length})
               </button>
-              {PHET_TOPICS.map((t) => (
+              {availableTopics.map((t) => (
                 <button
                   key={t}
                   type="button"
                   className={`chip${topic === t ? " active" : ""}`}
                   onClick={() => setTopic(t)}
                 >
-                  {topicLabel(t)} ({PHET_PHYSICS_SIMS.filter((s) => s.topic === t).length})
+                  {topicLabel(t)} ({subjectSims.filter((s) => s.topic === t).length})
                 </button>
               ))}
             </div>
@@ -109,18 +149,20 @@ export function ThreeDLab() {
           <EmptyState
             icon="🔭"
             title="No simulations match"
-            hint="Try a different search or topic filter."
+            hint="Try a different search, subject, or topic filter."
           />
         ) : (
           <div className="phet-grid">
             {filtered.map((sim) => (
               <button
-                key={sim.id}
+                key={`${sim.subject}-${sim.id}`}
                 type="button"
                 className="phet-sim-card"
                 onClick={() => setActive(sim)}
               >
-                <span className="phet-sim-topic">{topicLabel(sim.topic)}</span>
+                <span className="phet-sim-topic">
+                  {subjectLabels(sim)} · {topicLabel(sim.topic)}
+                </span>
                 <span className="phet-sim-name">{sim.name}</span>
                 <span className="phet-sim-blurb">{sim.description}</span>
                 <span className="phet-sim-cta">Launch simulation →</span>

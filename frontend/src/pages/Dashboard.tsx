@@ -11,7 +11,7 @@ const FEATURES = [
   { id: "content", icon: "🎯", label: "Content Differentiator", blurb: "Adapt lessons to every learner" },
   { id: "substitution", icon: "🔁", label: "Substitution Finder", blurb: "Find free teachers by period" },
   { id: "labs", icon: "🔬", label: "Lab Booking", blurb: "Reserve labs, avoid clashes" },
-  { id: "3dlab", icon: "🧪", label: "3D Lab", blurb: "PhET physics simulations" },
+  { id: "3dlab", icon: "🧪", label: "3D Lab", blurb: "PhET physics, chemistry & math sims" },
   { id: "chat", icon: "💬", label: "Teacher Chat", blurb: "Message other teachers" },
   { id: "assessment", icon: "📑", label: "Assessment Assigner", blurb: "AI assessments by topic" },
   { id: "lecture", icon: "🎙", label: "Lecture Recorder", blurb: "Record & AI timeline" },

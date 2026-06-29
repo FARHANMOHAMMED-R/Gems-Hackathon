@@ -1,0 +1,461 @@
+[
+  {
+    "id": "area-builder",
+    "name": "Area Builder",
+    "description": "Create your own shapes using colorful blocks and explore the relationship between perimeter and area. Compare the area and perimeter of two shapes side-by-side. Challenge yourself in the game screen to build shapes or fi",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/area-builder/latest/area-builder_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/area-builder"
+  },
+  {
+    "id": "area-model-algebra",
+    "name": "Area Model Algebra",
+    "description": "Build rectangles of various sizes and relate multiplication to area. Discover new strategies for multiplying algebraic expressions. Use the game screen to test your multiplication and factoring skills!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/area-model-algebra/latest/area-model-algebra_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/area-model-algebra"
+  },
+  {
+    "id": "area-model-decimals",
+    "name": "Area Model Decimals",
+    "description": "Build rectangles of various sizes and relate multiplication to area. Partition a rectangle into smaller areas and discover new strategies for multiplying decimals!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/area-model-decimals/latest/area-model-decimals_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/area-model-decimals"
+  },
+  {
+    "id": "area-model-introduction",
+    "name": "Area Model Introduction",
+    "description": "Build rectangles of various sizes and relate multiplication to area. Partition a rectangle into two areas to discover the distributive property.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/area-model-introduction/latest/area-model-introduction_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/area-model-introduction"
+  },
+  {
+    "id": "area-model-multiplication",
+    "name": "Area Model Multiplication",
+    "description": "Build rectangles of various sizes and relate multiplication to area. Discover new strategies for multiplying large numbers. Use the game screen to test your problem solving strategies!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/area-model-multiplication/latest/area-model-multiplication_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/area-model-multiplication"
+  },
+  {
+    "id": "arithmetic",
+    "name": "Arithmetic",
+    "description": "Remember your multiplication tables? Practice your multiplication, division, and factoring skills with this exciting game. No calculators allowed!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/arithmetic/latest/arithmetic_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/arithmetic"
+  },
+  {
+    "id": "balancing-act",
+    "name": "Balancing Act",
+    "description": "Play with objects on a teeter totter to learn about balance. Test what you've learned by trying the Balance Challenge game.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/balancing-act/latest/balancing-act_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/balancing-act"
+  },
+  {
+    "id": "build-a-fraction",
+    "name": "Build a Fraction",
+    "description": "Build fractions from shapes and numbers to earn stars in this fractions game or explore in the Fractions Lab. Challenge yourself on any level you like. Try to collect lots of stars!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/build-a-fraction/latest/build-a-fraction_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/build-a-fraction"
+  },
+  {
+    "id": "calculus-grapher",
+    "name": "Calculus Grapher",
+    "description": "Manipulate a graph of any function and see graphs of its integral, first derivative, and second derivative. Drag the tangent line along the curve, and accumulate area under the curve.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/calculus-grapher/latest/calculus-grapher_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/calculus-grapher"
+  },
+  {
+    "id": "center-and-variability",
+    "name": "Center and Variability",
+    "description": "Center and Variability allows students to explore and compare measures of center and variability, including mean, median, range, IQR, and MAD.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/center-and-variability/latest/center-and-variability_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/center-and-variability"
+  },
+  {
+    "id": "curve-fitting",
+    "name": "Curve Fitting",
+    "description": "Drag data points and their error bars and watch the best-fit polynomial curve update instantly. You choose the type of fit: linear, quadratic, or cubic. The reduced chi-square statistic shows you when the fit is good. Or",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/curve-fitting/latest/curve-fitting_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/curve-fitting"
+  },
+  {
+    "id": "equality-explorer",
+    "name": "Equality Explorer",
+    "description": "Explore what it means for a mathematical statement to be balanced or unbalanced by interacting with objects on a balance. Discover the rules for keeping it balanced. Collect stars by playing the game!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/equality-explorer/latest/equality-explorer_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/equality-explorer"
+  },
+  {
+    "id": "equality-explorer-basics",
+    "name": "Equality Explorer: Basics",
+    "description": "Explore what it means for a mathematical statement to be balanced or unbalanced by interacting with objects on a balance. Find all the ways to balance cats and dogs or apples and oranges.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/equality-explorer-basics/latest/equality-explorer-basics_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/equality-explorer-basics"
+  },
+  {
+    "id": "equality-explorer-two-variables",
+    "name": "Equality Explorer: Two Variables",
+    "description": "Explore what it means for a mathematical statement to be balanced or unbalanced by interacting with integers and variables on a balance. Find multiple ways to balance x and y to build a system of equations.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/equality-explorer-two-variables/latest/equality-explorer-two-variables_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/equality-explorer-two-variables"
+  },
+  {
+    "id": "expression-exchange",
+    "name": "Expression Exchange",
+    "description": "Build coin expressions, then exchange them for variable expressions. Simplify and evaluate expressions until you are ready to test your understanding of equivalent expressions in the game!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/expression-exchange/latest/expression-exchange_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/expression-exchange"
+  },
+  {
+    "id": "fourier-making-waves",
+    "name": "Fourier: Making Waves",
+    "description": "Add up sines or cosines to make waves of different shapes. Discover how changing the amplitudes of different harmonics changes the sound you hear. Play the Wave Game and combine harmonics to match a target waveform. Cons",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/fourier-making-waves/latest/fourier-making-waves_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/fourier-making-waves"
+  },
+  {
+    "id": "fraction-matcher",
+    "name": "Fraction Matcher",
+    "description": "Match shapes and numbers to earn stars in this fractions game. Challenge yourself on any level you like. Try to collect lots of stars!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/fraction-matcher/latest/fraction-matcher_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/fraction-matcher"
+  },
+  {
+    "id": "fractions-equality",
+    "name": "Fractions: Equality",
+    "description": "Build equivalent fractions with different denominators. Match shapes and numbers to earn stars in the game. Challenge yourself on any level you like. Try to collect lots of stars!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/fractions-equality/latest/fractions-equality_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/fractions-equality"
+  },
+  {
+    "id": "fractions-intro",
+    "name": "Fractions: Intro",
+    "description": "Explore fractions while you help yourself to 1/3 of a chocolate cake and wash it down with 1/2 a glass of water! Create your own fractions using fun interactive objects. Match shapes and numbers to earn stars in the frac",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/fractions-intro/latest/fractions-intro_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/fractions-intro"
+  },
+  {
+    "id": "fractions-mixed-numbers",
+    "name": "Fractions: Mixed Numbers",
+    "description": "Explore fractions while you help yourself to 1 and 1/2 chocolate cakes and wash it down with 1/3 a glass of water! Create your own fractions using fun interactive objects. Match shapes and numbers to earn stars in the mi",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/fractions-mixed-numbers/latest/fractions-mixed-numbers_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/fractions-mixed-numbers"
+  },
+  {
+    "id": "function-builder",
+    "name": "Function Builder",
+    "description": "Play with functions while you ponder Art History. Explore geometric transformations and transform your thinking about linear functions, then have fun figuring out the mystery functions!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/function-builder/latest/function-builder_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/function-builder"
+  },
+  {
+    "id": "function-builder-basics",
+    "name": "Function Builder: Basics",
+    "description": "Play with functions while you ponder Art History. Look for patterns, then apply what you learned on the Mystery screen!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/function-builder-basics/latest/function-builder-basics_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/function-builder-basics"
+  },
+  {
+    "id": "graphing-lines",
+    "name": "Graphing Lines",
+    "description": "Explore the world of lines. Investigate the relationships between linear equations, slope, and graphs of lines. Challenge yourself in the line game!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/graphing-lines/latest/graphing-lines_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/graphing-lines"
+  },
+  {
+    "id": "graphing-quadratics",
+    "name": "Graphing Quadratics",
+    "description": "Discover how changing coefficients changes the shape of a curve. View the graphs of individual terms (e.g. y=bx) to see how they add to generate the polynomial curve. Generate definitions for vertex, roots, and axis of s",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/graphing-quadratics/latest/graphing-quadratics_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/graphing-quadratics"
+  },
+  {
+    "id": "graphing-slope-intercept",
+    "name": "Graphing Slope-Intercept",
+    "description": "Explore slope-intercept form of a line. Connect the slope and y-intercept to the equation of the line. Challenge yourself in the line game!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/graphing-slope-intercept/latest/graphing-slope-intercept_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/graphing-slope-intercept"
+  },
+  {
+    "id": "keplers-laws",
+    "name": "Kepler's Laws",
+    "description": "Interact with the variables to discover how planetary objects moves in elliptical orbits, and the other characteristics of these orbits described by the three Kepler’s Laws. Connect Astronomy with Math, by experimenting ",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/keplers-laws/latest/keplers-laws_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/keplers-laws"
+  },
+  {
+    "id": "least-squares-regression",
+    "name": "Least-Squares Regression",
+    "description": "Create your own scatter plot or use real-world data and try to fit a line to it! Explore how individual data points affect the correlation coefficient and best-fit line.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/least-squares-regression/latest/least-squares-regression_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/least-squares-regression"
+  },
+  {
+    "id": "make-a-ten",
+    "name": "Make a Ten",
+    "description": "Add numbers by making tens. Break apart and combine numbers while focusing on place value. Use the adding screen to add any two numbers. Use the game screen to apply your make-a-ten strategies!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/make-a-ten/latest/make-a-ten_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/make-a-ten"
+  },
+  {
+    "id": "masses-and-springs",
+    "name": "Masses and Springs",
+    "description": "Hang masses from springs and adjust the spring constant and damping. Transport the lab to different planets, or slow down time. Observe the forces and energy in the system in real-time, and measure the period using the s",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/masses-and-springs/latest/masses-and-springs_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/masses-and-springs"
+  },
+  {
+    "id": "mean-share-and-balance",
+    "name": "Mean: Share and Balance",
+    "description": "Explore the mean by leveling cups of water, distributing candy bars, fairly sharing apples, and finding the balance point of a beam. Build a data set with a target mean. Challenge yourself to predict the mean before reve",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/mean-share-and-balance/latest/mean-share-and-balance_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/mean-share-and-balance"
+  },
+  {
+    "id": "number-compare",
+    "name": "Number Compare",
+    "description": "Compare numbers represented as numerals, objects, groups, and ten frames. Use a sentence, number line, or stacked units to determine the larger group. Hear the comparison spoken aloud in two different languages.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/number-compare/latest/number-compare_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/number-compare"
+  },
+  {
+    "id": "number-line-distance",
+    "name": "Number Line: Distance",
+    "description": "Subtraction is more than an operation- it is also the distance between two numbers! Explore the distance between a person and house, a bird and a fish, and the difference in temperature between two locations. Compare abs",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/number-line-distance/latest/number-line-distance_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/number-line-distance"
+  },
+  {
+    "id": "number-line-integers",
+    "name": "Number Line: Integers",
+    "description": "What do elevation, account balances, and temperature have in common? They can all be represented on a number line. Compare integers on a number line and in an inequality statement. Discover the meaning of absolute value.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/number-line-integers/latest/number-line-integers_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/number-line-integers"
+  },
+  {
+    "id": "number-line-operations",
+    "name": "Number Line: Operations",
+    "description": "Explore operations with integers using an authentic context of net worth, then generalize with a number line. Experiment with adding and subtracting both positives and negatives, and make predictions about whether the to",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/number-line-operations/latest/number-line-operations_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/number-line-operations"
+  },
+  {
+    "id": "number-pairs",
+    "name": "Number Pairs",
+    "description": "Create number pairs to compose, decompose, and add numbers from 0-20 in multiple contexts. Play with magic beads and kittens that can change color! Add numbers on a number line!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/number-pairs/latest/number-pairs_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/number-pairs"
+  },
+  {
+    "id": "number-play",
+    "name": "Number Play",
+    "description": "Play with counting and cardinality. Compare representations, including word, numeral, ten frame, and objects. Hear the number spoken aloud in two different languages. Challenge yourself to subitize numbers up to ten!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/number-play/latest/number-play_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/number-play"
+  },
+  {
+    "id": "ohms-law",
+    "name": "Ohm's Law",
+    "description": "See how the equation form of Ohm's law relates to a simple circuit. Adjust the voltage and resistance, and see the current change according to Ohm's law.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/ohms-law/latest/ohms-law_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/ohms-law"
+  },
+  {
+    "id": "pendulum-lab",
+    "name": "Pendulum Lab",
+    "description": "Play with one or two pendulums and discover how the period of a simple pendulum depends on the length of the string, the mass of the pendulum bob, the strength of gravity, and the amplitude of the swing. Observe the ener",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/pendulum-lab/latest/pendulum-lab_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/pendulum-lab"
+  },
+  {
+    "id": "plinko-probability",
+    "name": "Plinko Probability",
+    "description": "Drop balls through a triangular grid of pegs and see them accumulate in containers. Switch to a histogram view and compare the distribution of balls to an ideal binomial distribution. Adjust the binary probability and de",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/plinko-probability/latest/plinko-probability_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/plinko-probability"
+  },
+  {
+    "id": "projectile-data-lab",
+    "name": "Projectile Data Lab",
+    "description": "The Projectile Data Lab simulation allows students to engage in hands-on data collection and analysis through the context of projectile motion.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/projectile-data-lab/latest/projectile-data-lab_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/projectile-data-lab"
+  },
+  {
+    "id": "projectile-motion",
+    "name": "Projectile Motion",
+    "description": "Blast a car out of a cannon, and challenge yourself to hit a target! Learn about projectile motion by firing various objects. Set parameters such as angle, initial speed, and mass. Explore vector representations, and add",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/projectile-motion/latest/projectile-motion_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/projectile-motion"
+  },
+  {
+    "id": "projectile-sampling-distributions",
+    "name": "Projectile Sampling Distributions",
+    "description": "Engage in hands-on data collection and analysis through the rich context of launching projectiles. Explore how different launch parameters create a variety of distributions as you watch the Central Limit Theorem come to ",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/projectile-sampling-distributions/latest/projectile-sampling-distributions_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/projectile-sampling-distributions"
+  },
+  {
+    "id": "proportion-playground",
+    "name": "Proportion Playground",
+    "description": "Play with ratios and proportions by designing a necklace, throwing paint balloons, playing billiards, or shopping for apples! Make predictions about proportions before they are revealed.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/proportion-playground/latest/proportion-playground_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/proportion-playground"
+  },
+  {
+    "id": "quadrilateral",
+    "name": "Quadrilateral",
+    "description": "Explore the properties of and relationships between named four-sided shapes by moving sides and corners of a quadrilateral.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/quadrilateral/latest/quadrilateral_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/quadrilateral"
+  },
+  {
+    "id": "ratio-and-proportion",
+    "name": "Ratio and Proportion",
+    "description": "Play with the left and right hands in different ways, and explore ratio and proportion. Start on the Discover screen to find each challenge ratio by moving the hands. Then, on the Create screen, set your own challenge ra",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/ratio-and-proportion/latest/ratio-and-proportion_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/ratio-and-proportion"
+  },
+  {
+    "id": "resistance-in-a-wire",
+    "name": "Resistance in a Wire",
+    "description": "Observe changes to the equation and wire as you play with the resistivity, length, and area sliders.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/resistance-in-a-wire/latest/resistance-in-a-wire_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/resistance-in-a-wire"
+  },
+  {
+    "id": "trig-tour",
+    "name": "Trig Tour",
+    "description": "Take a tour of trigonometry using degrees or radians! Look for patterns in the values and on the graph when you change the value of theta. Compare the graphs of sine, cosine, and tangent.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/trig-tour/latest/trig-tour_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/trig-tour"
+  },
+  {
+    "id": "unit-rates",
+    "name": "Unit Rates",
+    "description": "Discover the unit rate while shopping for fruits, vegetables, and candy. Construct a double number line and look for patterns. Challenge yourself on the race track as you compare cars with different rates!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/unit-rates/latest/unit-rates_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/unit-rates"
+  },
+  {
+    "id": "vector-addition",
+    "name": "Vector Addition",
+    "description": "Explore vectors in 1D or 2D, and discover how vectors add together. Specify vectors in Cartesian or polar coordinates, and see the magnitude, angle, and components of each vector. Experiment with vector equations and com",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/vector-addition/latest/vector-addition_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/vector-addition"
+  },
+  {
+    "id": "vector-addition-equations",
+    "name": "Vector Addition: Equations",
+    "description": "Experiment with vector equations and compare vector sums and differences. Customize the base vectors or explore scalar multiplication by adjusting the coefficients in equation. Specify vectors in Cartesian or polar coord",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/vector-addition-equations/latest/vector-addition-equations_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/vector-addition-equations"
+  },
+  {
+    "id": "wave-on-a-string",
+    "name": "Wave on a String",
+    "description": "Explore the wonderful world of waves! Even observe a string vibrate in slow motion. Wiggle the end of the string and make waves, or adjust the frequency and amplitude of an oscillator.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/wave-on-a-string/latest/wave-on-a-string_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/wave-on-a-string"
+  }
+]

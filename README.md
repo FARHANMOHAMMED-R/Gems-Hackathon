@@ -105,7 +105,7 @@ Gems Assist gives teachers one place to run a modern classroom:
 | **Content Differentiator** | Rewrite lessons for Advanced, Standard, Visual, or Neurodivergent tracks |
 | **Substitution Finder** | See which teachers are free by period |
 | **Lab Booking** | Reserve rooms with double-booking protection |
-| **3D Lab** | 64 embedded PhET physics simulations |
+| **3D Lab** | 115 unique PhET simulations (physics, chemistry & math) |
 | **Teacher Chat** | Staff lounge for cross-class messages |
 | **Lecture Recorder** | Record class audio, pin timestamped notes, AI timeline & summary |
 | **Performance Tracker** | Enter PT1 → Half Yearly → PT2 → Final marks per subject; line graphs per student |

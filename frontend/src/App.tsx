@@ -95,7 +95,7 @@ function buildTeacherNav(teacher: TeacherSession): NavItem[] {
       id: "3dlab",
       label: "3D Lab",
       icon: "🧪",
-      blurb: "PhET physics simulations",
+      blurb: "PhET physics, chemistry & math sims",
       render: () => <ThreeDLab />,
     },
     {
