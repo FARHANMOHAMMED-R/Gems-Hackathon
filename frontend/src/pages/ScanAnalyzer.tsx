@@ -111,6 +111,12 @@ export function ScanAnalyzer({ classManaged }: { classManaged: string }) {
   }
 
   const selected = students.find((s) => s.id === studentId);
+  const noAiOcr =
+    ocrStatus &&
+    !ocrStatus.openai &&
+    !ocrStatus.gemini &&
+    !ocrStatus.claude &&
+    !ocrStatus.gurupdf;
 
   return (
     <div className="grid grid-2">
@@ -131,29 +137,26 @@ export function ScanAnalyzer({ classManaged }: { classManaged: string }) {
           </div>
           {mode === "Notebook" && (
             <span className="field-hint">
-              Upload a clear photo of the notebook page (not a screen screenshot). OCR tries
-              OpenAI → Gemini → Claude → PDF Guru → Tesseract automatically.
+              Upload a clear photo of the notebook page (not a screen screenshot). Uses offline
+              Tesseract by default; AI OCR is optional for better handwriting.
             </span>
           )}
-          {ocrStatus &&
-            !ocrStatus.openai &&
-            !ocrStatus.gemini &&
-            !ocrStatus.claude &&
-            !ocrStatus.gurupdf && (
-            <div className="info-note">
-              No AI OCR key detected. Add <code>OPENAI_API_KEY</code>, free{" "}
-              <code>GEMINI_API_KEY</code> ({" "}
-              <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
-                get one here
-              </a>
-              ), or <code>ANTHROPIC_API_KEY</code> (Claude) to backend <code>.env</code>, then
-              restart the server.
-            </div>
+          {noAiOcr && (
+            <details className="ppt-ai-setup">
+              <summary>Enable AI handwriting OCR (optional)</summary>
+              <p className="muted">
+                Add free <code>GEMINI_API_KEY</code> from{" "}
+                <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
+                  Google AI Studio
+                </a>
+                , or <code>OPENAI_API_KEY</code> / <code>ANTHROPIC_API_KEY</code> to backend{" "}
+                <code>.env</code>, then restart the server.
+              </p>
+            </details>
           )}
           {mode === "Exam Paper" && (
             <span className="field-hint">
-              Exam images are read via PDF Guru image-to-text (<code>GURUPDF_API_KEY</code>)
-              or OpenAI vision. Grading still needs <code>OPENAI_API_KEY</code>.
+              Exam OCR uses PDF Guru or AI vision when keys are set. Paste text manually anytime.
             </span>
           )}
         </div>
@@ -246,13 +249,9 @@ export function ScanAnalyzer({ classManaged }: { classManaged: string }) {
         )}
 
         {llmDown && !loading && mode === "Exam Paper" && (
-          <div className="info-note">
-            Exam grading needs <code>OPENAI_API_KEY</code> in the backend <code>.env</code>.
-            For scan OCR, add <code>GURUPDF_API_KEY</code> from{" "}
-            <a href="https://gurupdf.com/api" target="_blank" rel="noreferrer">
-              PDF Guru / GuruPDF
-            </a>
-            . Notebook mode works offline with local Tesseract.
+          <div className="info-note subtle">
+            Exam grading needs an AI key in backend <code>.env</code>. Notebook mode works
+            offline — switch to Notebook or add <code>GEMINI_API_KEY</code>.
           </div>
         )}
         {error && !loading && <ErrorNote>{error}</ErrorNote>}

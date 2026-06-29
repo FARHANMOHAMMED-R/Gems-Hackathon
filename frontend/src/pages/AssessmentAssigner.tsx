@@ -188,10 +188,17 @@ export function AssessmentAssigner({
         </p>
 
         {mailConfigured === false && (
-          <div className="info-note">
-            Email sending needs <code>RESEND_API_KEY</code> in backend <code>.env</code>. You can
-            still generate and copy assessments.
-          </div>
+          <details className="ppt-ai-setup">
+            <summary>Enable email to parents (optional)</summary>
+            <p className="muted">
+              Add <code>RESEND_API_KEY</code> from{" "}
+              <a href="https://resend.com" target="_blank" rel="noreferrer">
+                resend.com
+              </a>{" "}
+              or SMTP settings to backend <code>.env</code>, then restart the server. You can still
+              generate and copy assessments without email.
+            </p>
+          </details>
         )}
 
         <Field label="Subject">
@@ -292,10 +299,7 @@ export function AssessmentAssigner({
         {assessment && !loading && (
           <div className="stack" style={{ gap: 16 }}>
             {localMode && (
-              <div className="info-note">
-                📑 Template assessment — add <code>OPENAI_API_KEY</code> for fully custom AI
-                questions.
-              </div>
+              <span className="pill pill-primary">📑 Template assessment — add AI key for custom questions</span>
             )}
 
             <div>
