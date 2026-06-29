@@ -28,7 +28,7 @@ function toDraftRows(items: MailDraftItem[]): DraftRow[] {
   }));
 }
 
-export function ParentMailer({ classManaged, teacherEmail, teacherName }: ParentMailerProps) {
+export function ParentMailer({ classManaged, teacherEmail, teacherName: _teacherName }: ParentMailerProps) {
   const toast = useToast();
   const [students, setStudents] = useState<StudentRosterEntry[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
@@ -102,7 +102,12 @@ export function ParentMailer({ classManaged, teacherEmail, teacherName }: Parent
       setLocalMode(res.analysisMode === "local");
       toast.success(`Drafted ${res.count} email(s).`);
     } catch (err) {
-      if (err instanceof ApiError && err.isLlmNotConfigured) {
+      const offline =
+        (err instanceof ApiError && err.isLlmNotConfigured) ||
+        err instanceof TypeError ||
+        (err instanceof ApiError && err.status >= 502);
+
+      if (offline) {
         const drafted = draftBatchMailsLocally(
           students,
           teacherSummary.trim(),
@@ -242,16 +247,17 @@ export function ParentMailer({ classManaged, teacherEmail, teacherName }: Parent
         ) : (
           <>
             {mailConfigured === false && (
-              <div className="info-note">
-                Sending is off until you add <code>RESEND_API_KEY</code> (or SMTP) to the backend{" "}
-                <code>.env</code>. You can still draft and copy emails.
-              </div>
-            )}
-            {mailConfigured && (
-              <div className="info-note">
-                ✉️ Email API connected — replies go to <strong>{teacherEmail}</strong> (
-                {teacherName}).
-              </div>
+              <details className="ppt-ai-setup">
+                <summary>Enable email to parents (optional)</summary>
+                <p className="muted">
+                  Add <code>RESEND_API_KEY</code> from{" "}
+                  <a href="https://resend.com" target="_blank" rel="noreferrer">
+                    resend.com
+                  </a>{" "}
+                  or SMTP settings to backend <code>.env</code>, then restart the server. You can
+                  still draft and copy emails without sending.
+                </p>
+              </details>
             )}
 
             <Field
@@ -330,9 +336,9 @@ export function ParentMailer({ classManaged, teacherEmail, teacherName }: Parent
         {loading && <Spinner label="Composing emails…" />}
 
         {localMode && drafts && !loading && (
-          <div className="info-note">
-            📧 Local draft — add <code>OPENAI_API_KEY</code> for fully AI-personalized content.
-          </div>
+          <span className="pill pill-primary">
+            📧 Local draft — add AI key for fully personalized content
+          </span>
         )}
 
         {error && !loading && <ErrorNote>{error}</ErrorNote>}

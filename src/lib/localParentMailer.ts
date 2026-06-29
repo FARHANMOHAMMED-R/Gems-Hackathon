@@ -77,8 +77,5 @@ ${tokens}${records}
 Please reply if you have any questions or would like to discuss ${student.name}'s progress further.
 
 Warm regards,
-Your Class ${classLabel} Teacher
-
----
-*Drafted locally from your summary. Add OPENAI_API_KEY to the backend for fully AI-personalized emails.*`;
+Your Class ${classLabel} Teacher`;
 }
