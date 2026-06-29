@@ -173,6 +173,32 @@ Gems-Hackathon/
 
 ---
 
+## Deploying the frontend
+
+The frontend is a **static SPA** built with Vite. The Express API must be hosted separately (Railway, Render, Fly.io, a VPS, etc.).
+
+### Build
+
+```bash
+cd frontend
+npm install
+cp .env.example .env   # optional — set VITE_API_BASE for production
+npm run build          # output → frontend/dist/
+```
+
+Set `VITE_API_BASE` to your deployed API origin (e.g. `https://api.example.com`) **at build time** so the bundle points at the correct backend. Leave it empty only if you put a reverse proxy in front of both the static site and `/api`.
+
+Serve the contents of `frontend/dist/` from any static host (Vercel, Netlify, Cloudflare Pages, S3 + CloudFront, nginx, etc.).
+
+### Vercel / Netlify
+
+- **Vercel:** set root directory to `frontend`, build command `npm run build`, output `dist`. `frontend/vercel.json` includes SPA fallback rewrites.
+- **Netlify:** use `frontend/netlify.toml` (build + SPA redirect) or point the site at `frontend/` with publish directory `dist`.
+
+Ensure the backend allows CORS from your frontend origin if they are on different domains.
+
+---
+
 ## Data model
 
 Defined in [`prisma/schema.prisma`](prisma/schema.prisma). SQLite is the default for zero-config local dev; enum-like fields are stored as `String` and JSON fields as serialized strings (handled by [`src/lib/json.ts`](src/lib/json.ts)).
