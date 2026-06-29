@@ -141,6 +141,10 @@ export function SignIn({ onSignedIn }: SignInProps) {
           </span>
           <div>
             <h1 className="signin-title">Gems Assist</h1>
+            <p className="signin-group">Group 3 (NEPTUNE)</p>
+            <p className="signin-members">
+              Farhan Mohammed Rangrej · Kailas · Roselin
+            </p>
             <p className="signin-tagline">Sign in to continue</p>
           </div>
         </header>

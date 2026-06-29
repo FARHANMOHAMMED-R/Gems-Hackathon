@@ -5,6 +5,11 @@
 <h1 align="center">Gems Assist</h1>
 
 <p align="center">
+  <strong>Group 3 (NEPTUNE)</strong><br />
+  Farhan Mohammed Rangrej · Kailas · Roselin
+</p>
+
+<p align="center">
   AI-powered education platform for CBSE teachers — grading, differentiation, labs, parent mail, performance tracking, and a student token economy.
 </p>
 
@@ -281,6 +286,16 @@ VITE_API_BASE=https://your-api.example.com npm run build
 ```
 
 Serve `frontend/dist/` from any static host. Run the Express API separately and enable CORS for your frontend origin.
+
+---
+
+## Team — Group 3 (NEPTUNE)
+
+| Member |
+|--------|
+| Farhan Mohammed Rangrej |
+| Kailas |
+| Roselin |
 
 ---
 

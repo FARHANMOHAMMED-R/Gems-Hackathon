@@ -1057,10 +1057,23 @@ textarea:focus {
   font-weight: 700;
 }
 
+.signin-group {
+  font-size: 14px;
+  font-weight: 600;
+  color: #c4b5fd;
+  margin-top: 4px;
+}
+
+.signin-members {
+  font-size: 12px;
+  color: #97a0bd;
+  margin-top: 2px;
+}
+
 .signin-tagline {
   font-size: 13px;
   color: #97a0bd;
-  margin-top: 2px;
+  margin-top: 6px;
 }
 
 .signin-card {

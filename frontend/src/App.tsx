@@ -337,7 +337,7 @@ export function App() {
           </span>
           <div>
             <div className="brand-name">Gems Assist</div>
-            <div className="brand-tag">Education platform</div>
+            <div className="brand-tag">Group 3 · NEPTUNE</div>
           </div>
         </div>
 
