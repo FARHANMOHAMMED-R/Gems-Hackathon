@@ -59,6 +59,7 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
   }, []);
 
   const configured = providers.filter((p) => p.configured);
+  const useTemplate = configured.length === 0;
 
   async function generate() {
     if (!topic.trim() || !chapters.trim()) {
@@ -82,7 +83,11 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
         provider: provider || undefined,
       });
       setResult(res);
-      toast.success(`Created ${res.slideCount} slides.`);
+      toast.success(
+        res.analysisMode === "local"
+          ? `Created ${res.slideCount} template slides.`
+          : `Created ${res.slideCount} slides.`,
+      );
     } catch (err) {
       if (err instanceof ApiError && err.isLlmNotConfigured) {
         setError("No AI key configured. Add OPENAI_API_KEY, GEMINI_API_KEY, or ANTHROPIC_API_KEY to .env.");
@@ -104,12 +109,21 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
   return (
     <div className="grid grid-2">
       <Card title="PPT Generator" subtitle={`AI lesson slides for Grade ${grade} (${classManaged})`}>
-        {configured.length === 0 ? (
+        {useTemplate ? (
           <div className="info-note">
-            Add at least one AI key to backend <code>.env</code>:
+            <strong>Template mode</strong> — no AI key in backend <code>.env</code>, so slides use
+            your topic & chapters as a structured outline. Still downloads a real{" "}
+            <code>.pptx</code>.
             <br />
-            <code>OPENAI_API_KEY</code> (ChatGPT) · <code>GEMINI_API_KEY</code> (free) ·{" "}
-            <code>ANTHROPIC_API_KEY</code> (Claude)
+            <br />
+            For AI-written slides, add a free key:
+            <br />
+            <code>GEMINI_API_KEY</code> at{" "}
+            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
+              Google AI Studio
+            </a>
+            , or <code>OPENAI_API_KEY</code> / <code>ANTHROPIC_API_KEY</code> — then restart the
+            backend.
           </div>
         ) : (
           <div className="field">
@@ -128,6 +142,12 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
               ))}
             </div>
           </div>
+        )}
+
+        {useTemplate && (
+          <span className="pill pill-primary" style={{ marginBottom: 12, display: "inline-block" }}>
+            📋 Template mode (offline)
+          </span>
         )}
 
         <Field label="Subject">
@@ -179,7 +199,11 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
         </Field>
 
         <button className="btn btn-primary btn-block" onClick={generate} disabled={loading}>
-          {loading ? "Generating slides…" : "Generate PowerPoint"}
+          {loading
+            ? "Generating slides…"
+            : useTemplate
+              ? "Generate template PowerPoint"
+              : "Generate PowerPoint"}
         </button>
       </Card>
 
@@ -192,7 +216,11 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
           <EmptyState
             icon="📊"
             title="No presentation yet"
-            hint="Fill in topic and chapters, pick an AI, and generate."
+            hint={
+              useTemplate
+                ? "Fill in topic and chapters, then generate a template deck."
+                : "Fill in topic and chapters, pick an AI, and generate."
+            }
           />
         )}
 

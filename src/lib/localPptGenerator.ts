@@ -40,11 +40,12 @@ export function generatePptLocally(input: {
   ];
 
   for (let i = 0; i < contentSlides; i++) {
+    const chapter = chapters[i % chapters.length] ?? input.topic;
     slides.push({
       layout: "bullets",
-      title: `${input.topic} — Part ${i + 1}`,
+      title: chapters.length > 1 ? chapter : `${input.topic} — Part ${i + 1}`,
       bullets: [
-        `Explain concept ${i + 1} from ${chapterLabel}`,
+        `Key ideas from ${chapter}`,
         "Include one real-world example",
         "Ask a check-for-understanding question",
       ],
