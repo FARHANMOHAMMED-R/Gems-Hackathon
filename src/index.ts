@@ -20,6 +20,20 @@ app.use(express.json({ limit: "25mb" }));
 // Liveness probe.
 app.get("/health", (_req, res) => res.json({ ok: true, service: "gems-assist" }));
 
+// Root — this server is the API only; the website runs on the frontend.
+app.get("/", (_req, res) => {
+  res.json({
+    service: "gems-assist-api",
+    message: "This is the backend API. Open the website instead.",
+    website: {
+      local: "http://localhost:5173",
+      live: "https://gems-class-flow.base44.app",
+    },
+    health: "/health",
+    docs: "https://github.com/FARHANMOHAMMED-R/Gems-Hackathon#api-reference",
+  });
+});
+
 // --- Functional domains ---
 app.use("/api", analyzeScanRouter); // 2. Document Vision & Notebook Analyzer
 app.use("/api", differentiateContentRouter); // 3. Differentiated Content Generation
