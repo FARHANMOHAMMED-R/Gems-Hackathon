@@ -56,6 +56,8 @@ if (!frontendDist) {
       website: {
         local: "http://localhost:5173",
         live: "https://gems-class-flow.base44.app",
+        share: "Run npm run share at repo root for a public https link → localhost:5173",
+        github: "https://github.com/FARHANMOHAMMED-R/Gems-Hackathon",
       },
       health: "/health",
       docs: "https://github.com/FARHANMOHAMMED-R/Gems-Hackathon#api-reference",

@@ -14,11 +14,18 @@
 </p>
 
 <p align="center">
-  <a href="https://gems-class-flow.base44.app"><strong>🌐 Open app (any device) →</strong></a>
+  <a href="https://gems-class-flow.base44.app"><strong>🌐 Live app (any device) →</strong></a>
   &nbsp;·&nbsp;
-  <a href="http://localhost:5173">Local dev</a>
+  <a href="http://localhost:5173"><strong>Local :5173 →</strong></a>
   &nbsp;·&nbsp;
-  <a href="https://github.com/FARHANMOHAMMED-R/Gems-Hackathon">GitHub</a>
+  <a href="https://github.com/FARHANMOHAMMED-R/Gems-Hackathon"><strong>GitHub →</strong></a>
+</p>
+
+<p align="center">
+  <sub>
+    Share your local app publicly: run <code>npm run share</code> at the repo root → get an
+    <code>https://</code> link for any phone or laptop
+  </sub>
 </p>
 
 <p align="center">
@@ -202,7 +209,7 @@ Starts **http://localhost:5173** and prints a public **https://** URL for any de
 Vite prints a **Network** URL when the frontend starts, e.g. `http://192.168.1.42:5173`.  
 Other phones and laptops on the **same Wi‑Fi** can open that link — the dev server proxies `/api` to your machine.
 
-For access **outside your Wi‑Fi**, use the universal link: **https://gems-class-flow.base44.app**
+For access **outside your Wi‑Fi**, run **`npm run share`** for a public link to your full local app, or open the hosted frontend at **https://gems-class-flow.base44.app**
 
 ---
 

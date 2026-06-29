@@ -14,6 +14,10 @@ npm install && npm run dev
 
 Open **[http://localhost:5173](http://localhost:5173)**.
 
+**Share on any device (public link):** from repo root run `npm run share` — prints an `https://` URL that forwards to your local `:5173`.
+
+**Live hosted app:** [https://gems-class-flow.base44.app](https://gems-class-flow.base44.app)
+
 The Vite dev server proxies `/api` and `/health` to `http://localhost:4000`.
 
 ## Docs

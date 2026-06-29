@@ -9,6 +9,7 @@ import {
   type AuthSession,
   type TeacherSession,
 } from "../lib/authSession";
+import { APP_LINKS } from "../lib/appLinks";
 
 const CLASS_PRESETS = ["9-A", "9-B", "10-A", "10-B", "11-A", "11-B", "12-A", "12-B"];
 
@@ -321,6 +322,21 @@ export function SignIn({ onSignedIn }: SignInProps) {
           {mode === "teacher"
             ? "Your profile is saved locally and synced to the platform."
             : "Admin session is stored locally on this device."}
+        </p>
+
+        <p className="signin-links">
+          <a href={APP_LINKS.live} target="_blank" rel="noreferrer">
+            Live app (any device)
+          </a>
+          {" · "}
+          <a href={APP_LINKS.local}>Local :5173</a>
+          {" · "}
+          <a href={APP_LINKS.github} target="_blank" rel="noreferrer">
+            GitHub
+          </a>
+        </p>
+        <p className="signin-share-hint">
+          Public share link: run <code>{APP_LINKS.shareCommand}</code> in the project folder
         </p>
       </div>
     </div>
