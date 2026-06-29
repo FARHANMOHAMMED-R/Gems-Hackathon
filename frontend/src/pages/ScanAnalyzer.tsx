@@ -1,6 +1,7 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../api/client";
-import type { AnalyzeScanResponse, ScanMode } from "../api/types";
+import { fetchClassStudents } from "../api/classData";
+import type { AnalyzeScanResponse, ScanMode, StudentRosterEntry } from "../api/types";
 import { Card, EmptyState, ErrorNote, Field, Spinner } from "../components/ui";
 import { useToast } from "../components/Toast";
 
@@ -15,11 +16,14 @@ function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
-export function ScanAnalyzer() {
+export function ScanAnalyzer({ classManaged }: { classManaged: string }) {
   const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [mode, setMode] = useState<ScanMode>("Exam Paper");
+  const [students, setStudents] = useState<StudentRosterEntry[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState(true);
+
+  const [mode, setMode] = useState<ScanMode>("Notebook");
   const [studentId, setStudentId] = useState("");
   const [markingScheme, setMarkingScheme] = useState("");
   const [rawText, setRawText] = useState("");
@@ -29,6 +33,17 @@ export function ScanAnalyzer() {
   const [result, setResult] = useState<AnalyzeScanResponse | null>(null);
   const [llmDown, setLlmDown] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoadingStudents(true);
+    fetchClassStudents(classManaged)
+      .then((students) => {
+        setStudents(students);
+        if (students[0]) setStudentId(students[0].id);
+      })
+      .catch(() => setStudents([]))
+      .finally(() => setLoadingStudents(false));
+  }, [classManaged]);
 
   async function onFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -52,8 +67,12 @@ export function ScanAnalyzer() {
   }
 
   async function analyze() {
+    if (!studentId) {
+      toast.error("Select a student from your class roster.");
+      return;
+    }
     if (images.length === 0 && !rawText.trim()) {
-      toast.error("Provide scanned text or upload at least one image.");
+      toast.error("Upload a notebook image or paste scanned text.");
       return;
     }
     setLoading(true);
@@ -63,13 +82,17 @@ export function ScanAnalyzer() {
     try {
       const res = await api.analyzeScan({
         mode,
-        studentId: studentId.trim() || undefined,
+        studentId,
         markingScheme: mode === "Exam Paper" ? markingScheme || undefined : undefined,
         images: images.length ? images.map((i) => i.dataUrl) : undefined,
         rawScannedText: rawText.trim() || undefined,
       });
       setResult(res);
-      toast.success("Analysis complete.");
+      if (res.analysisMode === "local") {
+        toast.success("Notebook analyzed locally (no API key needed).");
+      } else {
+        toast.success("Analysis complete.");
+      }
     } catch (err) {
       if (err instanceof ApiError && err.isLlmNotConfigured) {
         setLlmDown(true);
@@ -82,9 +105,11 @@ export function ScanAnalyzer() {
     }
   }
 
+  const selected = students.find((s) => s.id === studentId);
+
   return (
     <div className="grid grid-2">
-      <Card title="Submit a Scan" subtitle="AI grading for exams and notebooks">
+      <Card title="Notebook / Exam Analyzer" subtitle="Linked to your class roster">
         <div className="field">
           <span className="field-label">Mode</span>
           <div className="chip-group">
@@ -101,43 +126,61 @@ export function ScanAnalyzer() {
           </div>
           {mode === "Notebook" && (
             <span className="field-hint">
-              Notebook mode scores Handwriting, Creativity & Content (5 each).
+              Upload notebook photos — OCR uses PDF Guru when{" "}
+              <code>GURUPDF_API_KEY</code> is set, otherwise local Tesseract. Scores
+              Handwriting, Creativity & Content (5 each).
+            </span>
+          )}
+          {mode === "Exam Paper" && (
+            <span className="field-hint">
+              Exam images are read via PDF Guru image-to-text (<code>GURUPDF_API_KEY</code>)
+              or OpenAI vision. Grading still needs <code>OPENAI_API_KEY</code>.
             </span>
           )}
         </div>
 
-        <Field label="Student ID" hint="Optional — links the result to a student record.">
-          <input
-            type="text"
-            value={studentId}
-            onChange={(e) => setStudentId(e.target.value)}
-            placeholder="e.g. clxxxx… (from the leaderboard)"
-          />
+        <Field label="Student" hint="Pick by name — roll no. and school ID are saved automatically.">
+          {loadingStudents ? (
+            <Spinner label="Loading class roster…" />
+          ) : students.length === 0 ? (
+            <p className="muted">No students in this class. Set up the roster first.</p>
+          ) : (
+            <select value={studentId} onChange={(e) => setStudentId(e.target.value)}>
+              {students.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} · Roll {s.rollNumber} · {s.schoolId}
+                </option>
+              ))}
+            </select>
+          )}
         </Field>
 
+        {selected && (
+          <p className="muted" style={{ marginTop: -8 }}>
+            Grading for <strong>{selected.name}</strong> (Roll {selected.rollNumber})
+          </p>
+        )}
+
         {mode === "Exam Paper" && (
-          <Field label="Marking scheme" hint="Answers / rubric to grade against.">
+          <Field label="Marking scheme">
             <textarea
               value={markingScheme}
               onChange={(e) => setMarkingScheme(e.target.value)}
-              placeholder={"Q1: Newton's 2nd law, F=ma (3 marks)\nQ2: Units must be consistent (4 marks)"}
+              placeholder="Q1: Newton's 2nd law (3 marks)…"
             />
           </Field>
         )}
 
-        <Field
-          label="Scanned text"
-          hint="Paste OCR'd / typed student text, or upload images below."
-        >
+        <Field label="Scanned text" hint="Or upload notebook images below.">
           <textarea
             value={rawText}
             onChange={(e) => setRawText(e.target.value)}
-            placeholder="Q1: Newton's second law states F = ma…"
+            placeholder="Paste OCR text from the student's notebook…"
           />
         </Field>
 
         <div className="field">
-          <span className="field-label">Image upload</span>
+          <span className="field-label">Upload notebook / exam image</span>
           <input
             ref={fileRef}
             type="file"
@@ -145,24 +188,15 @@ export function ScanAnalyzer() {
             multiple
             onChange={(e) => onFiles(e.target.files)}
           />
-          <span className="field-hint">
-            Images are converted to base64 and sent as <code>images[]</code>.
-          </span>
           {images.length > 0 && (
             <div className="chip-group" style={{ marginTop: 8 }}>
               {images.map((img) => (
                 <span key={img.name} className="pill pill-primary">
                   🖼 {img.name}
                   <button
+                    type="button"
                     onClick={() => removeImage(img.name)}
-                    aria-label={`Remove ${img.name}`}
-                    style={{
-                      border: "none",
-                      background: "transparent",
-                      cursor: "pointer",
-                      fontSize: 14,
-                      color: "inherit",
-                    }}
+                    style={{ border: "none", background: "transparent", cursor: "pointer" }}
                   >
                     ×
                   </button>
@@ -172,44 +206,61 @@ export function ScanAnalyzer() {
           )}
         </div>
 
-        <button className="btn btn-primary btn-block" onClick={analyze} disabled={loading}>
-          {loading ? "Analyzing…" : "Analyze scan"}
+        <button
+          className="btn btn-primary btn-block"
+          onClick={analyze}
+          disabled={loading || !studentId || students.length === 0}
+        >
+          {loading ? "Analyzing…" : "Analyze & save to student"}
         </button>
       </Card>
 
-      <Card title="Results" subtitle="Score breakdown, feedback & concept gaps">
-        {loading && <Spinner label="Running the grading pipeline…" />}
-
-        {llmDown && !loading && (
-          <div className="info-note">
-            The AI grader isn't configured on the backend (no{" "}
-            <code>OPENAI_API_KEY</code>). Add a key to the backend{" "}
-            <code>.env</code> and restart it to enable analysis.
-          </div>
-        )}
-
-        {error && !loading && <ErrorNote>{error}</ErrorNote>}
-
-        {!loading && !llmDown && !error && !result && (
-          <EmptyState
-            icon="📝"
-            title="No analysis yet"
-            hint="Fill in the form and run an analysis to see results here."
+      <Card title="Results" subtitle="Scores feed into parent mailer & records">
+        {loading && (
+          <Spinner
+            label={
+              images.length && !rawText.trim()
+                ? "Reading notebook image & analyzing…"
+                : "Analyzing notebook…"
+            }
           />
         )}
 
+        {llmDown && !loading && mode === "Exam Paper" && (
+          <div className="info-note">
+            Exam grading needs <code>OPENAI_API_KEY</code> in the backend <code>.env</code>.
+            For scan OCR, add <code>GURUPDF_API_KEY</code> from{" "}
+            <a href="https://gurupdf.com/api" target="_blank" rel="noreferrer">
+              PDF Guru / GuruPDF
+            </a>
+            . Notebook mode works offline with local Tesseract.
+          </div>
+        )}
+        {error && !loading && <ErrorNote>{error}</ErrorNote>}
+        {!loading && !llmDown && !error && !result && (
+          <EmptyState icon="📝" title="No analysis yet" hint="Select a student and submit a scan." />
+        )}
         {result && !loading && (
           <div className="stack">
+            {result.ocrMode === "gurupdf" && (
+              <span className="pill pill-primary">📝 OCR via PDF Guru image-to-text</span>
+            )}
+            {result.ocrMode === "tesseract" && (
+              <span className="pill pill-primary">📝 OCR via local Tesseract</span>
+            )}
+            {result.analysisMode === "local" && (
+              <span className="pill pill-primary">
+                📓 Local notebook analysis (works without OpenAI)
+              </span>
+            )}
             <div>
               <div className="section-label">Score breakdown</div>
               <ScoreBreakdown scores={result.score_breakdown} />
             </div>
-
             <div>
-              <div className="section-label">Constructive feedback</div>
+              <div className="section-label">Feedback</div>
               <div className="text-block">{result.constructive_feedback}</div>
             </div>
-
             {result.concept_gaps?.length > 0 && (
               <div>
                 <div className="section-label">Concept gaps</div>
@@ -223,21 +274,9 @@ export function ScanAnalyzer() {
                 </div>
               </div>
             )}
-
             {result.recordId && (
-              <span className="pill pill-success">
-                ✓ Saved as record {result.recordId.slice(0, 8)}…
-              </span>
+              <span className="pill pill-success">✓ Saved to student record</span>
             )}
-
-            <details>
-              <summary className="muted" style={{ cursor: "pointer" }}>
-                View extracted text
-              </summary>
-              <div className="text-block" style={{ marginTop: 8 }}>
-                {result.rawScannedText}
-              </div>
-            </details>
           </div>
         )}
       </Card>
@@ -247,17 +286,13 @@ export function ScanAnalyzer() {
 
 function ScoreBreakdown({ scores }: { scores: Record<string, unknown> }) {
   const entries = Object.entries(scores ?? {});
-  if (entries.length === 0) {
-    return <p className="muted">No structured scores returned.</p>;
-  }
+  if (entries.length === 0) return <p className="muted">No scores returned.</p>;
   return (
     <div className="score-grid">
       {entries.map(([key, val]) => (
         <div key={key} className="score-cell">
           <div className="score-key">{key.replace(/_/g, " ")}</div>
-          <div className="score-val">
-            {typeof val === "object" ? JSON.stringify(val) : String(val)}
-          </div>
+          <div className="score-val">{String(val)}</div>
         </div>
       ))}
     </div>

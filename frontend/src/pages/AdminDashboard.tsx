@@ -2,6 +2,8 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "../api/client";
 import type { LabReservation } from "../api/types";
 import { Card, EmptyState, ErrorNote, Field, Spinner } from "../components/ui";
+import { AdminNotificationsPanel } from "../components/AdminNotificationsPanel";
+import { AdminMonitorPanel } from "../components/AdminMonitorPanel";
 import { useToast } from "../components/Toast";
 
 const PERIODS = [1, 2, 3, 4, 5, 6, 7];
@@ -155,6 +157,9 @@ export function AdminDashboard() {
 
   return (
     <div className="admin-dashboard">
+      <AdminMonitorPanel />
+      <AdminNotificationsPanel />
+
       <Card
         title="Add reservation"
         subtitle="Admin override — book any available slot"

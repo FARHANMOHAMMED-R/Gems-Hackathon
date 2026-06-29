@@ -16,8 +16,26 @@ type RewardReason = keyof typeof TOKEN_REWARDS;
 
 const awardSchema = z.object({
   studentId: z.string().min(1),
-  reason: z.enum(["answering", "kindness", "peer_support"]),
+  reason: z.enum(["answering", "kindness", "peer_support"]).optional(),
+  /** Custom points override (teacher quick-add button). */
+  points: z.coerce.number().int().min(1).max(100).optional(),
 });
+
+function leaderboardSelect(classManaged?: string) {
+  return prisma.studentProfile.findMany({
+    where: classManaged ? { classManaged } : undefined,
+    orderBy: [{ totalTokens: "desc" }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      grade: true,
+      section: true,
+      rollNumber: true,
+      schoolId: true,
+      totalTokens: true,
+    },
+  });
+}
 
 /**
  * POST /api/tokens/award
@@ -28,45 +46,48 @@ const awardSchema = z.object({
 tokensRouter.post(
   "/tokens/award",
   asyncHandler(async (req, res) => {
-    const { studentId, reason } = awardSchema.parse(req.body);
-    const amount = TOKEN_REWARDS[reason as RewardReason];
+    const body = awardSchema.parse(req.body);
+    const amount =
+      body.points ??
+      (body.reason ? TOKEN_REWARDS[body.reason as RewardReason] : undefined);
+    if (!amount) {
+      throw new ApiError(400, "Provide either reason or points.");
+    }
 
-    // Atomic increment — avoids read-modify-write races on the balance.
     let updated;
     try {
       updated = await prisma.studentProfile.update({
-        where: { id: studentId },
+        where: { id: body.studentId },
         data: { totalTokens: { increment: amount } },
-        select: { id: true, name: true, totalTokens: true },
+        select: {
+          id: true,
+          name: true,
+          totalTokens: true,
+          classManaged: true,
+        },
       });
     } catch {
       throw new ApiError(404, "Student not found.");
     }
 
-    // Recompute leaderboard ranking array (highest tokens first).
-    const ranked = await prisma.studentProfile.findMany({
-      orderBy: [{ totalTokens: "desc" }, { name: "asc" }],
-      select: { id: true, name: true, grade: true, section: true, totalTokens: true },
-    });
-
+    const ranked = await leaderboardSelect(updated.classManaged || undefined);
     const leaderboard = ranked.map((s, i) => ({ rank: i + 1, ...s }));
 
     res.json({
-      awarded: { reason, amount },
+      awarded: { reason: body.reason ?? "custom", amount },
       student: updated,
       leaderboard,
     });
-  })
+  }),
 );
 
-/** GET /api/tokens/leaderboard — read-only ranking for the UI. */
+/** GET /api/tokens/leaderboard?classManaged=11-A */
 tokensRouter.get(
   "/tokens/leaderboard",
-  asyncHandler(async (_req, res) => {
-    const ranked = await prisma.studentProfile.findMany({
-      orderBy: [{ totalTokens: "desc" }, { name: "asc" }],
-      select: { id: true, name: true, grade: true, section: true, totalTokens: true },
-    });
+  asyncHandler(async (req, res) => {
+    const classManaged =
+      typeof req.query.classManaged === "string" ? req.query.classManaged : undefined;
+    const ranked = await leaderboardSelect(classManaged);
     res.json({ leaderboard: ranked.map((s, i) => ({ rank: i + 1, ...s })) });
-  })
+  }),
 );

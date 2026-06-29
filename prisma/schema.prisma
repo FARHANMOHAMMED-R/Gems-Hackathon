@@ -22,6 +22,10 @@ model StudentProfile {
   name                      String
   grade                     String
   section                   String
+  rollNumber                String          @default("") @map("roll_number")
+  schoolId                  String          @default("") @map("school_id")
+  /// Class key matching TeacherProfile.classManaged, e.g. "11-A"
+  classManaged              String          @default("") @map("class_managed")
   totalTokens               Int             @default(0) @map("total_tokens")
   /// JSON string, e.g. {"track":"Neurodivergent","subtype":"ADHD","pace":"micro"}
   adaptivePreferenceProfile String?         @map("adaptive_preference_profile")
@@ -30,8 +34,10 @@ model StudentProfile {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@unique([classManaged, rollNumber], name: "class_roll")
   @@index([grade, section])
-  @@index([totalTokens]) // supports leaderboard ordering
+  @@index([classManaged])
+  @@index([totalTokens])
   @@map("student_profiles")
 }
 
@@ -81,11 +87,39 @@ model TeacherProfile {
   name          String
   classManaged  String @map("class_managed")
   email         String @unique
+  lastSeenAt    DateTime? @map("last_seen_at")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("teacher_profiles")
+}
+
+/// Staff-lounge message between signed-in teachers.
+model TeacherChatMessage {
+  id           String   @id @default(cuid())
+  teacherId    String   @map("teacher_id")
+  teacherName  String   @map("teacher_name")
+  classManaged String   @map("class_managed")
+  teacherEmail String   @map("teacher_email")
+  body         String
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("teacher_chat_messages")
+}
+
+/// Broadcast notice from admin to all teachers.
+model AdminNotification {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  /// Allowed values: "info" | "warning" | "urgent" (application-enforced).
+  priority  String   @default("info")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("admin_notifications")
 }
 
 /// A teacher's per-period availability for the current day.

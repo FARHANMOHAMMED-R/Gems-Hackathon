@@ -3,11 +3,16 @@ import { api } from "./api/client";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { Dashboard } from "./pages/Dashboard";
 import { ScanAnalyzer } from "./pages/ScanAnalyzer";
+import { BlueprintGenerator } from "./pages/BlueprintGenerator";
 import { ContentDifferentiator } from "./pages/ContentDifferentiator";
 import { SubstitutionFinder } from "./pages/SubstitutionFinder";
 import { LabBooking } from "./pages/LabBooking";
+import { ThreeDLab } from "./pages/ThreeDLab";
 import { ParentMailer } from "./pages/ParentMailer";
 import { SignIn } from "./pages/SignIn";
+import { ClassRosterSetup } from "./pages/ClassRosterSetup";
+import { ClassStudents } from "./pages/ClassStudents";
+import { TeacherChat } from "./pages/TeacherChat";
 import {
   clearAuthSession,
   getAuthSession,
@@ -17,6 +22,8 @@ import {
   type AuthSession,
   type TeacherSession,
 } from "./lib/authSession";
+import { hasLocalRoster } from "./lib/classRoster";
+import { TeacherNotificationBox } from "./components/TeacherNotificationBox";
 
 interface NavItem {
   id: string;
@@ -26,50 +33,83 @@ interface NavItem {
   render: (onNavigate: (id: string) => void) => JSX.Element;
 }
 
-const TEACHER_NAV: NavItem[] = [
-  {
-    id: "dashboard",
-    label: "Dashboard",
-    icon: "🏆",
-    blurb: "Token leaderboard & rewards",
-    render: (onNavigate) => <Dashboard onNavigate={onNavigate} />,
-  },
-  {
-    id: "scan",
-    label: "Scan Analyzer",
-    icon: "📝",
-    blurb: "AI grading for exams & notebooks",
-    render: () => <ScanAnalyzer />,
-  },
-  {
-    id: "content",
-    label: "Content Differentiator",
-    icon: "🎯",
-    blurb: "Adapt lessons to every learner",
-    render: () => <ContentDifferentiator />,
-  },
-  {
-    id: "substitution",
-    label: "Substitution Finder",
-    icon: "🔁",
-    blurb: "Find free teachers by period",
-    render: () => <SubstitutionFinder />,
-  },
-  {
-    id: "labs",
-    label: "Lab Booking",
-    icon: "🔬",
-    blurb: "Reserve labs, avoid clashes",
-    render: () => <LabBooking />,
-  },
-  {
-    id: "mailer",
-    label: "Parent Mailer",
-    icon: "✉️",
-    blurb: "Draft parent update emails",
-    render: () => <ParentMailer />,
-  },
-];
+function buildTeacherNav(teacher: TeacherSession): NavItem[] {
+  const { classManaged } = teacher;
+  return [
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: "🏆",
+      blurb: "Token leaderboard & rewards",
+      render: (onNavigate) => (
+        <Dashboard classManaged={classManaged} onNavigate={onNavigate} />
+      ),
+    },
+    {
+      id: "students",
+      label: "Class Roster",
+      icon: "👥",
+      blurb: "Edit students & roll numbers",
+      render: () => <ClassStudents classManaged={classManaged} />,
+    },
+    {
+      id: "scan",
+      label: "Scan Analyzer",
+      icon: "📝",
+      blurb: "AI grading for exams & notebooks",
+      render: () => <ScanAnalyzer classManaged={classManaged} />,
+    },
+    {
+      id: "blueprint",
+      label: "Blueprint Generator",
+      icon: "📋",
+      blurb: "Exam paper topic & marks map",
+      render: () => <BlueprintGenerator />,
+    },
+    {
+      id: "content",
+      label: "Content Differentiator",
+      icon: "🎯",
+      blurb: "Adapt lessons to every learner",
+      render: () => <ContentDifferentiator />,
+    },
+    {
+      id: "substitution",
+      label: "Substitution Finder",
+      icon: "🔁",
+      blurb: "Find free teachers by period",
+      render: () => <SubstitutionFinder />,
+    },
+    {
+      id: "labs",
+      label: "Lab Booking",
+      icon: "🔬",
+      blurb: "Reserve labs, avoid clashes",
+      render: () => <LabBooking />,
+    },
+    {
+      id: "3dlab",
+      label: "3D Lab",
+      icon: "🧪",
+      blurb: "PhET physics simulations",
+      render: () => <ThreeDLab />,
+    },
+    {
+      id: "chat",
+      label: "Teacher Chat",
+      icon: "💬",
+      blurb: "Message other teachers",
+      render: () => <TeacherChat teacher={teacher} />,
+    },
+    {
+      id: "mailer",
+      label: "Parent Mailer",
+      icon: "✉️",
+      blurb: "Draft parent update emails",
+      render: () => <ParentMailer classManaged={classManaged} />,
+    },
+  ];
+}
 
 const ADMIN_NAV_ITEM: NavItem = {
   id: "admin",
@@ -90,10 +130,16 @@ export function App() {
   });
   const [status, setStatus] = useState<BackendStatus>("checking");
   const [navOpen, setNavOpen] = useState(false);
+  /** null = checking, false = needs roster setup, true = ready */
+  const [rosterReady, setRosterReady] = useState<boolean | null>(null);
 
   const isAdmin = session && isAdminSession(session);
   const teacher = session && isTeacherSession(session) ? session : null;
-  const nav = isAdmin ? [ADMIN_NAV_ITEM, ...TEACHER_NAV] : TEACHER_NAV;
+  const nav = isAdmin
+    ? [ADMIN_NAV_ITEM, ...(teacher ? buildTeacherNav(teacher) : [])]
+    : teacher
+      ? buildTeacherNav(teacher)
+      : [];
 
   useEffect(() => {
     let cancelled = false;
@@ -141,8 +187,8 @@ export function App() {
       })
       .catch(() => {
         if (cancelled) return;
-        clearAuthSession();
-        setSession(null);
+        // Keep local session when backend is down or not yet restarted.
+        setSession(stored as TeacherSession);
       })
       .finally(() => {
         if (!cancelled) setSessionReady(true);
@@ -152,6 +198,36 @@ export function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!teacher) {
+      setRosterReady(null);
+      return;
+    }
+    let cancelled = false;
+    api
+      .getRosterStatus(teacher.classManaged)
+      .then((r) =>
+        !cancelled &&
+        setRosterReady(!r.needsSetup || hasLocalRoster(teacher.classManaged)),
+      )
+      .catch(() =>
+        !cancelled && setRosterReady(hasLocalRoster(teacher.classManaged)),
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, [teacher?.classManaged, teacher?.email]);
+
+  useEffect(() => {
+    if (!teacher?.email) return;
+    const ping = () => {
+      api.teacherPresence(teacher.email).catch(() => {});
+    };
+    ping();
+    const t = window.setInterval(ping, 60000);
+    return () => window.clearInterval(t);
+  }, [teacher?.email]);
 
   function handleSignedIn(next: AuthSession) {
     setSession(next);
@@ -176,6 +252,25 @@ export function App() {
 
   if (!session) {
     return <SignIn onSignedIn={handleSignedIn} />;
+  }
+
+  if (teacher && rosterReady === null) {
+    return (
+      <div className="signin-page">
+        <div className="signin-shell">
+          <p className="signin-footnote">Checking class roster…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (teacher && rosterReady === false) {
+    return (
+      <ClassRosterSetup
+        teacher={teacher}
+        onComplete={() => setRosterReady(true)}
+      />
+    );
   }
 
   const current = nav.find((n) => n.id === active) ?? nav[0];
@@ -205,6 +300,8 @@ export function App() {
             <span className="teacher-chip-meta">{displayMeta}</span>
           </div>
         </div>
+
+        {teacher && <TeacherNotificationBox />}
 
         <nav className="nav">
           {nav.map((item) => (

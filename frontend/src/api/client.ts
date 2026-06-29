@@ -2,6 +2,8 @@ import { ADMIN_PASSCODE } from "../lib/authSession";
 import type {
   AnalyzeScanRequest,
   AnalyzeScanResponse,
+  GenerateBlueprintRequest,
+  GenerateBlueprintResponse,
   AvailabilityResponse,
   AwardReason,
   AwardResponse,
@@ -10,6 +12,8 @@ import type {
   DifferentiateResponse,
   GenerateMailRequest,
   GenerateMailResponse,
+  GenerateMailBatchRequest,
+  GenerateMailBatchResponse,
   HealthResponse,
   LeaderboardResponse,
   ReservationsListResponse,
@@ -18,8 +22,25 @@ import type {
   SubstitutionResponse,
   TeacherProfile,
   TeacherSignInRequest,
+  TeachersListResponse,
+  ChatMessagesResponse,
+  SendChatMessageRequest,
+  SendChatMessageResponse,
+  NotificationsResponse,
+  CreateNotificationRequest,
+  AdminNotification,
+  AdminMonitorResponse,
   UpdateLabReservationRequest,
   UpdateLabReservationResponse,
+  RosterStatusResponse,
+  StudentsListResponse,
+  CreateRosterRequest,
+  CreateRosterResponse,
+  ParseRosterTextRequest,
+  ParseRosterTextResponse,
+  AddStudentRequest,
+  StudentMutationResponse,
+  DeleteStudentResponse,
 } from "./types";
 
 // Single source of truth for the API base. The Vite dev proxy (vite.config.ts)
@@ -86,10 +107,17 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   const data = text ? safeParse(text) : undefined;
 
   if (!res.ok) {
-    const message =
-      (data && typeof data === "object" && "error" in data
+    const serverMessage =
+      data && typeof data === "object" && "error" in data
         ? String((data as { error: unknown }).error)
-        : undefined) ?? `Request failed with status ${res.status}`;
+        : undefined;
+    let message =
+      serverMessage ?? `Request failed with status ${res.status}`;
+    if (res.status >= 500) {
+      message = serverMessage
+        ? `Server error (${res.status}): ${serverMessage}. Check that the backend is running on http://localhost:4000 (npm run dev).`
+        : `Server error (${res.status}). The backend may be offline — start it with npm run dev on http://localhost:4000.`;
+    }
     const code =
       data && typeof data === "object" && "code" in data
         ? (data as { code?: string }).code
@@ -113,16 +141,33 @@ export const api = {
   health: () => request<HealthResponse>("/health"),
 
   // Tokens
-  getLeaderboard: () => request<LeaderboardResponse>("/api/tokens/leaderboard"),
+  getLeaderboard: (classManaged?: string) => {
+    const qs = classManaged
+      ? `?classManaged=${encodeURIComponent(classManaged)}`
+      : "";
+    return request<LeaderboardResponse>(`/api/tokens/leaderboard${qs}`);
+  },
   awardToken: (studentId: string, reason: AwardReason) =>
     request<AwardResponse>("/api/tokens/award", {
       method: "POST",
       body: { studentId, reason },
     }),
+  awardPoints: (studentId: string, points: number) =>
+    request<AwardResponse>("/api/tokens/award", {
+      method: "POST",
+      body: { studentId, points },
+    }),
 
   // Scan analysis
   analyzeScan: (body: AnalyzeScanRequest, signal?: AbortSignal) =>
     request<AnalyzeScanResponse>("/api/analyze-scan", {
+      method: "POST",
+      body,
+      signal,
+    }),
+
+  generateBlueprint: (body: GenerateBlueprintRequest, signal?: AbortSignal) =>
+    request<GenerateBlueprintResponse>("/api/generate-blueprint", {
       method: "POST",
       body,
       signal,
@@ -183,6 +228,49 @@ export const api = {
       body,
       signal,
     }),
+  generateMailBatch: (body: GenerateMailBatchRequest, signal?: AbortSignal) =>
+    request<GenerateMailBatchResponse>("/api/generate-mail/batch", {
+      method: "POST",
+      body,
+      signal,
+    }),
+
+  // Students / roster
+  getRosterStatus: (classManaged: string) =>
+    request<RosterStatusResponse>(
+      `/api/students/roster-status?classManaged=${encodeURIComponent(classManaged)}`,
+    ),
+  listStudents: (classManaged: string) =>
+    request<StudentsListResponse>(
+      `/api/students?classManaged=${encodeURIComponent(classManaged)}`,
+    ),
+  createRoster: (body: CreateRosterRequest) =>
+    request<CreateRosterResponse>("/api/students/roster", {
+      method: "POST",
+      body,
+    }),
+  parseRosterText: (body: ParseRosterTextRequest) =>
+    request<ParseRosterTextResponse>("/api/students/roster/parse-text", {
+      method: "POST",
+      body,
+    }),
+  addStudent: (body: AddStudentRequest) =>
+    request<StudentMutationResponse>("/api/students", {
+      method: "POST",
+      body,
+    }),
+  updateStudent: (
+    id: string,
+    body: { name?: string; rollNumber?: string; schoolId?: string },
+  ) =>
+    request<StudentMutationResponse>(`/api/students/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body,
+    }),
+  deleteStudent: (id: string) =>
+    request<DeleteStudentResponse>(`/api/students/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    }),
 
   // Teachers
   teacherSignIn: (body: TeacherSignInRequest) =>
@@ -194,4 +282,51 @@ export const api = {
     request<TeacherProfile>(
       `/api/teachers/me?email=${encodeURIComponent(email)}`,
     ),
+  listTeachers: () => request<TeachersListResponse>("/api/teachers"),
+  getChatMessages: (after?: string) => {
+    const qs = after ? `?after=${encodeURIComponent(after)}` : "";
+    return request<ChatMessagesResponse>(`/api/teachers/chat/messages${qs}`);
+  },
+  sendChatMessage: (body: SendChatMessageRequest) =>
+    request<SendChatMessageResponse>("/api/teachers/chat/messages", {
+      method: "POST",
+      body,
+    }),
+  deleteChatMessage: (id: string, email: string) =>
+    request<{ ok: boolean; deletedId: string }>(
+      `/api/teachers/chat/messages/${encodeURIComponent(id)}?email=${encodeURIComponent(email)}`,
+      { method: "DELETE" },
+    ),
+
+  // Notifications
+  getNotifications: () => request<NotificationsResponse>("/api/notifications"),
+  listAdminNotifications: () =>
+    request<NotificationsResponse>("/api/admin/notifications", {
+      headers: { "X-Admin-Passcode": ADMIN_PASSCODE },
+    }),
+  createAdminNotification: (body: CreateNotificationRequest) =>
+    request<{ notification: AdminNotification }>("/api/admin/notifications", {
+      method: "POST",
+      body,
+      headers: { "X-Admin-Passcode": ADMIN_PASSCODE },
+    }),
+  deleteAdminNotification: (id: string) =>
+    request<{ ok: boolean; deletedId: string }>(
+      `/api/admin/notifications/${encodeURIComponent(id)}`,
+      {
+        method: "DELETE",
+        headers: { "X-Admin-Passcode": ADMIN_PASSCODE },
+      },
+    ),
+
+  getAdminMonitor: () =>
+    request<AdminMonitorResponse>("/api/admin/monitor", {
+      headers: { "X-Admin-Passcode": ADMIN_PASSCODE },
+    }),
+
+  teacherPresence: (email: string) =>
+    request<{ ok: boolean; lastSeenAt: string | null }>("/api/teachers/presence", {
+      method: "POST",
+      body: { email },
+    }),
 };

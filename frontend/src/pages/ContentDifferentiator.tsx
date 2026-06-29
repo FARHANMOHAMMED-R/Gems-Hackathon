@@ -21,6 +21,7 @@ export function ContentDifferentiator() {
   const [loading, setLoading] = useState(false);
   const [html, setHtml] = useState<string | null>(null);
   const [resultTarget, setResultTarget] = useState<DifferentiationTarget | null>(null);
+  const [analysisMode, setAnalysisMode] = useState<"ai" | "local" | null>(null);
   const [llmDown, setLlmDown] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,6 +32,7 @@ export function ContentDifferentiator() {
     }
     setLoading(true);
     setHtml(null);
+    setAnalysisMode(null);
     setLlmDown(false);
     setError(null);
     try {
@@ -38,7 +40,12 @@ export function ContentDifferentiator() {
       const rendered = await marked.parse(res.content);
       setHtml(rendered);
       setResultTarget(res.target);
-      toast.success(`Adapted for ${res.target}.`);
+      setAnalysisMode(res.analysisMode ?? "ai");
+      if (res.analysisMode === "local") {
+        toast.success(`Adapted locally for ${res.target} (no API key needed).`);
+      } else {
+        toast.success(`Adapted for ${res.target}.`);
+      }
     } catch (err) {
       if (err instanceof ApiError && err.isLlmNotConfigured) {
         setLlmDown(true);
@@ -79,7 +86,8 @@ export function ContentDifferentiator() {
             ))}
           </div>
           <span className="field-hint">
-            {TARGETS.find((t) => t.value === target)?.blurb}
+            {TARGETS.find((t) => t.value === target)?.blurb} — works without OpenAI key
+            (local adaptation).
           </span>
         </div>
 
@@ -113,7 +121,14 @@ export function ContentDifferentiator() {
         )}
 
         {html && !loading && (
-          <div className="markdown" dangerouslySetInnerHTML={{ __html: html }} />
+          <>
+            {analysisMode === "local" && (
+              <span className="pill pill-primary" style={{ marginBottom: 12, display: "inline-block" }}>
+                📘 Local adaptation — add OPENAI_API_KEY for full AI rewrite
+              </span>
+            )}
+            <div className="markdown" dangerouslySetInnerHTML={{ __html: html }} />
+          </>
         )}
       </Card>
     </div>

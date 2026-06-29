@@ -35,6 +35,40 @@ export const VISION_TRANSCRIBE_SYSTEM_PROMPT =
   "and symbols. Do not solve, correct, grade, or summarize. Output only the raw transcribed text.";
 
 /* ------------------------------------------------------------------ */
+/* 2b. Exam Blueprint Generator                                       */
+/* ------------------------------------------------------------------ */
+
+/** Blueprint prompt for /api/generate-blueprint. */
+export const BLUEPRINT_SYSTEM_PROMPT = `You are a CBSE Class 11 exam blueprint analyst. Given the full text of an exam paper (questions only — not student answers), produce a structured exam blueprint for teachers.
+
+Identify every question with its number, marks, topic/unit, question type (MCQ, Very Short Answer, Short Answer, Long Answer, Numerical, Diagram-based), and Bloom's cognitive level (Remember, Understand, Apply, Analyze, Evaluate, Create).
+
+Return strict JSON:
+{
+  "examTitle": string,
+  "totalMarks": number,
+  "durationMinutes": number | null,
+  "sections": [{
+    "name": string,
+    "instructions": string,
+    "sectionMarks": number,
+    "questions": [{
+      "number": string,
+      "marks": number,
+      "topic": string,
+      "questionType": string,
+      "cognitiveLevel": string,
+      "description": string
+    }]
+  }],
+  "topicDistribution": [{ "topic": string, "marks": number, "percentage": number, "questionCount": number }],
+  "cognitiveDistribution": [{ "level": string, "marks": number, "percentage": number }],
+  "summary": string
+}
+
+Be grounded only in the uploaded paper. If marks are not stated, infer typical CBSE weightings honestly and note uncertainty in descriptions.`;
+
+/* ------------------------------------------------------------------ */
 /* 3. Differentiated Content Generation                               */
 /* ------------------------------------------------------------------ */
 
@@ -66,3 +100,16 @@ export const PARENT_MAIL_SYSTEM_PROMPT =
   "to the parents of this student. Reference their positive token activities and " +
   "outline precise focus areas for weak test metrics without using introductory " +
   "explanatory filler clauses or robotic phrases.";
+
+/* ------------------------------------------------------------------ */
+/* 6. Roster text import                                              */
+/* ------------------------------------------------------------------ */
+
+/** Free-form text → student list for /api/students/roster/parse-text. */
+export const ROSTER_IMPORT_SYSTEM_PROMPT =
+  "You extract a class student roster from free-form text pasted by a teacher. " +
+  "The text may be from a spreadsheet copy-paste, WhatsApp message, attendance sheet, or numbered list. " +
+  "For each student return: name (full name), rollNumber (roll no / serial), " +
+  "schoolId (school ID, admission number, or student ID). " +
+  "If school ID is missing, use GEMS-{rollNumber}. Skip headers and non-student lines. " +
+  'Return strict JSON: { "students": [{ "name": string, "rollNumber": string, "schoolId": string }] }';

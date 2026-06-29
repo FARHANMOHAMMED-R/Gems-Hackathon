@@ -6,75 +6,15 @@ const prisma = new PrismaClient();
 const j = (v: unknown) => JSON.stringify(v);
 
 /**
- * Seed a small, realistic CBSE Class 11 dataset so every endpoint is
- * immediately demoable: students, grading history, teacher availability and
- * a couple of lab reservations.
+ * Seed supporting data only — teachers add their own class roster (0 tokens).
+ * Lab reservations and teacher availability for substitution demos.
  */
 async function main() {
-  // Clean slate (order matters for FK).
   await prisma.gradingRecord.deleteMany();
   await prisma.studentProfile.deleteMany();
   await prisma.labReservation.deleteMany();
   await prisma.teacherAvailability.deleteMany();
 
-  const aarav = await prisma.studentProfile.create({
-    data: {
-      name: "Aarav Sharma",
-      grade: "11",
-      section: "A",
-      totalTokens: 18,
-      adaptivePreferenceProfile: j({ track: "Standard", pace: "normal" }),
-      gradingRecords: {
-        create: [
-          {
-            type: "Exam",
-            rawScannedText: "Q1: Newton's second law F=ma ... derivation partially correct.",
-            scores: j({ total: 7, max: 10, Q1: 3, Q2: 4 }),
-            aiFeedbackText:
-              "Strong grasp of force concepts; lost marks on unit consistency in Q2.",
-          },
-          {
-            type: "Notebook",
-            rawScannedText: "Chapter 4 notes — kinematics graphs neatly drawn.",
-            scores: j({ Handwriting: 4, Creativity: 3, Content: 5 }),
-            aiFeedbackText: "Excellent content coverage; add more worked examples for creativity.",
-          },
-        ],
-      },
-    },
-  });
-
-  const diya = await prisma.studentProfile.create({
-    data: {
-      name: "Diya Nair",
-      grade: "11",
-      section: "A",
-      totalTokens: 27,
-      adaptivePreferenceProfile: j({ track: "Neurodivergent", subtype: "ADHD", pace: "micro" }),
-      gradingRecords: {
-        create: [
-          {
-            type: "Exam",
-            rawScannedText: "Q1: Mole concept calculation, minor arithmetic slip.",
-            scores: j({ total: 8, max: 10, Q1: 4, Q2: 4 }),
-            aiFeedbackText: "Conceptually solid; double-check arithmetic under time pressure.",
-          },
-        ],
-      },
-    },
-  });
-
-  await prisma.studentProfile.create({
-    data: {
-      name: "Kabir Verma",
-      grade: "11",
-      section: "B",
-      totalTokens: 9,
-      adaptivePreferenceProfile: j({ track: "Advanced", pace: "fast" }),
-    },
-  });
-
-  // current_period_free_status: booleans for periods 1..7.
   await prisma.teacherAvailability.createMany({
     data: [
       {
@@ -111,8 +51,7 @@ async function main() {
     },
   });
 
-  console.log("Seed complete.");
-  console.log(`Sample student IDs:\n  Aarav: ${aarav.id}\n  Diya:  ${diya.id}`);
+  console.log("Seed complete (no students — teacher sets up class roster on first sign-in).");
 }
 
 main()

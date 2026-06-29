@@ -1,0 +1,591 @@
+[
+  {
+    "id": "atomic-interactions",
+    "name": "Atomic Interactions",
+    "description": "Explore the interactions between various combinations of two atoms. Observe the total force acting on the atoms or the individual attractive and repulsive forces. Customize the attraction to see how changing the atomic d",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/atomic-interactions/latest/atomic-interactions_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/atomic-interactions"
+  },
+  {
+    "id": "balancing-act",
+    "name": "Balancing Act",
+    "description": "Play with objects on a teeter totter to learn about balance. Test what you've learned by trying the Balance Challenge game.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/balancing-act/latest/balancing-act_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/balancing-act"
+  },
+  {
+    "id": "balloons-and-static-electricity",
+    "name": "Balloons and Static Electricity",
+    "description": "Grab a balloon to explore concepts of static electricity such as charge transfer, attraction, repulsion, and induced charge.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/balloons-and-static-electricity/latest/balloons-and-static-electricity_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/balloons-and-static-electricity"
+  },
+  {
+    "id": "bending-light",
+    "name": "Bending Light",
+    "description": "Explore bending of light between two media with different indices of refraction. See how changing from air to water to glass changes the bending angle. Play with prisms of different shapes and make rainbows.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/bending-light/latest/bending-light_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/bending-light"
+  },
+  {
+    "id": "blackbody-spectrum",
+    "name": "Blackbody Spectrum",
+    "description": "How does the blackbody spectrum of the sun compare to visible light? Learn about the blackbody spectrum of Sirius A, the sun, a light bulb, and the earth. Adjust the temperature to see the wavelength and intensity of the",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/blackbody-spectrum/latest/blackbody-spectrum_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/blackbody-spectrum"
+  },
+  {
+    "id": "build-a-nucleus",
+    "name": "Build a Nucleus",
+    "description": "How does changing the number of neutrons or protons affect the nuclear species, the stability of a nucleus, and its possible decay mechanisms?  Explore different species, and learn about the common decay paths! Visualize",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/build-a-nucleus/latest/build-a-nucleus_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/build-a-nucleus"
+  },
+  {
+    "id": "build-an-atom",
+    "name": "Build an Atom",
+    "description": "Build an atom out of protons, neutrons, and electrons, and see how the element, charge, and mass change. Then play a game to test your ideas!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/build-an-atom/latest/build-an-atom_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/build-an-atom"
+  },
+  {
+    "id": "buoyancy",
+    "name": "Buoyancy",
+    "description": "When will objects float, and when will they sink? Learn how buoyancy works and the forces involved by experimenting with objects, like blocks, materials with different shapes, a bottle with substances inside, and blocks ",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/buoyancy/latest/buoyancy_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/buoyancy"
+  },
+  {
+    "id": "buoyancy-basics",
+    "name": "Buoyancy: Basics",
+    "description": "When will objects float, and when will they sink? Learn how buoyancy works by experimenting with different blocks, modifying their volume and mass, and placing them in the pool with fluids of different densities.  Analyz",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/buoyancy-basics/latest/buoyancy-basics_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/buoyancy-basics"
+  },
+  {
+    "id": "calculus-grapher",
+    "name": "Calculus Grapher",
+    "description": "Manipulate a graph of any function and see graphs of its integral, first derivative, and second derivative. Drag the tangent line along the curve, and accumulate area under the curve.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/calculus-grapher/latest/calculus-grapher_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/calculus-grapher"
+  },
+  {
+    "id": "capacitor-lab-basics",
+    "name": "Capacitor Lab: Basics",
+    "description": "Explore how a capacitor works! Change the size of the plates and the distance between them. Change the voltage and see charges build up on the plates. View the electric field, and measure the voltage. Connect a charged c",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/capacitor-lab-basics/latest/capacitor-lab-basics_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/capacitor-lab-basics"
+  },
+  {
+    "id": "charges-and-fields",
+    "name": "Charges and Fields",
+    "description": "Arrange positive and negative charges in space and view the resulting electric field and electrostatic potential. Plot equipotential lines and discover their relationship to the electric field. Create models of dipoles, ",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/charges-and-fields/latest/charges-and-fields_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/charges-and-fields"
+  },
+  {
+    "id": "circuit-construction-kit-ac",
+    "name": "Circuit Construction Kit: AC",
+    "description": "Experiment with an electronics kit! Build circuits with batteries, resistors, ideal and non-Ohmic light bulbs, fuses, and switches. Build circuits with AC voltage sources, batteries, resistors, capacitors, inductors, fus",
+    "topic": "electricity-magnets-and-circuits",
+    "topics": [
+      "electricity-magnets-and-circuits"
+    ],
+    "runUrl": "https://phet.colorado.edu/sims/html/circuit-construction-kit-ac/latest/circuit-construction-kit-ac_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/circuit-construction-kit-ac"
+  },
+  {
+    "id": "circuit-construction-kit-ac-virtual-lab",
+    "name": "Circuit Construction Kit: AC - Virtual Lab",
+    "description": "Do you like Circuit Construction Kit: AC, but want to use only in-line ammeters? This is the sim for you! Experiment with an electronics kit. Build circuits with AC voltage sources, batteries, resistors, capacitors, indu",
+    "topic": "electricity-magnets-and-circuits",
+    "topics": [
+      "electricity-magnets-and-circuits"
+    ],
+    "runUrl": "https://phet.colorado.edu/sims/html/circuit-construction-kit-ac-virtual-lab/latest/circuit-construction-kit-ac-virtual-lab_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/circuit-construction-kit-ac-virtual-lab"
+  },
+  {
+    "id": "circuit-construction-kit-dc",
+    "name": "Circuit Construction Kit: DC",
+    "description": "Experiment with an electronics kit! Build circuits with batteries, resistors, ideal and non-Ohmic light bulbs, fuses, and switches. Determine if everyday objects are conductors or insulators, and take measurements with a",
+    "topic": "electricity-magnets-and-circuits",
+    "topics": [
+      "electricity-magnets-and-circuits"
+    ],
+    "runUrl": "https://phet.colorado.edu/sims/html/circuit-construction-kit-dc/latest/circuit-construction-kit-dc_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/circuit-construction-kit-dc"
+  },
+  {
+    "id": "circuit-construction-kit-dc-virtual-lab",
+    "name": "Circuit Construction Kit: DC - Virtual Lab",
+    "description": "Do you like Circuit Construction Kit: DC, but want to use only in-line ammeters? This is the sim for you! Experiment with an electronics kit. Build circuits with batteries, resistors, ideal and non-Ohmic light bulbs, fus",
+    "topic": "electricity-magnets-and-circuits",
+    "topics": [
+      "electricity-magnets-and-circuits"
+    ],
+    "runUrl": "https://phet.colorado.edu/sims/html/circuit-construction-kit-dc-virtual-lab/latest/circuit-construction-kit-dc-virtual-lab_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/circuit-construction-kit-dc-virtual-lab"
+  },
+  {
+    "id": "collision-lab",
+    "name": "Collision Lab",
+    "description": "Investigate simple collisions in 1D and more complex collisions in 2D. Experiment with the number of balls, masses, and initial conditions. Vary the elasticity and see how the total momentum and kinetic energy change dur",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/collision-lab/latest/collision-lab_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/collision-lab"
+  },
+  {
+    "id": "color-vision",
+    "name": "Color Vision",
+    "description": "Make a whole rainbow by mixing red, green, and blue light. Change the wavelength of a monochromatic beam or filter white light. View the light as a solid beam, or see the individual photons.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/color-vision/latest/color-vision_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/color-vision"
+  },
+  {
+    "id": "coulombs-law",
+    "name": "Coulomb's Law",
+    "description": "Visualize the electrostatic force that two charges exert on each other. Observe how changing the sign and magnitude of the charges and the distance between them affects the electrostatic force.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/coulombs-law/latest/coulombs-law_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/coulombs-law"
+  },
+  {
+    "id": "curve-fitting",
+    "name": "Curve Fitting",
+    "description": "Drag data points and their error bars and watch the best-fit polynomial curve update instantly. You choose the type of fit: linear, quadratic, or cubic. The reduced chi-square statistic shows you when the fit is good. Or",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/curve-fitting/latest/curve-fitting_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/curve-fitting"
+  },
+  {
+    "id": "density",
+    "name": "Density",
+    "description": "Why do some materials like wood float in water, and others don’t? Interact with blocks of different materials, including a custom option by modifying their mass and volume, to explore the effect on the density and discov",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/density/latest/density_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/density"
+  },
+  {
+    "id": "diffusion",
+    "name": "Diffusion",
+    "description": "Mix two gases to explore diffusion! Experiment with concentration, temperature, mass, and radius and determine how these factors affect the rate of diffusion.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/diffusion/latest/diffusion_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/diffusion"
+  },
+  {
+    "id": "energy-forms-and-changes",
+    "name": "Energy Forms and Changes",
+    "description": "Explore how heating and cooling iron, brick, water, and olive oil adds or removes energy. See how energy is transferred between objects. Build your own system, with energy sources, changers, and users. Track and visualiz",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/energy-forms-and-changes/latest/energy-forms-and-changes_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/energy-forms-and-changes"
+  },
+  {
+    "id": "energy-skate-park",
+    "name": "Energy Skate Park",
+    "description": "Learn about the conservation of energy at the skate park! Build tracks, ramps, and jumps for the skater. View the skater's kinetic energy, potential energy, and thermal energy as they move along the track. Measure the sp",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/energy-skate-park/latest/energy-skate-park_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/energy-skate-park"
+  },
+  {
+    "id": "energy-skate-park-basics",
+    "name": "Energy Skate Park: Basics",
+    "description": "Learn about conservation of energy with a skater gal! Explore different tracks and view the kinetic energy, potential energy and friction as she moves. Build your own tracks, ramps, and jumps for the skater.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/energy-skate-park-basics/latest/energy-skate-park-basics_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/energy-skate-park-basics"
+  },
+  {
+    "id": "faradays-electromagnetic-lab",
+    "name": "Faraday's Electromagnetic Lab",
+    "description": "Experiment with magnets and coils to learn about Faraday's Law. Measure the direction and magnitude of the magnetic field. Induce a current through the pickup coil to light a bulb and vary magnetic strength, number of lo",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/faradays-electromagnetic-lab/latest/faradays-electromagnetic-lab_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/faradays-electromagnetic-lab"
+  },
+  {
+    "id": "faradays-law",
+    "name": "Faraday's Law",
+    "description": "Investigate Faraday's law and how a changing magnetic flux can produce a flow of electricity!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/faradays-law/latest/faradays-law_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/faradays-law"
+  },
+  {
+    "id": "forces-and-motion-basics",
+    "name": "Forces and Motion: Basics",
+    "description": "Explore the forces at work when pulling against a cart, and pushing a refrigerator, crate, or person. Create an applied force and see how it makes objects move. Change friction and see how it affects the motion of object",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/forces-and-motion-basics/latest/forces-and-motion-basics_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/forces-and-motion-basics"
+  },
+  {
+    "id": "fourier-making-waves",
+    "name": "Fourier: Making Waves",
+    "description": "Add up sines or cosines to make waves of different shapes. Discover how changing the amplitudes of different harmonics changes the sound you hear. Play the Wave Game and combine harmonics to match a target waveform. Cons",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/fourier-making-waves/latest/fourier-making-waves_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/fourier-making-waves"
+  },
+  {
+    "id": "friction",
+    "name": "Friction",
+    "description": "Move the Chemistry book and observe what happens.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/friction/latest/friction_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/friction"
+  },
+  {
+    "id": "gas-properties",
+    "name": "Gas Properties",
+    "description": "Pump gas molecules to a box and see what happens as you change the volume, add or remove heat, and more. Measure the temperature and pressure, and discover how the properties of the gas vary in relation to each other. Ex",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/gas-properties/latest/gas-properties_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/gas-properties"
+  },
+  {
+    "id": "gases-intro",
+    "name": "Gases Intro",
+    "description": "Pump gas molecules to a box and see what happens as you change the volume, add or remove heat, and more. Measure the temperature and pressure, and discover how the properties of the gas vary in relation to each other.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/gases-intro/latest/gases-intro_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/gases-intro"
+  },
+  {
+    "id": "generator",
+    "name": "Generator",
+    "description": "Generate electricity with a spinning bar magnet. Explore the underlying physics of a generator and discover how to maximize the brightness of a light bulb.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/generator/latest/generator_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/generator"
+  },
+  {
+    "id": "geometric-optics",
+    "name": "Geometric Optics",
+    "description": "How does a lens or mirror form an image? See how light rays are refracted by a lens or reflected by a mirror. Observe how the image changes when you adjust the focal length of the lens, move the object, or move the scree",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/geometric-optics/latest/geometric-optics_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/geometric-optics"
+  },
+  {
+    "id": "geometric-optics-basics",
+    "name": "Geometric Optics: Basics",
+    "description": "How does a lens or mirror form an image? See how light rays are refracted by a lens or reflected by a mirror. Observe how the image changes when you adjust the focal length, move the object, or move the screen.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/geometric-optics-basics/latest/geometric-optics-basics_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/geometric-optics-basics"
+  },
+  {
+    "id": "gravity-and-orbits",
+    "name": "Gravity and Orbits",
+    "description": "Move the sun, earth, moon and space station to see how it affects their gravitational forces and orbital paths. Visualize the sizes and distances between different heavenly bodies, and turn off gravity to see what would ",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/gravity-and-orbits/latest/gravity-and-orbits_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/gravity-and-orbits"
+  },
+  {
+    "id": "gravity-force-lab",
+    "name": "Gravity Force Lab",
+    "description": "Visualize the gravitational force that two objects exert on each other. Adjust properties of the objects to see how changing the properties affects the gravitational attraction.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/gravity-force-lab/latest/gravity-force-lab_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/gravity-force-lab"
+  },
+  {
+    "id": "gravity-force-lab-basics",
+    "name": "Gravity Force Lab: Basics",
+    "description": "Visualize the gravitational force that two objects exert on each other. Discover the factors that affect gravitational attraction, and determine how adjusting these factors will change the gravitational force.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/gravity-force-lab-basics/latest/gravity-force-lab-basics_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/gravity-force-lab-basics"
+  },
+  {
+    "id": "hookes-law",
+    "name": "Hooke's Law",
+    "description": "Stretch and compress springs to explore the relationships between force, spring constant, displacement, and potential energy! Investigate what happens when two springs are connected in series and parallel.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/hookes-law/latest/hookes-law_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/hookes-law"
+  },
+  {
+    "id": "john-travoltage",
+    "name": "John Travoltage",
+    "description": "Play with John’s foot and arm to explore when he gets a shock!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/john-travoltage/latest/john-travoltage_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/john-travoltage"
+  },
+  {
+    "id": "keplers-laws",
+    "name": "Kepler's Laws",
+    "description": "Interact with the variables to discover how planetary objects moves in elliptical orbits, and the other characteristics of these orbits described by the three Kepler’s Laws. Connect Astronomy with Math, by experimenting ",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/keplers-laws/latest/keplers-laws_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/keplers-laws"
+  },
+  {
+    "id": "magnet-and-compass",
+    "name": "Magnet and Compass",
+    "description": "Explore the interactions between a compass and bar magnet. Relate the Earth’s magnetic field to a bar magnet. Vary the magnet's strength, and see how things change both inside and outside. Measure the direction and magni",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/magnet-and-compass/latest/magnet-and-compass_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/magnet-and-compass"
+  },
+  {
+    "id": "magnets-and-electromagnets",
+    "name": "Magnets and Electromagnets",
+    "description": "Explore the interactions between a compass and bar magnet. Discover how you can use a battery and coil to make an electromagnet. Explore the ways to change the magnetic field, and measure its direction and magnitude arou",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/magnets-and-electromagnets/latest/magnets-and-electromagnets_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/magnets-and-electromagnets"
+  },
+  {
+    "id": "masses-and-springs",
+    "name": "Masses and Springs",
+    "description": "Hang masses from springs and adjust the spring constant and damping. Transport the lab to different planets, or slow down time. Observe the forces and energy in the system in real-time, and measure the period using the s",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/masses-and-springs/latest/masses-and-springs_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/masses-and-springs"
+  },
+  {
+    "id": "masses-and-springs-basics",
+    "name": "Masses and Springs: Basics",
+    "description": "Hang masses from springs and discover how they stretch and oscillate. Compare two mass-spring systems, and experiment with spring constant. Transport the lab to different planets, slow down time, and observe the velocity",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/masses-and-springs-basics/latest/masses-and-springs-basics_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/masses-and-springs-basics"
+  },
+  {
+    "id": "models-of-the-hydrogen-atom",
+    "name": "Models of the Hydrogen Atom",
+    "description": "This simulation is designed for undergraduate level students who are studying atomic structure.  The simulation could also be used by high school students in advanced level physical science courses.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/models-of-the-hydrogen-atom/latest/models-of-the-hydrogen-atom_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/models-of-the-hydrogen-atom"
+  },
+  {
+    "id": "molecules-and-light",
+    "name": "Molecules and Light",
+    "description": "Turn light source on to explore. Observe what happens in the observation window as you set up different combinations of light source and molecule. Note this simulation is the first to support our pan and zoom feature, so",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/molecules-and-light/latest/molecules-and-light_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/molecules-and-light"
+  },
+  {
+    "id": "my-solar-system",
+    "name": "My Solar System",
+    "description": "Build your own system of heavenly bodies and watch the gravitational ballet. With this orbit simulator, you can set initial positions, velocities, and masses of 2, 3, or 4 bodies, and then see them orbit each other.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/my-solar-system/latest/my-solar-system_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/my-solar-system"
+  },
+  {
+    "id": "ohms-law",
+    "name": "Ohm's Law",
+    "description": "See how the equation form of Ohm's law relates to a simple circuit. Adjust the voltage and resistance, and see the current change according to Ohm's law.",
+    "topic": "motion",
+    "topics": [
+      "motion",
+      "electricity-magnets-and-circuits"
+    ],
+    "runUrl": "https://phet.colorado.edu/sims/html/ohms-law/latest/ohms-law_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/ohms-law"
+  },
+  {
+    "id": "pendulum-lab",
+    "name": "Pendulum Lab",
+    "description": "Play with one or two pendulums and discover how the period of a simple pendulum depends on the length of the string, the mass of the pendulum bob, the strength of gravity, and the amplitude of the swing. Observe the ener",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/pendulum-lab/latest/pendulum-lab_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/pendulum-lab"
+  },
+  {
+    "id": "plinko-probability",
+    "name": "Plinko Probability",
+    "description": "Drop balls through a triangular grid of pegs and see them accumulate in containers. Switch to a histogram view and compare the distribution of balls to an ideal binomial distribution. Adjust the binary probability and de",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/plinko-probability/latest/plinko-probability_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/plinko-probability"
+  },
+  {
+    "id": "projectile-data-lab",
+    "name": "Projectile Data Lab",
+    "description": "The Projectile Data Lab simulation allows students to engage in hands-on data collection and analysis through the context of projectile motion.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/projectile-data-lab/latest/projectile-data-lab_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/projectile-data-lab"
+  },
+  {
+    "id": "projectile-motion",
+    "name": "Projectile Motion",
+    "description": "Blast a car out of a cannon, and challenge yourself to hit a target! Learn about projectile motion by firing various objects. Set parameters such as angle, initial speed, and mass. Explore vector representations, and add",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/projectile-motion/latest/projectile-motion_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/projectile-motion"
+  },
+  {
+    "id": "quantum-coin-toss",
+    "name": "Quantum Coin Toss",
+    "description": "Compare the similarities and differences between classical biased coins and quantum \"coins\" that can be prepared in a superposition of states!",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/quantum-coin-toss/latest/quantum-coin-toss_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/quantum-coin-toss"
+  },
+  {
+    "id": "quantum-measurement",
+    "name": "Quantum Measurement",
+    "description": "Explore 2-level quantum systems and the results of measuring quantum states. Discover the similarities and differences between how a flip of a classical biased coin compares to observations of a quantum \"coin\". Discover ",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/quantum-measurement/latest/quantum-measurement_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/quantum-measurement"
+  },
+  {
+    "id": "resistance-in-a-wire",
+    "name": "Resistance in a Wire",
+    "description": "Observe changes to the equation and wire as you play with the resistivity, length, and area sliders.",
+    "topic": "motion",
+    "topics": [
+      "motion"
+    ],
+    "runUrl": "https://phet.colorado.edu/sims/html/resistance-in-a-wire/latest/resistance-in-a-wire_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/resistance-in-a-wire"
+  },
+  {
+    "id": "rutherford-scattering",
+    "name": "Rutherford Scattering",
+    "description": "How did Rutherford figure out the structure of the atom without being able to see it? Simulate the famous experiment in which he disproved the Plum Pudding model of the atom by observing alpha particles bouncing off atom",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/rutherford-scattering/latest/rutherford-scattering_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/rutherford-scattering"
+  },
+  {
+    "id": "states-of-matter",
+    "name": "States of Matter",
+    "description": "Watch different types of molecules form a solid, liquid, or gas. Add or remove heat and watch the phase change. Change the temperature or volume of a container and see a pressure-temperature diagram respond in real time.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/states-of-matter/latest/states-of-matter_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/states-of-matter"
+  },
+  {
+    "id": "states-of-matter-basics",
+    "name": "States of Matter: Basics",
+    "description": "Heat, cool and compress atoms and molecules and watch as they change between solid, liquid and gas phases.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/states-of-matter-basics/latest/states-of-matter-basics_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/states-of-matter-basics"
+  },
+  {
+    "id": "under-pressure",
+    "name": "Under Pressure",
+    "description": "Explore pressure under and above water. See how pressure changes as you change fluids, gravity, container shapes, and volume.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/under-pressure/latest/under-pressure_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/under-pressure"
+  },
+  {
+    "id": "vector-addition",
+    "name": "Vector Addition",
+    "description": "Explore vectors in 1D or 2D, and discover how vectors add together. Specify vectors in Cartesian or polar coordinates, and see the magnitude, angle, and components of each vector. Experiment with vector equations and com",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/vector-addition/latest/vector-addition_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/vector-addition"
+  },
+  {
+    "id": "wave-interference",
+    "name": "Wave Interference",
+    "description": "Make waves with a dripping faucet, audio speaker, or laser! Add a second source to create an interference pattern. Put up a barrier to explore single-slit diffraction and double-slit interference. Experiment with diffrac",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/wave-interference/latest/wave-interference_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/wave-interference"
+  },
+  {
+    "id": "wave-on-a-string",
+    "name": "Wave on a String",
+    "description": "Explore the wonderful world of waves! Even observe a string vibrate in slow motion. Wiggle the end of the string and make waves, or adjust the frequency and amplitude of an oscillator.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/wave-on-a-string/latest/wave-on-a-string_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/wave-on-a-string"
+  },
+  {
+    "id": "waves-intro",
+    "name": "Waves Intro",
+    "description": "Make waves with a dripping faucet, audio speaker, or laser! Adjust frequency and amplitude, and observe the effects. Hear the sound produced by the speaker, and discover what determines the color of light.",
+    "topic": "general",
+    "topics": [],
+    "runUrl": "https://phet.colorado.edu/sims/html/waves-intro/latest/waves-intro_en.html",
+    "pageUrl": "https://phet.colorado.edu/en/simulations/waves-intro"
+  }
+]

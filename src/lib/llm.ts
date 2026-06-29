@@ -28,6 +28,11 @@ function getClient(): OpenAI {
 
 export class LlmConfigError extends Error {}
 
+/** True when an OpenAI-compatible API key is present. */
+export function isLlmConfigured(): boolean {
+  return Boolean(process.env.OPENAI_API_KEY?.trim());
+}
+
 const TEXT_MODEL = () => process.env.LLM_TEXT_MODEL || "gpt-4o";
 const VISION_MODEL = () => process.env.LLM_VISION_MODEL || "gpt-4o";
 

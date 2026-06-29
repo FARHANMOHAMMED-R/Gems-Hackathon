@@ -15,17 +15,31 @@ const meQuerySchema = z.object({
   email: z.string().trim().email("Invalid email address"),
 });
 
+const presenceSchema = z.object({
+  email: z.string().trim().email(),
+});
+
+const teacherSelect = {
+  id: true,
+  name: true,
+  classManaged: true,
+  email: true,
+  lastSeenAt: true,
+} as const;
+
 function toTeacherResponse(t: {
   id: string;
   name: string;
   classManaged: string;
   email: string;
+  lastSeenAt?: Date | null;
 }) {
   return {
     id: t.id,
     name: t.name,
     classManaged: t.classManaged,
     email: t.email,
+    lastSeenAt: t.lastSeenAt?.toISOString() ?? null,
   };
 }
 
@@ -41,9 +55,9 @@ teachersRouter.post(
 
     const teacher = await prisma.teacherProfile.upsert({
       where: { email },
-      create: { name, classManaged, email },
-      update: { name, classManaged },
-      select: { id: true, name: true, classManaged: true, email: true },
+      create: { name, classManaged, email, lastSeenAt: new Date() },
+      update: { name, classManaged, lastSeenAt: new Date() },
+      select: teacherSelect,
     });
 
     res.json(toTeacherResponse(teacher));
@@ -62,7 +76,7 @@ teachersRouter.get(
 
     const teacher = await prisma.teacherProfile.findUnique({
       where: { email },
-      select: { id: true, name: true, classManaged: true, email: true },
+      select: teacherSelect,
     });
 
     if (!teacher) {
@@ -70,5 +84,23 @@ teachersRouter.get(
     }
 
     res.json(toTeacherResponse(teacher));
+  }),
+);
+
+/** POST /api/teachers/presence — heartbeat while a teacher is using the app. */
+teachersRouter.post(
+  "/teachers/presence",
+  asyncHandler(async (req, res) => {
+    const { email } = presenceSchema.parse(req.body);
+    try {
+      const teacher = await prisma.teacherProfile.update({
+        where: { email },
+        data: { lastSeenAt: new Date() },
+        select: { lastSeenAt: true },
+      });
+      res.json({ ok: true, lastSeenAt: teacher.lastSeenAt?.toISOString() ?? null });
+    } catch {
+      res.json({ ok: false });
+    }
   }),
 );
