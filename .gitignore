@@ -14,3 +14,6 @@ prisma/*.db-journal
 # OS
 .DS_Store
 
+# Tesseract language data (downloaded locally, not for git)
+eng.traineddata
+

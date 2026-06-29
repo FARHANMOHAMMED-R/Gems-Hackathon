@@ -1,181 +1,177 @@
-# Gems Assist
+<p align="center">
+  <img src="frontend/public/favicon.svg" width="72" alt="Gems Assist logo" />
+</p>
 
-**Gems Assist** is an education platform for AI-powered grading, differentiated content, smart teacher substitution, lab booking, parent communication, and a student token economy.
+<h1 align="center">Gems Assist</h1>
 
-## Links
+<p align="center">
+  AI-powered education platform for CBSE teachers — grading, differentiation, labs, parent mail, and a student token economy.
+</p>
 
-| Resource | URL |
-|----------|-----|
-| **Live Website (App)** | [**https://gems-class-flow.base44.app**](https://gems-class-flow.base44.app) |
-| **GitHub Repository** | [**github.com/FARHANMOHAMMED-R/Gems-Hackathon**](https://github.com/FARHANMOHAMMED-R/Gems-Hackathon) |
-| **Local Website** | [**http://localhost:5173**](http://localhost:5173) — run `cd frontend && npm run dev` |
-| **Local API** | [http://localhost:4000](http://localhost:4000) — API only (use `/health` to test) |
-| **Health Check** | [http://localhost:4000/health](http://localhost:4000/health) |
+<p align="center">
+  <a href="http://localhost:5173"><strong>Open local app →</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://gems-class-flow.base44.app">Live demo</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/FARHANMOHAMMED-R/Gems-Hackathon">GitHub</a>
+</p>
 
-> **Tip:** Add the live website URL to your GitHub repo **About → Website** field: `https://gems-class-flow.base44.app`
-
----
-
-## Architecture
-
-| Layer | Stack | Role |
-|-------|-------|------|
-| **Backend** | Node.js · TypeScript · Express · Prisma · SQLite | REST API, persistence, LLM orchestration |
-| **Frontend** | React · Vite · TypeScript (`frontend/`) | Responsive UI for all six platform domains |
-
-The frontend talks to the backend over HTTP. In development, the Vite dev server proxies `/api` and `/health` to `http://localhost:4000`, so the browser stays same-origin.
-
-```
-┌─────────────────┐     /api, /health      ┌──────────────────────────┐
-│  React + Vite   │ ─────────────────────► │  Express API  (:4000)  │
-│  (:5173)        │                        │  Prisma + SQLite         │
-└─────────────────┘                        └──────────┬───────────────┘
-                                                      │
-                                                      ▼
-                                           OpenAI-compatible LLM
-                                           (grading, OCR, mail, content)
-```
+<p align="center">
+  <img src="docs/screenshots/02-dashboard.png" alt="Gems Assist teacher dashboard with sidebar navigation and token leaderboard" width="920" />
+</p>
 
 ---
 
-## Prerequisites
+## Quick links
 
-- **Node.js** 18+ (LTS recommended)
-- **npm** 9+
+| | URL |
+|---|---|
+| **Local website** | [**http://localhost:5173**](http://localhost:5173) |
+| **Local API** | [http://localhost:4000](http://localhost:4000) |
+| **Health check** | [http://localhost:4000/health](http://localhost:4000/health) |
+| **Live demo** | [https://gems-class-flow.base44.app](https://gems-class-flow.base44.app) |
+
+> Start backend + frontend (see [Quick start](#quick-start)), then open **http://localhost:5173** in your browser.
+
+---
+
+## What it does
+
+Gems Assist gives teachers one place to run a modern classroom:
+
+| Feature | What you get |
+|---------|----------------|
+| **Class Roster** | Add, edit, import students by roll number & school ID |
+| **Scan Analyzer** | OCR exam papers & notebooks (PDF Guru, OpenAI, or local Tesseract) |
+| **Blueprint Generator** | Upload a past paper → topic & marks breakdown |
+| **Content Differentiator** | Rewrite lessons for Advanced, Standard, Visual, or Neurodivergent tracks |
+| **Substitution Finder** | See which teachers are free by period |
+| **Lab Booking** | Reserve rooms with double-booking protection |
+| **3D Lab** | 64 embedded PhET physics simulations |
+| **Teacher Chat** | Staff lounge for cross-class messages |
+| **Parent Mailer** | Batch draft compassionate parent update emails |
+| **Token Matrix** | Award points for answering, kindness & peer support |
+| **Admin Dashboard** | Manage labs, broadcast notices, monitor teachers online |
+
+**Sign in**
+
+| Role | How |
+|------|-----|
+| Teacher | Name, class (e.g. `11-A`), email |
+| Admin | Passcode `farhan` |
+
+---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/01-sign-in.png" alt="Teacher and admin sign-in screen" />
+      <br /><sub><b>Sign in</b> — teacher or admin</sub>
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/03-scan-analyzer.png" alt="Scan Analyzer for notebook and exam grading" />
+      <br /><sub><b>Scan Analyzer</b> — exam & notebook OCR</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/04-blueprint-generator.png" alt="Exam blueprint generator with topic distribution" />
+      <br /><sub><b>Blueprint Generator</b> — marks & topic map</sub>
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/02-dashboard.png" alt="Dashboard with token leaderboard" />
+      <br /><sub><b>Dashboard</b> — token leaderboard</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
 ## Quick start
 
+**Requirements:** Node.js 18+, npm 9+
+
 ```bash
-# 1. Clone
 git clone https://github.com/FARHANMOHAMMED-R/Gems-Hackathon.git
 cd Gems-Hackathon
 
-# 2. Install backend dependencies
+# Backend
 npm install
-
-# 3. Configure environment (add OPENAI_API_KEY for AI features)
-cp .env.example .env
-
-# 4. Database setup
+cp .env.example .env          # add OPENAI_API_KEY & GURUPDF_API_KEY for AI features
 npm run prisma:generate
 npm run prisma:push
+npm run seed                  # optional demo data
 
-# 5. (Optional) Seed demo data — CBSE Class 11 students, teachers, labs
-npm run seed
+# Terminal 1 — API
+npm run dev                   # → http://localhost:4000
 
-# 6. Start the backend (terminal 1)
-npm run dev          # http://localhost:4000
-
-# 7. Start the frontend (terminal 2)
-cd frontend
-npm install
-npm run dev          # http://localhost:5173
+# Terminal 2 — website
+cd frontend && npm install && npm run dev   # → http://localhost:5173
 ```
 
-Health check: `GET http://localhost:4000/health`
+Open **http://localhost:5173**, sign in as a teacher, set up your class roster, and explore.
 
-### Open on other devices (same Wi‑Fi)
+### Share on other devices (same Wi‑Fi)
 
-Both dev servers bind to all network interfaces (`0.0.0.0`), so phones, tablets, and other laptops on your LAN can use the app:
-
-1. Start backend and frontend as above.
-2. In the frontend terminal, Vite prints a **Network** URL, e.g. `http://192.168.1.42:5173`.
-3. Open that URL on any device on the same Wi‑Fi.
-
-The Vite dev server proxies `/api` to the backend on your machine, so other devices do **not** need direct access to port `4000` — only port `5173`.
-
-> If a device cannot connect, allow incoming connections for Node in your Mac firewall (System Settings → Network → Firewall).
-
-> **AI endpoints** return `503 LLM_NOT_CONFIGURED` until `OPENAI_API_KEY` is set in `.env`. Deterministic endpoints (substitution, labs, tokens) work without a key.
+Vite prints a **Network** URL when the frontend starts, e.g. `http://192.168.1.42:5173`.  
+Other phones and laptops on the same Wi‑Fi can open that link — the dev server proxies `/api` to your machine.
 
 ---
 
 ## Environment variables
 
-Copy `.env.example` to `.env` at the repo root.
+Copy [`.env.example`](.env.example) → `.env` at the repo root.
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `PORT` | `4000` | Backend HTTP port |
-| `DATABASE_URL` | `file:./dev.db` | Prisma datasource (SQLite locally; swap for Postgres/MySQL in production) |
-| `OPENAI_API_KEY` | *(empty)* | LLM authentication — **required for AI endpoints** |
-| `OPENAI_BASE_URL` | `https://api.openai.com/v1` | OpenAI-compatible gateway (OpenAI, Azure, etc.) |
-| `LLM_TEXT_MODEL` | `gpt-4o` | Text model for grading, differentiation, and mail drafting |
-| `LLM_VISION_MODEL` | `gpt-4o` | Multimodal model for scan OCR |
+| Variable | Purpose |
+|----------|---------|
+| `OPENAI_API_KEY` | AI grading, differentiation, mail (optional for offline features) |
+| `GURUPDF_API_KEY` | PDF Guru image-to-text OCR for scans ([get key](https://gurupdf.com/api)) |
+| `PORT` / `HOST` | Backend port (default `4000`) and bind address (`0.0.0.0` for LAN) |
+| `DATABASE_URL` | SQLite path (default `file:./dev.db`) |
 
-**Frontend (optional):** set `VITE_API_BASE` to point at a non-proxied backend origin (e.g. `http://localhost:4000`) when deploying without the Vite dev proxy. Defaults to `""` (relative URLs via proxy).
+Frontend optional: `VITE_API_BASE` — set only when deploying without the Vite dev proxy.
 
 ---
 
-## API endpoints
+## Architecture
 
-| Domain | Method | Path | Description |
-|--------|--------|------|-------------|
-| Health | `GET` | `/health` | Liveness probe |
-| Scan Analyzer | `POST` | `/api/analyze-scan` | Vision OCR + CBSE examiner grading (exam or notebook) |
-| Content Differentiator | `POST` | `/api/differentiate-content` | Rewrite lesson for a learner track (markdown) |
-| Substitution Finder | `GET` | `/api/substitution/check-free` | Free teachers by period (`?period=&department=`) |
-| Lab Booking | `POST` | `/api/labs/reserve` | Reserve a lab slot (409 on double-booking) |
-| Lab Booking | `GET` | `/api/labs/availability` | Availability grid (`?date=YYYY-MM-DD`) |
-| Lab Booking | `GET` | `/api/labs/reservations` | List all reservations (`?date=` optional); requires `X-Admin-Passcode` header |
-| Lab Booking | `PATCH` | `/api/labs/reservations/:id` | Update reservation; requires `X-Admin-Passcode` header |
-| Lab Booking | `DELETE` | `/api/labs/reservations/:id` | Delete/cancel reservation; requires `X-Admin-Passcode` header |
-| Parent Mailer | `POST` | `/api/generate-mail` | Draft compassionate parent update email |
-| Token Matrix | `POST` | `/api/tokens/award` | Award tokens (`answering` +1, `kindness` +5, `peer_support` +3) |
-| Token Matrix | `GET` | `/api/tokens/leaderboard` | Ranked student leaderboard |
-| Teacher Sign-In | `POST` | `/api/teachers/sign-in` | Upsert teacher profile by email |
-| Teacher Sign-In | `GET` | `/api/teachers/me` | Restore session (`?email=`) |
-
-**Admin lab APIs** require header `X-Admin-Passcode: farhan` (hackathon MVP — passcode is also validated client-side on sign-in).
-
-### Admin lab API examples
-
-```bash
-# List all reservations
-curl -s -H "X-Admin-Passcode: farhan" http://localhost:4000/api/labs/reservations
-
-# Filter by date
-curl -s -H "X-Admin-Passcode: farhan" "http://localhost:4000/api/labs/reservations?date=2026-06-29"
-
-# Update a reservation (replace RESERVATION_ID)
-curl -s -X PATCH -H "Content-Type: application/json" -H "X-Admin-Passcode: farhan" \
-  -d '{"roomName":"Physics Lab 2","status":"Occupied"}' \
-  http://localhost:4000/api/labs/reservations/RESERVATION_ID
-
-# Delete a reservation
-curl -s -X DELETE -H "X-Admin-Passcode: farhan" \
-  http://localhost:4000/api/labs/reservations/RESERVATION_ID
+```
+Browser  →  React + Vite (:5173)  →  /api proxy  →  Express + Prisma (:4000)  →  SQLite + LLM
 ```
 
-System prompts live in [`src/lib/prompts.ts`](src/lib/prompts.ts). See the existing route files under `src/routes/` for full request/response schemas.
+| Layer | Stack |
+|-------|-------|
+| Frontend | React · Vite · TypeScript |
+| Backend | Node · Express · Prisma · SQLite |
+| AI | OpenAI-compatible API · PDF Guru OCR · local Tesseract fallback |
 
 ---
 
-## Frontend screens
+## API overview
 
-| Screen | Features |
-|--------|----------|
-| **Sign-In** | Teacher (name, class, email) or Admin (passcode `farhan`) |
-| **Admin Dashboard** | Manage all lab reservations — view, edit, delete, add |
-| **Dashboard** | Token leaderboard, award tokens by reason |
-| **Scan Analyzer** | Upload scanned pages or paste text; exam vs. notebook modes |
-| **Content Differentiator** | Adapt lessons (Advanced, Standard, Simplified Visual, Neurodivergent) |
-| **Substitution Finder** | Query free teachers by period and department |
-| **Lab Booking** | Reserve rooms and view daily availability |
-| **Parent Mailer** | Generate and copy parent update emails |
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Liveness |
+| `POST` | `/api/analyze-scan` | OCR + grade exam or notebook |
+| `POST` | `/api/generate-blueprint` | Exam topic & marks blueprint |
+| `POST` | `/api/differentiate-content` | Adapt lesson content |
+| `GET` | `/api/substitution/check-free` | Free teachers by period |
+| `POST` | `/api/labs/reserve` | Book a lab slot |
+| `GET` | `/api/labs/availability` | Daily availability grid |
+| `POST` | `/api/generate-mail` | Draft parent email |
+| `POST` | `/api/tokens/award` | Award student tokens |
+| `GET` | `/api/tokens/leaderboard` | Class leaderboard |
+| `POST` | `/api/teachers/sign-in` | Teacher session |
+| `GET/POST` | `/api/students/*` | Class roster CRUD & import |
+| `GET/POST` | `/api/chat/*` | Teacher staff lounge |
+| `GET/POST` | `/api/notifications/*` | Admin broadcasts |
+| `GET` | `/api/admin/monitor` | Online teachers & student stats |
 
-Each screen includes loading, empty, and error states, plus toast notifications. The sidebar shows live backend health.
+Admin lab routes require header `X-Admin-Passcode: farhan`.
 
-### Sign-in flows
-
-| Role | How to sign in | After login |
-|------|----------------|-------------|
-| **Teacher** | Select **Teacher** tab → name, class, email | Teacher tools (dashboard, labs, etc.) |
-| **Admin** | Select **Admin** tab → passcode `farhan` | **Admin Dashboard** + all teacher tools |
-
-Sign out clears the session for either role.
+Full route implementations live in [`src/routes/`](src/routes/).
 
 ---
 
@@ -183,96 +179,50 @@ Sign out clears the session for either role.
 
 ```
 Gems-Hackathon/
-├── .env.example              # Backend environment template
-├── package.json              # Backend scripts & dependencies
-├── prisma/
-│   ├── schema.prisma         # StudentProfile, GradingRecord, LabReservation, TeacherAvailability
-│   └── seed.ts               # Demo data seeder
+├── docs/screenshots/       # README screenshots
+├── prisma/                 # Schema & seed
 ├── src/
-│   ├── index.ts              # Express app + route wiring
-│   ├── lib/                  # prisma, llm, prompts, json, http helpers
-│   └── routes/               # analyzeScan, differentiateContent, substitution,
-│                             # labs, mail, tokens, teachers
+│   ├── index.ts            # Express app
+│   ├── lib/                # LLM, OCR, PDF Guru, helpers
+│   └── routes/             # REST endpoints
 └── frontend/
-    ├── package.json
-    ├── vite.config.ts        # Dev proxy: /api & /health → :4000
-    └── src/
-        ├── App.tsx           # Sidebar nav + screen routing
-        ├── api/              # Typed fetch client
-        ├── components/       # Toast, shared UI primitives
-        ├── lib/              # authSession (teacher + admin roles)
-        └── pages/            # SignIn, AdminDashboard, Dashboard, ScanAnalyzer,
-                              # ContentDifferentiator, SubstitutionFinder, LabBooking, ParentMailer
+    ├── src/pages/          # All app screens
+    ├── src/components/     # Shared UI
+    └── vite.config.ts      # Dev proxy → :4000
 ```
 
 ---
 
-## Development scripts
+## Scripts
 
-### Backend (repo root)
+| Location | Command | Description |
+|----------|---------|-------------|
+| Root | `npm run dev` | Backend with hot reload |
+| Root | `npm run seed` | Load demo students & labs |
+| `frontend/` | `npm run dev` | Website at **http://localhost:5173** |
+| `frontend/` | `npm run build` | Production bundle |
 
-| Script | Command | Description |
-|--------|---------|-------------|
-| Dev server | `npm run dev` | Hot-reload via `tsx watch` |
-| Build | `npm run build` | Compile TypeScript to `dist/` |
-| Start | `npm start` | Run compiled `dist/index.js` |
-| Typecheck | `npm run typecheck` | `tsc --noEmit` |
-| Prisma generate | `npm run prisma:generate` | Regenerate Prisma client |
-| Prisma push | `npm run prisma:push` | Sync schema to SQLite |
-| Prisma migrate | `npm run prisma:migrate` | Create migration (`init`) |
-| Seed | `npm run seed` | Load demo students, teachers, labs |
+Regenerate README screenshots (with dev servers running):
 
-### Frontend (`frontend/`)
-
-| Script | Command | Description |
-|--------|---------|-------------|
-| Dev server | `npm run dev` | Vite on `:5173`, proxies API to `:4000` |
-| Build | `npm run build` | Typecheck + production bundle |
-| Preview | `npm run preview` | Serve production build locally |
-| Typecheck | `npm run typecheck` | `tsc --noEmit` |
+```bash
+node scripts/capture-readme-screenshots.mjs
+```
 
 ---
 
-## Deploying the frontend
+## Deploy
 
-The frontend is a **static SPA** built with Vite. The Express API must be hosted separately (Railway, Render, Fly.io, a VPS, etc.).
-
-### Build
+Build the static frontend:
 
 ```bash
 cd frontend
-npm install
-cp .env.example .env   # optional — set VITE_API_BASE for production
-npm run build          # output → frontend/dist/
+VITE_API_BASE=https://your-api.example.com npm run build
 ```
 
-Set `VITE_API_BASE` to your deployed API origin (e.g. `https://api.example.com`) **at build time** so the bundle points at the correct backend. Leave it empty only if you put a reverse proxy in front of both the static site and `/api`.
-
-Serve the contents of `frontend/dist/` from any static host (Vercel, Netlify, Cloudflare Pages, S3 + CloudFront, nginx, etc.).
-
-### Vercel / Netlify
-
-- **Vercel:** set root directory to `frontend`, build command `npm run build`, output `dist`. `frontend/vercel.json` includes SPA fallback rewrites.
-- **Netlify:** use `frontend/netlify.toml` (build + SPA redirect) or point the site at `frontend/` with publish directory `dist`.
-
-Ensure the backend allows CORS from your frontend origin if they are on different domains.
-
----
-
-## Data model
-
-Defined in [`prisma/schema.prisma`](prisma/schema.prisma). SQLite is the default for zero-config local dev; enum-like fields are stored as `String` and JSON fields as serialized strings (handled by [`src/lib/json.ts`](src/lib/json.ts)).
-
-| Model | Purpose |
-|-------|---------|
-| `StudentProfile` | Learner profile, token balance, adaptive preference |
-| `GradingRecord` | AI-graded exam or notebook artifacts |
-| `LabReservation` | Lab room slots with unique `(room, date, period)` constraint |
-| `TeacherAvailability` | Per-teacher 7-period free/busy status |
-| `TeacherProfile` | Signed-in teacher (name, class, email) |
+Serve `frontend/dist/` from any static host. Run the Express API separately and enable CORS for your frontend origin.
 
 ---
 
 ## License
 
-MIT
+MIT · [GEMS Hackathon](https://github.com/FARHANMOHAMMED-R/Gems-Hackathon)
