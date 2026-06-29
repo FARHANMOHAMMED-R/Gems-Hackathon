@@ -1,18 +1,25 @@
+import { ADMIN_PASSCODE } from "../lib/authSession";
 import type {
   AnalyzeScanRequest,
   AnalyzeScanResponse,
   AvailabilityResponse,
   AwardReason,
   AwardResponse,
+  DeleteLabReservationResponse,
   DifferentiateRequest,
   DifferentiateResponse,
   GenerateMailRequest,
   GenerateMailResponse,
   HealthResponse,
   LeaderboardResponse,
+  ReservationsListResponse,
   ReserveRequest,
   ReserveResponse,
   SubstitutionResponse,
+  TeacherProfile,
+  TeacherSignInRequest,
+  UpdateLabReservationRequest,
+  UpdateLabReservationResponse,
 } from "./types";
 
 // Single source of truth for the API base. The Vite dev proxy (vite.config.ts)
@@ -50,14 +57,18 @@ interface RequestOptions {
   method?: string;
   body?: unknown;
   signal?: AbortSignal;
+  headers?: Record<string, string>;
 }
 
 async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
+  const headers: Record<string, string> = { ...opts.headers };
+  if (opts.body) headers["Content-Type"] = "application/json";
+
   let res: Response;
   try {
     res = await fetch(`${API_BASE}${path}`, {
       method: opts.method ?? "GET",
-      headers: opts.body ? { "Content-Type": "application/json" } : undefined,
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
       body: opts.body ? JSON.stringify(opts.body) : undefined,
       signal: opts.signal,
     });
@@ -144,6 +155,26 @@ export const api = {
     request<AvailabilityResponse>(
       `/api/labs/availability?date=${encodeURIComponent(date)}`,
     ),
+  listLabReservations: (date?: string) => {
+    const qs = date ? `?date=${encodeURIComponent(date)}` : "";
+    return request<ReservationsListResponse>(`/api/labs/reservations${qs}`, {
+      headers: { "X-Admin-Passcode": ADMIN_PASSCODE },
+    });
+  },
+  updateLabReservation: (id: string, body: UpdateLabReservationRequest) =>
+    request<UpdateLabReservationResponse>(`/api/labs/reservations/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body,
+      headers: { "X-Admin-Passcode": ADMIN_PASSCODE },
+    }),
+  deleteLabReservation: (id: string) =>
+    request<DeleteLabReservationResponse>(
+      `/api/labs/reservations/${encodeURIComponent(id)}`,
+      {
+        method: "DELETE",
+        headers: { "X-Admin-Passcode": ADMIN_PASSCODE },
+      },
+    ),
 
   // Parent mailer
   generateMail: (body: GenerateMailRequest, signal?: AbortSignal) =>
@@ -152,4 +183,15 @@ export const api = {
       body,
       signal,
     }),
+
+  // Teachers
+  teacherSignIn: (body: TeacherSignInRequest) =>
+    request<TeacherProfile>("/api/teachers/sign-in", {
+      method: "POST",
+      body,
+    }),
+  getTeacherMe: (email: string) =>
+    request<TeacherProfile>(
+      `/api/teachers/me?email=${encodeURIComponent(email)}`,
+    ),
 };

@@ -1,10 +1,31 @@
-import { Router } from "express";
+import { Router, type NextFunction, type Request, type Response } from "express";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { asyncHandler, ApiError } from "../lib/http";
 
 export const labsRouter = Router();
+
+/** Hackathon MVP admin gate — passcode checked via X-Admin-Passcode header on admin routes. */
+const ADMIN_PASSCODE = "farhan";
+
+function requireAdminPasscode(req: Request, _res: Response, next: NextFunction) {
+  const passcode = req.header("X-Admin-Passcode");
+  if (passcode !== ADMIN_PASSCODE) {
+    return next(new ApiError(401, "Admin passcode required.", "ADMIN_UNAUTHORIZED"));
+  }
+  next();
+}
+
+const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "date must be YYYY-MM-DD");
+
+const updateReservationSchema = z.object({
+  roomName: z.string().min(1).optional(),
+  date: dateSchema.optional(),
+  periodNumber: z.coerce.number().int().min(1).max(7).optional(),
+  reservedByTeacherId: z.string().min(1).nullable().optional(),
+  status: z.enum(["Free", "Occupied"]).optional(),
+});
 
 const reserveSchema = z.object({
   roomName: z.string().min(1),
@@ -61,15 +82,91 @@ labsRouter.post(
 labsRouter.get(
   "/labs/availability",
   asyncHandler(async (req, res) => {
-    const date = z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/)
-      .parse(req.query.date);
+    const date = dateSchema.parse(req.query.date);
 
     const occupied = await prisma.labReservation.findMany({
       where: { date, status: "Occupied" },
       orderBy: [{ roomName: "asc" }, { periodNumber: "asc" }],
     });
     res.json({ date, occupied });
+  })
+);
+
+/**
+ * GET /api/labs/reservations?date=YYYY-MM-DD
+ * Admin-only: list all lab reservations (optional date filter).
+ */
+labsRouter.get(
+  "/labs/reservations",
+  requireAdminPasscode,
+  asyncHandler(async (req, res) => {
+    const date =
+      typeof req.query.date === "string" && req.query.date.length > 0
+        ? dateSchema.parse(req.query.date)
+        : undefined;
+
+    const reservations = await prisma.labReservation.findMany({
+      where: date ? { date } : undefined,
+      orderBy: [{ date: "desc" }, { roomName: "asc" }, { periodNumber: "asc" }],
+    });
+    res.json({ reservations });
+  })
+);
+
+/**
+ * PATCH /api/labs/reservations/:id
+ * Admin-only: update room, date, period, teacher, or status.
+ */
+labsRouter.patch(
+  "/labs/reservations/:id",
+  requireAdminPasscode,
+  asyncHandler(async (req, res) => {
+    const id = z.string().min(1).parse(req.params.id);
+    const body = updateReservationSchema.parse(req.body);
+
+    const existing = await prisma.labReservation.findUnique({ where: { id } });
+    if (!existing) {
+      throw new ApiError(404, "Reservation not found.");
+    }
+
+    try {
+      const reservation = await prisma.labReservation.update({
+        where: { id },
+        data: body,
+      });
+      res.json({ ok: true, reservation });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === "P2002"
+      ) {
+        throw new ApiError(
+          409,
+          "Another reservation already exists for that room, date, and period.",
+          "DOUBLE_BOOKING"
+        );
+      }
+      throw err;
+    }
+  })
+);
+
+/**
+ * DELETE /api/labs/reservations/:id
+ * Admin-only: cancel/delete a reservation.
+ */
+labsRouter.delete(
+  "/labs/reservations/:id",
+  requireAdminPasscode,
+  asyncHandler(async (req, res) => {
+    const id = z.string().min(1).parse(req.params.id);
+
+    const existing = await prisma.labReservation.findUnique({ where: { id } });
+    if (!existing) {
+      throw new ApiError(404, "Reservation not found.");
+    }
+
+    await prisma.labReservation.delete({ where: { id } });
+    res.json({ ok: true, deletedId: id });
   })
 );

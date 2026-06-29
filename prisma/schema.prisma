@@ -75,6 +75,19 @@ model LabReservation {
   @@map("lab_reservations")
 }
 
+/// Signed-in teacher profile (upserted on each sign-in by email).
+model TeacherProfile {
+  id            String @id @default(cuid())
+  name          String
+  classManaged  String @map("class_managed")
+  email         String @unique
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("teacher_profiles")
+}
+
 /// A teacher's per-period availability for the current day.
 /// `currentPeriodFreeStatus` is a 7-element boolean array (periods 1..7),
 /// stored as Json. `department` enables department-matched substitution.

@@ -6,12 +6,13 @@ through a clean, responsive UI.
 
 ## Links
 
-- **GitHub Repository:** https://github.com/FARHANMOHAMMED-R/Gems-Hackathon
-- **Local Website (Frontend):** http://localhost:5173 (run `cd frontend && npm run dev`)
-- **Local API (Backend):** http://localhost:4000
-- **Health Check:** http://localhost:4000/health
-
-> **Public live URL:** Deploy `frontend/dist` to Vercel or Netlify. See the root [README](../README.md#deploying-the-frontend) for build and hosting steps.
+| Resource | URL |
+|----------|-----|
+| **Live Website (App)** | [**https://gems-class-flow.base44.app**](https://gems-class-flow.base44.app) |
+| **GitHub Repository** | [**github.com/FARHANMOHAMMED-R/Gems-Hackathon**](https://github.com/FARHANMOHAMMED-R/Gems-Hackathon) |
+| **Local Website** | [http://localhost:5173](http://localhost:5173) |
+| **Local API** | [http://localhost:4000](http://localhost:4000) |
+| **Health Check** | [http://localhost:4000/health](http://localhost:4000/health) |
 
 ## Prerequisites
 

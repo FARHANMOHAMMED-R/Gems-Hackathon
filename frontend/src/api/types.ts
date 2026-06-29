@@ -106,6 +106,28 @@ export interface AvailabilityResponse {
   occupied: LabReservation[];
 }
 
+export interface ReservationsListResponse {
+  reservations: LabReservation[];
+}
+
+export interface UpdateLabReservationRequest {
+  roomName?: string;
+  date?: string;
+  periodNumber?: number;
+  reservedByTeacherId?: string | null;
+  status?: "Free" | "Occupied";
+}
+
+export interface UpdateLabReservationResponse {
+  ok: boolean;
+  reservation: LabReservation;
+}
+
+export interface DeleteLabReservationResponse {
+  ok: boolean;
+  deletedId: string;
+}
+
 // --- Parent mailer ---
 export interface GenerateMailRequest {
   studentId: string;
@@ -114,5 +136,19 @@ export interface GenerateMailRequest {
 
 export interface GenerateMailResponse {
   studentId: string;
+  email: string;
+}
+
+// --- Teachers ---
+export interface TeacherSignInRequest {
+  name: string;
+  classManaged: string;
+  email: string;
+}
+
+export interface TeacherProfile {
+  id: string;
+  name: string;
+  classManaged: string;
   email: string;
 }

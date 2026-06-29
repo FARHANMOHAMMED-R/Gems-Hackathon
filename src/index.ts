@@ -9,6 +9,7 @@ import { substitutionRouter } from "./routes/substitution";
 import { labsRouter } from "./routes/labs";
 import { mailRouter } from "./routes/mail";
 import { tokensRouter } from "./routes/tokens";
+import { teachersRouter } from "./routes/teachers";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use("/api", substitutionRouter); // 4a. Smart Substitution
 app.use("/api", labsRouter); // 4b. Lab Booking Scheduler
 app.use("/api", mailRouter); // 5a. Parent Mailer
 app.use("/api", tokensRouter); // 5b. Token Matrix
+app.use("/api", teachersRouter); // Teacher sign-in
 
 // 404 fallback for unknown routes.
 app.use((_req, res) => res.status(404).json({ error: "Not found" }));

@@ -1,11 +1,22 @@
 import { useEffect, useState } from "react";
 import { api } from "./api/client";
+import { AdminDashboard } from "./pages/AdminDashboard";
 import { Dashboard } from "./pages/Dashboard";
 import { ScanAnalyzer } from "./pages/ScanAnalyzer";
 import { ContentDifferentiator } from "./pages/ContentDifferentiator";
 import { SubstitutionFinder } from "./pages/SubstitutionFinder";
 import { LabBooking } from "./pages/LabBooking";
 import { ParentMailer } from "./pages/ParentMailer";
+import { SignIn } from "./pages/SignIn";
+import {
+  clearAuthSession,
+  getAuthSession,
+  isAdminSession,
+  isTeacherSession,
+  setAuthSession,
+  type AuthSession,
+  type TeacherSession,
+} from "./lib/authSession";
 
 interface NavItem {
   id: string;
@@ -15,7 +26,7 @@ interface NavItem {
   render: (onNavigate: (id: string) => void) => JSX.Element;
 }
 
-const NAV: NavItem[] = [
+const TEACHER_NAV: NavItem[] = [
   {
     id: "dashboard",
     label: "Dashboard",
@@ -60,12 +71,29 @@ const NAV: NavItem[] = [
   },
 ];
 
+const ADMIN_NAV_ITEM: NavItem = {
+  id: "admin",
+  label: "Admin Dashboard",
+  icon: "🛡️",
+  blurb: "Manage lab bookings & platform",
+  render: () => <AdminDashboard />,
+};
+
 type BackendStatus = "checking" | "online" | "offline";
 
 export function App() {
-  const [active, setActive] = useState<string>(NAV[0].id);
+  const [session, setSession] = useState<AuthSession | null>(() => getAuthSession());
+  const [sessionReady, setSessionReady] = useState(() => !getAuthSession());
+  const [active, setActive] = useState<string>(() => {
+    const stored = getAuthSession();
+    return stored && isAdminSession(stored) ? "admin" : "dashboard";
+  });
   const [status, setStatus] = useState<BackendStatus>("checking");
   const [navOpen, setNavOpen] = useState(false);
+
+  const isAdmin = session && isAdminSession(session);
+  const teacher = session && isTeacherSession(session) ? session : null;
+  const nav = isAdmin ? [ADMIN_NAV_ITEM, ...TEACHER_NAV] : TEACHER_NAV;
 
   useEffect(() => {
     let cancelled = false;
@@ -82,7 +110,78 @@ export function App() {
     };
   }, []);
 
-  const current = NAV.find((n) => n.id === active) ?? NAV[0];
+  useEffect(() => {
+    const stored = getAuthSession();
+    if (!stored) {
+      setSessionReady(true);
+      return;
+    }
+
+    if (isAdminSession(stored)) {
+      setSession(stored);
+      setSessionReady(true);
+      return;
+    }
+
+    let cancelled = false;
+    api
+      .getTeacherMe(stored.email)
+      .then((profile) => {
+        if (cancelled) return;
+        const refreshed: TeacherSession = {
+          role: "teacher",
+          id: profile.id,
+          name: profile.name,
+          classManaged: profile.classManaged,
+          email: profile.email,
+          signedInAt: stored.signedInAt,
+        };
+        setAuthSession(refreshed);
+        setSession(refreshed);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        clearAuthSession();
+        setSession(null);
+      })
+      .finally(() => {
+        if (!cancelled) setSessionReady(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function handleSignedIn(next: AuthSession) {
+    setSession(next);
+    setActive(isAdminSession(next) ? "admin" : "dashboard");
+  }
+
+  function handleSignOut() {
+    clearAuthSession();
+    setSession(null);
+    setNavOpen(false);
+  }
+
+  if (!sessionReady) {
+    return (
+      <div className="signin-page">
+        <div className="signin-shell">
+          <p className="signin-footnote">Loading your session…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <SignIn onSignedIn={handleSignedIn} />;
+  }
+
+  const current = nav.find((n) => n.id === active) ?? nav[0];
+  const displayName = isAdmin ? session.name ?? "Admin" : teacher!.name;
+  const displayMeta = isAdmin ? "Owner" : `Class ${teacher!.classManaged}`;
+  const displayEmail = isAdmin ? "Administrator" : teacher!.email;
 
   return (
     <div className="app">
@@ -97,8 +196,18 @@ export function App() {
           </div>
         </div>
 
+        <div className="teacher-chip" title={displayEmail}>
+          <span className="teacher-chip-avatar" aria-hidden>
+            {displayName.charAt(0).toUpperCase()}
+          </span>
+          <div className="teacher-chip-text">
+            <span className="teacher-chip-name">{displayName}</span>
+            <span className="teacher-chip-meta">{displayMeta}</span>
+          </div>
+        </div>
+
         <nav className="nav">
-          {NAV.map((item) => (
+          {nav.map((item) => (
             <button
               key={item.id}
               className={`nav-item${item.id === active ? " active" : ""}`}
@@ -118,16 +227,21 @@ export function App() {
           ))}
         </nav>
 
-        <div className={`backend-status status-${status}`}>
-          <span className="status-dot" aria-hidden />
-          <span>
-            Backend{" "}
-            {status === "checking"
-              ? "checking…"
-              : status === "online"
-                ? "online"
-                : "offline"}
-          </span>
+        <div className="sidebar-foot">
+          <button className="btn btn-ghost btn-sm btn-block" onClick={handleSignOut}>
+            Sign out
+          </button>
+          <div className={`backend-status status-${status}`}>
+            <span className="status-dot" aria-hidden />
+            <span>
+              Backend{" "}
+              {status === "checking"
+                ? "checking…"
+                : status === "online"
+                  ? "online"
+                  : "offline"}
+            </span>
+          </div>
         </div>
       </aside>
 
@@ -148,6 +262,9 @@ export function App() {
               <h1>{current.label}</h1>
               <p>{current.blurb}</p>
             </div>
+          </div>
+          <div className="topbar-teacher" title={displayEmail}>
+            Welcome, <strong>{displayName}</strong>
           </div>
         </header>
 
