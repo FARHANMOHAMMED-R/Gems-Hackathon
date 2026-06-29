@@ -214,10 +214,13 @@ export function LectureRecorder({
       <div className="grid grid-2">
         <Card title="Lecture Recorder" subtitle={`Record & annotate · Class ${classManaged}`}>
           {status && !status.transcription && (
-            <div className="info-note">
-              Add <code>OPENAI_API_KEY</code> (Whisper) or <code>GEMINI_API_KEY</code> for
-              speech-to-text. Notes and timeline still work without it.
-            </div>
+            <details className="ppt-ai-setup">
+              <summary>Enable speech-to-text (optional)</summary>
+              <p className="muted">
+                Add <code>OPENAI_API_KEY</code> (Whisper) or <code>GEMINI_API_KEY</code> to backend{" "}
+                <code>.env</code>, then restart the server. Notes and timeline work without it.
+              </p>
+            </details>
           )}
 
           <Field label="Lecture title">
@@ -311,7 +314,7 @@ export function LectureRecorder({
               {result.analysisMode === "ai" ? (
                 <span className="pill pill-primary">✨ AI summary & timeline</span>
               ) : (
-                <span className="pill pill-primary">📋 Local summary (add AI keys for full analysis)</span>
+                <span className="pill pill-primary">📋 Summary from your notes</span>
               )}
 
               <div>
