@@ -3,10 +3,12 @@ import { z } from "zod";
 import { asyncHandler } from "../lib/http";
 import {
   aiCompleteJSON,
+  isClaudeConfigured,
   isGeminiConfigured,
   isOpenAiConfigured,
   type AiProvider,
 } from "../lib/aiProviders";
+import { fetchWikipediaAnswer, isGeneralKnowledgeQuestion } from "../lib/generalKnowledge";
 import { ASSISTANT_SYSTEM_PROMPT } from "../lib/prompts";
 import { isAssistantNavId, localAssistantAnswer } from "../lib/localAssistant";
 
@@ -25,6 +27,7 @@ const chatSchema = z.object({
     .optional(),
   teacherName: z.string().trim().optional(),
   classManaged: z.string().trim().optional(),
+  provider: z.enum(["openai", "gemini", "claude"]).optional(),
 });
 
 function buildUserContent(
@@ -45,9 +48,14 @@ function buildUserContent(
   return lines.join("\n");
 }
 
-function pickProvider(): AiProvider | null {
-  if (isOpenAiConfigured()) return "openai";
+/** Assistant prefers Gemini for general knowledge, then OpenAI. */
+function pickAssistantProvider(requested?: AiProvider): AiProvider | null {
+  if (requested === "gemini" && isGeminiConfigured()) return "gemini";
+  if (requested === "openai" && isOpenAiConfigured()) return "openai";
+  if (requested === "claude" && isClaudeConfigured()) return "claude";
   if (isGeminiConfigured()) return "gemini";
+  if (isOpenAiConfigured()) return "openai";
+  if (isClaudeConfigured()) return "claude";
   return null;
 }
 
@@ -63,31 +71,51 @@ assistantRouter.post(
     const body = chatSchema.parse(req.body);
     const context = { teacherName: body.teacherName, classManaged: body.classManaged };
 
-    const provider = pickProvider();
-    if (!provider) {
-      const local = localAssistantAnswer(body.message, context);
-      res.json({ ...local, analysisMode: "local" as const });
+    const appLocal = localAssistantAnswer(body.message, context);
+    if (appLocal.navigateTo) {
+      res.json({ ...appLocal, analysisMode: "local" as const });
       return;
     }
 
-    const { data: result, provider: providerUsed } = await aiCompleteJSON<{
-      reply: string;
-      navigateTo?: string | null;
-    }>({
-      systemPrompt: ASSISTANT_SYSTEM_PROMPT,
-      userContent: buildUserContent(body.message, body.history, context),
-      temperature: 0.55,
-      provider,
-    });
+    const provider = pickAssistantProvider(body.provider);
 
-    const navigateTo = sanitizeNav(result.navigateTo);
-    const fallback = localAssistantAnswer(body.message, context);
+    if (provider) {
+      try {
+        const { data: result, provider: providerUsed } = await aiCompleteJSON<{
+          reply: string;
+          navigateTo?: string | null;
+        }>({
+          systemPrompt: ASSISTANT_SYSTEM_PROMPT,
+          userContent: buildUserContent(body.message, body.history, context),
+          temperature: 0.55,
+          provider,
+        });
 
-    res.json({
-      reply: result.reply?.trim() || fallback.reply,
-      navigateTo: navigateTo ?? fallback.navigateTo,
-      analysisMode: "ai" as const,
-      providerUsed,
-    });
+        const navigateTo = sanitizeNav(result.navigateTo);
+        res.json({
+          reply: result.reply?.trim() || appLocal.reply,
+          navigateTo,
+          analysisMode: "ai" as const,
+          providerUsed,
+        });
+        return;
+      } catch {
+        // Fall through to Wikipedia / local below
+      }
+    }
+
+    if (isGeneralKnowledgeQuestion(body.message)) {
+      const wiki = await fetchWikipediaAnswer(body.message);
+      if (wiki) {
+        res.json({
+          reply: wiki,
+          analysisMode: "local" as const,
+          source: "wikipedia" as const,
+        });
+        return;
+      }
+    }
+
+    res.json({ ...appLocal, analysisMode: "local" as const });
   }),
 );

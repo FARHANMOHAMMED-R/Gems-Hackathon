@@ -5,6 +5,7 @@ import {
   isAssistantNavId,
   localAssistantAnswer,
 } from "../lib/localAssistant";
+import { fetchWikipediaAnswer, isGeneralKnowledgeQuestion } from "../lib/generalKnowledge";
 
 interface ChatTurn {
   role: "user" | "assistant";
@@ -24,7 +25,7 @@ export function AiAssistant({ teacherName, classManaged, onNavigate }: AiAssista
   const [messages, setMessages] = useState<ChatTurn[]>([
     {
       role: "assistant",
-      content: `Hi ${teacherName.split(" ")[0] || "there"}! Ask me anything — general doubts or how to use Gems Assist.`,
+      content: `Hi ${teacherName.split(" ")[0] || "there"}! Ask me anything — history, science, or how to use Gems Assist.`,
     },
   ]);
   const [loading, setLoading] = useState(false);
@@ -79,6 +80,7 @@ export function AiAssistant({ teacherName, classManaged, onNavigate }: AiAssista
         history,
         teacherName,
         classManaged,
+        provider: "gemini",
       });
       handleResult(res.reply.trim(), res.navigateTo);
     } catch (err) {
@@ -88,7 +90,14 @@ export function AiAssistant({ teacherName, classManaged, onNavigate }: AiAssista
 
       if (offline) {
         const local = localAssistantAnswer(msg, { teacherName, classManaged });
-        handleResult(local.reply, local.navigateTo);
+        if (local.navigateTo) {
+          handleResult(local.reply, local.navigateTo);
+        } else if (isGeneralKnowledgeQuestion(msg)) {
+          const wiki = await fetchWikipediaAnswer(msg);
+          handleResult(wiki ?? local.reply);
+        } else {
+          handleResult(local.reply);
+        }
       } else {
         handleResult(err instanceof Error ? err.message : "Something went wrong.");
       }
@@ -104,7 +113,7 @@ export function AiAssistant({ teacherName, classManaged, onNavigate }: AiAssista
           <header className="ai-assistant-head">
             <div>
               <strong>Gems Assist AI</strong>
-              <span className="ai-assistant-sub">General help · app navigation</span>
+              <span className="ai-assistant-sub">Gemini AI · general & app help</span>
             </div>
             <button
               type="button"

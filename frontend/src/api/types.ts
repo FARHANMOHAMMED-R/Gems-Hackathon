@@ -482,6 +482,7 @@ export interface AssistantChatRequest {
   history?: AssistantChatTurn[];
   teacherName?: string;
   classManaged?: string;
+  provider?: AiProvider;
 }
 
 export interface AssistantChatResponse {
@@ -489,6 +490,7 @@ export interface AssistantChatResponse {
   navigateTo?: string;
   analysisMode?: "ai" | "local";
   providerUsed?: AiProvider;
+  source?: "wikipedia";
 }
 
 // --- Parent mailer (legacy) ---
