@@ -18,9 +18,15 @@ import {
   type TextLevelerProvider,
 } from "../lib/textLevelerAiConfig";
 import { loadAssistantAiConfig } from "../lib/assistantAiConfig";
+import { bootstrapGeminiFromEnv, persistGeminiKeyEverywhere } from "../lib/bootstrapGeminiAi";
 import { buildPptxBase64, deckFileName } from "../lib/buildPptx";
 import { clientGeneratePptDeck } from "../lib/clientPptGenerator";
-import { resolveGemsApiKey, resolveSkyworkApiKey, defaultGemsProvider } from "../lib/resolvePptCredentials";
+import {
+  defaultTextLevelerProvider,
+  persistTextLevelerCredentials,
+  resolveTextLevelerCredentials,
+} from "../lib/resolveTextLevelerCredentials";
+import { resolveSkyworkApiKey } from "../lib/resolvePptCredentials";
 import { Card, EmptyState, ErrorNote, Field, Spinner } from "../components/ui";
 import { useToast } from "../components/Toast";
 
@@ -59,7 +65,7 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
   const savedGems = loadTextLevelerAiConfig();
   const [providers, setProviders] = useState<AiProviderInfo[]>([]);
   const [provider, setProvider] = useState<TextLevelerProvider>(
-    savedGems?.provider ?? defaultGemsProvider(),
+    savedGems?.provider ?? defaultTextLevelerProvider(),
   );
   const [gemsApiKey, setGemsApiKey] = useState(savedGems?.apiKey ?? "");
   const [engine, setEngine] = useState<PptEngine>("gems");
@@ -78,32 +84,38 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
   const [showApiSettings, setShowApiSettings] = useState(false);
 
   useEffect(() => {
-    const creds = resolveGemsApiKey(gemsApiKey, provider);
-    if (creds) {
-      setProvider(creds.provider);
-      setGemsApiKey(creds.apiKey);
-      saveTextLevelerAiConfig(creds);
-    }
-
-    const sky = resolveSkyworkApiKey(skyworkKey);
-    if (sky) setSkyworkKey(sky);
-  }, []);
-
-  useEffect(() => {
+    bootstrapGeminiFromEnv();
     api
       .getAiProviders()
       .then((res) => setProviders(res.providers))
       .catch(() => setProviders([]));
   }, []);
 
-  const configured = providers.filter((p) => p.configured);
-  const gemsCreds = resolveGemsApiKey(gemsApiKey, provider);
-  const gemsKeyReady = Boolean(gemsCreds);
+  const backendProviders = providers.map((p) => ({
+    id: p.id,
+    configured: p.configured,
+  }));
+  const gemsCreds = resolveTextLevelerCredentials(provider, gemsApiKey, backendProviders);
+  const gemsAiReady = Boolean(gemsCreds);
   const skyworkResolved = resolveSkyworkApiKey(skyworkKey);
   const skyworkReady = Boolean(skyworkResolved);
-  const backendAiReady = configured.length > 0;
-  const gemsAiReady = gemsKeyReady || backendAiReady;
   const formReady = topic.trim().length > 0 && chapters.trim().length > 0;
+
+  useEffect(() => {
+    bootstrapGeminiFromEnv();
+    const resolved = resolveTextLevelerCredentials(provider, gemsApiKey, backendProviders);
+    if (resolved?.apiKey && !gemsApiKey.trim()) {
+      setProvider(resolved.provider);
+      setGemsApiKey(resolved.apiKey);
+      persistTextLevelerCredentials(resolved);
+      setShowApiSettings(false);
+    } else if (resolved?.source === "backend") {
+      setShowApiSettings(false);
+    }
+
+    const sky = resolveSkyworkApiKey(skyworkKey);
+    if (sky && !skyworkKey.trim()) setSkyworkKey(sky);
+  }, [backendProviders]);
 
   function saveGemsKey() {
     const trimmed = gemsApiKey.trim();
@@ -111,8 +123,13 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
       toast.error("Paste a valid API key.");
       return;
     }
-    saveTextLevelerAiConfig({ provider, apiKey: trimmed });
-    toast.success(`${TEXT_LEVELER_PROVIDER_LABELS[provider]} key saved.`);
+    if (provider === "gemini") {
+      persistGeminiKeyEverywhere(trimmed);
+    } else {
+      saveTextLevelerAiConfig({ provider, apiKey: trimmed });
+    }
+    setShowApiSettings(false);
+    toast.success(`${TEXT_LEVELER_PROVIDER_LABELS[provider]} connected — all AI tools updated.`);
   }
 
   function useAssistantKey() {
@@ -127,7 +144,12 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
     }
     setProvider(assistant.provider);
     setGemsApiKey(assistant.apiKey);
-    saveTextLevelerAiConfig({ provider: assistant.provider, apiKey: assistant.apiKey });
+    if (assistant.provider === "gemini") {
+      persistGeminiKeyEverywhere(assistant.apiKey);
+    } else {
+      saveTextLevelerAiConfig({ provider: assistant.provider, apiKey: assistant.apiKey });
+    }
+    setShowApiSettings(false);
     toast.success(`Using ${TEXT_LEVELER_PROVIDER_LABELS[assistant.provider]} from assistant.`);
   }
 
@@ -165,11 +187,11 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
     );
 
     try {
-      const creds = resolveGemsApiKey(gemsApiKey, provider);
+      const creds = resolveTextLevelerCredentials(provider, gemsApiKey, backendProviders);
       const trimmedSkyworkKey = resolveSkyworkApiKey(skyworkKey) ?? "";
 
-      if (engine === "gems" && creds) {
-        saveTextLevelerAiConfig(creds);
+      if (engine === "gems" && creds?.apiKey) {
+        persistTextLevelerCredentials(creds);
         setProvider(creds.provider);
         setGemsApiKey(creds.apiKey);
         setShowApiSettings(false);
@@ -226,8 +248,8 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
         saveSkyworkPptApiKey(trimmedSkyworkKey);
       }
       if (res.analysisMode === "local" && engine === "gems" && !creds) {
-        toast.info("Outline deck created. Add a free Gemini key once for AI slides.");
         setShowApiSettings(true);
+        toast.info("Add a free Gemini key below for AI slides, or use the outline deck.");
       } else {
         setShowApiSettings(false);
       }
@@ -305,7 +327,9 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
         {engine === "gems" && gemsAiReady && !showApiSettings && (
           <p className="field-hint" style={{ color: "#059669", marginBottom: 12 }}>
             ✓ AI connected
-            {gemsCreds ? ` (${TEXT_LEVELER_PROVIDER_LABELS[gemsCreds.provider]})` : " (server)"}
+            {gemsCreds?.apiKey
+              ? ` (${TEXT_LEVELER_PROVIDER_LABELS[gemsCreds.provider]})`
+              : " (server Gemini)"}
             {" — "}
             <button
               type="button"
@@ -388,9 +412,9 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
               style={{ padding: 0, fontSize: "inherit" }}
               onClick={() => setShowApiSettings(true)}
             >
-              Optional: connect Gemini for AI slides
+              Connect Gemini for AI slides
             </button>
-            {" "}(or generate an outline deck now)
+            {" "}(outline deck works without a key)
           </p>
         )}
 
