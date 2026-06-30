@@ -53,7 +53,7 @@ export function SubstitutionFinder() {
             type="text"
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
-            placeholder="e.g. Physics"
+            placeholder="e.g. Mathematics, CHEM, Computer Science"
           />
         </Field>
 

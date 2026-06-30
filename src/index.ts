@@ -24,6 +24,8 @@ import { performanceRouter } from "./routes/performance";
 import { lectureRouter } from "./routes/lecture";
 import { reportCommentsRouter } from "./routes/reportComments";
 import { assistantRouter } from "./routes/assistant";
+import { ensureDemoLabBookings } from "./lib/demoLabBookings";
+import { ensureDemoSubstitutionTeachers } from "./lib/demoSubstitutionTeachers";
 
 const app = express();
 
@@ -107,6 +109,14 @@ const PORT = Number(process.env.PORT) || 4000;
 const HOST = process.env.HOST || "0.0.0.0";
 
 app.listen(PORT, HOST, () => {
+  void ensureDemoLabBookings().catch((err) => {
+    // eslint-disable-next-line no-console
+    console.warn("Demo lab bookings seed skipped:", err);
+  });
+  void ensureDemoSubstitutionTeachers().catch((err) => {
+    // eslint-disable-next-line no-console
+    console.warn("Demo substitution teachers seed skipped:", err);
+  });
   const lan = getLanIPv4();
   if (frontendDist) {
     // eslint-disable-next-line no-console

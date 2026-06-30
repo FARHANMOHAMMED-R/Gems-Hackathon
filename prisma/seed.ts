@@ -18,37 +18,62 @@ async function main() {
   await prisma.teacherAvailability.createMany({
     data: [
       {
-        teacherName: "Mr. Rajesh Kumar",
-        department: "Physics",
-        currentPeriodFreeStatus: j([true, false, true, false, true, false, true]),
+        teacherName: "Irfana Ma'am",
+        department: "Computer Science",
+        currentPeriodFreeStatus: j([true, false, true, true, false, true, false]),
       },
       {
-        teacherName: "Ms. Anita Desai",
-        department: "Physics",
-        currentPeriodFreeStatus: j([false, false, true, true, false, true, false]),
-      },
-      {
-        teacherName: "Mr. Suresh Iyer",
+        teacherName: "Tina Ma'am",
         department: "Mathematics",
-        currentPeriodFreeStatus: j([true, true, true, false, false, false, true]),
+        currentPeriodFreeStatus: j([false, true, true, false, true, false, true]),
       },
       {
-        teacherName: "Ms. Fatima Khan",
-        department: "Chemistry",
+        teacherName: "Yogesh Sir",
+        department: "CHEM",
         currentPeriodFreeStatus: j([false, true, false, true, true, false, true]),
       },
     ],
   });
 
   const today = new Date().toISOString().slice(0, 10);
-  await prisma.labReservation.create({
-    data: {
-      roomName: "Physics Lab 1",
-      date: today,
-      periodNumber: 2,
-      reservedByTeacherId: "Mr. Rajesh Kumar",
-      status: "Occupied",
-    },
+  await prisma.labReservation.createMany({
+    data: [
+      {
+        roomName: "Chemistry Lab 2",
+        date: today,
+        periodNumber: 1,
+        reservedByTeacherId: "Yogesh Sir · CHEM",
+        status: "Occupied",
+      },
+      {
+        roomName: "Chemistry Lab 1",
+        date: today,
+        periodNumber: 2,
+        reservedByTeacherId: "Ms. Fatima Khan · CHEM",
+        status: "Occupied",
+      },
+      {
+        roomName: "Physics Lab 1",
+        date: today,
+        periodNumber: 4,
+        reservedByTeacherId: "Mr. Rajesh Kumar · PHY",
+        status: "Occupied",
+      },
+      {
+        roomName: "Computer Lab 1",
+        date: today,
+        periodNumber: 2,
+        reservedByTeacherId: "Irfana Ma'am · CS",
+        status: "Occupied",
+      },
+      {
+        roomName: "Computer Lab 1",
+        date: today,
+        periodNumber: 6,
+        reservedByTeacherId: "Irfana Ma'am · CS",
+        status: "Occupied",
+      },
+    ],
   });
 
   console.log("Seed complete (no students — teacher sets up class roster on first sign-in).");

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api, ApiError } from "../api/client";
 import type { AvailabilityResponse, LabReservation } from "../api/types";
 import { Card, EmptyState, ErrorNote, Field, Spinner } from "../components/ui";
@@ -70,6 +70,11 @@ export function LabBooking() {
       setAvailLoading(false);
     }
   }
+
+  useEffect(() => {
+    void loadAvailability(availDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once for today on mount
+  }, []);
 
   return (
     <div className="grid grid-2">
