@@ -192,7 +192,7 @@ mailRouter.post(
       systemPrompt: PROFESSIONAL_EMAIL_SYSTEM_PROMPT,
       userContent: userParts.join("\n"),
       temperature: 0.45,
-      provider: body.provider as AiProvider | undefined,
+      provider: (body.provider ?? "gemini") as AiProvider,
     });
 
     res.json({

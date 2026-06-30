@@ -11,9 +11,11 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20"
+      - key: DATABASE_URL
+        value: file:./data/prod.db
       - key: LLM_DEFAULT_PROVIDER
-        value: openai
-      - key: OPENAI_API_KEY
+        value: gemini
+      - key: GEMINI_API_KEY
         sync: false
-      - key: LLM_TEXT_MODEL
-        value: gpt-4o-mini
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash

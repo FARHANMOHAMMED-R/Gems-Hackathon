@@ -1,17 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../api/client";
-import type { AiProvider, AiProviderInfo } from "../api/types";
 import { draftProfessionalEmailLocally } from "../lib/localProfessionalEmail";
 import { ErrorNote, Field, Spinner } from "../components/ui";
 import { useToast } from "../components/Toast";
 
 const WORD_LIMIT = 75000;
-
-function providerLabel(id: AiProvider): string {
-  if (id === "openai") return "ChatGPT (OpenAI)";
-  if (id === "gemini") return "Gemini";
-  return "Claude";
-}
 
 const EXEMPLAR = {
   authorName: "Jane Smith",
@@ -46,7 +39,6 @@ export function ProfessionalEmail({ teacherEmail, teacherName }: ProfessionalEma
   const [fileContext, setFileContext] = useState("");
 
   const [loading, setLoading] = useState(false);
-  const [localMode, setLocalMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState<EmailDraft | null>(null);
   const [previousDraft, setPreviousDraft] = useState<EmailDraft | null>(null);
@@ -55,24 +47,11 @@ export function ProfessionalEmail({ teacherEmail, teacherName }: ProfessionalEma
   const [mailConfigured, setMailConfigured] = useState<boolean | null>(null);
   const [sending, setSending] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [providers, setProviders] = useState<AiProviderInfo[]>([]);
-  const [provider, setProvider] = useState<AiProvider | "">("");
 
   const totalWords = countWords(content) + countWords(fileContext);
-  const configured = providers.filter((p) => p.configured);
-  const useTemplate = configured.length === 0;
 
   useEffect(() => {
     api.getMailStatus().then((s) => setMailConfigured(s.configured)).catch(() => setMailConfigured(false));
-    api
-      .getAiProviders()
-      .then((res) => {
-        setProviders(res.providers);
-        const openai = res.providers.find((p) => p.id === "openai" && p.configured);
-        const first = openai ?? res.providers.find((p) => p.configured);
-        if (first) setProvider(first.id);
-      })
-      .catch(() => setProviders([]));
   }, []);
 
   async function onFilePick(e: React.ChangeEvent<HTMLInputElement>) {
@@ -133,19 +112,17 @@ export function ProfessionalEmail({ teacherEmail, teacherName }: ProfessionalEma
 
     setLoading(true);
     setError(null);
-    setLocalMode(false);
 
     try {
       const res = await api.generateProfessionalEmail({
         authorName: authorName.trim(),
         content: content.trim(),
         fileContext: fileContext.trim() || undefined,
-        provider: provider || undefined,
+        provider: "gemini" as const,
       });
       setPreviousDraft(draft);
       setDraft({ subject: res.subject, body: res.body });
-      setLocalMode(res.analysisMode === "local");
-      toast.success("Email generated.");
+      toast.success(res.analysisMode === "ai" ? "Email generated with AI." : "Email generated.");
     } catch (err) {
       const offline =
         (err instanceof ApiError && err.isLlmNotConfigured) ||
@@ -160,8 +137,7 @@ export function ProfessionalEmail({ teacherEmail, teacherName }: ProfessionalEma
         );
         setPreviousDraft(draft);
         setDraft(local);
-        setLocalMode(true);
-        toast.success("Email generated locally.");
+        toast.success("Email generated.");
       } else {
         setError(err instanceof Error ? err.message : "Generation failed.");
         toast.error("Could not generate email.");
@@ -241,46 +217,6 @@ export function ProfessionalEmail({ teacherEmail, teacherName }: ProfessionalEma
             </button>
           </div>
         </header>
-
-        {useTemplate ? (
-          <details className="ppt-ai-setup" open>
-            <summary>Enable OpenAI / AI generation</summary>
-            <p className="muted">
-              Add your OpenAI key to backend <code>.env</code>, then restart the server:
-            </p>
-            <pre className="pro-email-env-snippet">{`OPENAI_API_KEY=sk-...
-LLM_TEXT_MODEL=gpt-4o-mini
-LLM_DEFAULT_PROVIDER=openai`}</pre>
-            <p className="muted">
-              Get a key at{" "}
-              <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">
-                platform.openai.com/api-keys
-              </a>
-              . Or use free <code>GEMINI_API_KEY</code> from{" "}
-              <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
-                Google AI Studio
-              </a>
-              .
-            </p>
-          </details>
-        ) : (
-          <div className="field">
-            <span className="field-label">AI provider</span>
-            <div className="chip-group">
-              {configured.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  className={`chip${provider === p.id ? " active" : ""}`}
-                  onClick={() => setProvider(p.id)}
-                  title={p.textModel}
-                >
-                  {providerLabel(p.id)}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         {mailConfigured === false && (
           <details className="ppt-ai-setup">
@@ -363,12 +299,6 @@ LLM_DEFAULT_PROVIDER=openai`}</pre>
         </button>
 
         {loading && <Spinner label="Writing your email…" />}
-
-        {localMode && draft && !loading && (
-          <span className="pill pill-primary">
-            📧 {useTemplate ? "Local draft — add OPENAI_API_KEY to backend .env" : "Local draft — backend could not reach AI"}
-          </span>
-        )}
 
         {error && !loading && <ErrorNote>{error}</ErrorNote>}
 

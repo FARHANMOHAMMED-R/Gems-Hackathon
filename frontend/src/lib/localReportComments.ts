@@ -1,4 +1,4 @@
-/** Draft report card comments in the browser when the backend is offline. */
+/** Built-in report comment drafting — no external API key required. */
 export function draftReportCommentsLocally(input: {
   gradeLevel: string;
   studentPronouns: string;
@@ -31,42 +31,39 @@ export function draftReportCommentsLocally(input: {
     return "their";
   }
 
-  function formatBullets(text: string): string {
+  function toSentences(text: string): string[] {
     return text
-      .trim()
       .split(/\n+/)
       .map((line) => line.replace(/^[-•*]\s*/, "").trim())
       .filter(Boolean)
-      .join(". ");
+      .map((line) => (/[.!?]$/.test(line) ? line : `${line}.`));
   }
 
   const subj = subjectPronoun(input.studentPronouns);
   const obj = objectPronoun(input.studentPronouns);
   const pos = possessive(input.studentPronouns);
+  const grade = input.gradeLevel.trim() || "this grade level";
 
-  let strengthText = formatBullets(input.strengths);
-  if (input.strengthsFileContext?.trim()) {
-    strengthText = strengthText
-      ? `${strengthText}. ${formatBullets(input.strengthsFileContext)}`
-      : formatBullets(input.strengthsFileContext);
-  }
+  const strengthLines = [
+    ...toSentences(input.strengths),
+    ...(input.strengthsFileContext?.trim() ? toSentences(input.strengthsFileContext) : []),
+  ];
+  const growthLines = [
+    ...toSentences(input.growthAreas),
+    ...(input.growthFileContext?.trim() ? toSentences(input.growthFileContext) : []),
+  ];
 
-  let growthText = formatBullets(input.growthAreas);
-  if (input.growthFileContext?.trim()) {
-    growthText = growthText
-      ? `${growthText}. ${formatBullets(input.growthFileContext)}`
-      : formatBullets(input.growthFileContext);
-  }
+  const strengthPara =
+    strengthLines.length > 0
+      ? `${subj} demonstrates several strengths this term. ${strengthLines.join(" ")}`
+      : `${subj} contributes positively to our ${grade} classroom community.`;
 
-  const grade = input.gradeLevel.trim() || "this grade";
+  const growthPara =
+    growthLines.length > 0
+      ? `Areas for continued growth include the following goals: ${growthLines.join(" ")} With consistent practice and support, ${subj.toLowerCase()} can make strong progress in these areas.`
+      : `With continued effort, ${subj.toLowerCase()} can build on ${pos} strengths in the coming term.`;
 
-  const p1 = `${subj} has shown meaningful progress this year in ${grade}. ${strengthText || `${subj} contributes positively to class.`}`;
+  const closing = `Overall, ${subj.toLowerCase()} is a valued member of our class, and I look forward to supporting ${obj} as ${subj.toLowerCase()} continues to grow academically and personally.`;
 
-  const p2 = growthText
-    ? `Moving forward, ${subj.toLowerCase()} will benefit from focusing on: ${growthText}. With continued support at home and school, ${subj.toLowerCase()} can build on ${pos} strengths in the coming term.`
-    : `With continued effort, ${subj.toLowerCase()} can build on ${pos} strengths in the coming term.`;
-
-  const p3 = `I appreciate ${pos} engagement and look forward to seeing ${obj} continue to grow.`;
-
-  return { comment: [p1, p2, p3].join("\n\n") };
+  return { comment: [strengthPara, growthPara, closing].join("\n\n") };
 }

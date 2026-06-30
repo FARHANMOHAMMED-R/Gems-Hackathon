@@ -1,17 +1,10 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { api, ApiError } from "../api/client";
-import type { AiProvider, AiProviderInfo } from "../api/types";
 import { draftReportCommentsLocally } from "../lib/localReportComments";
 import { ErrorNote, Field, Spinner } from "../components/ui";
 import { useToast } from "../components/Toast";
 
 const WORD_LIMIT = 75000;
-
-function providerLabel(id: AiProvider): string {
-  if (id === "openai") return "ChatGPT (OpenAI)";
-  if (id === "gemini") return "Gemini";
-  return "Claude";
-}
 
 const GRADE_LEVELS = [
   "Kindergarten",
@@ -73,29 +66,12 @@ export function ReportCardComments({ classManaged }: { classManaged: string }) {
   const [growthFileContext, setGrowthFileContext] = useState("");
 
   const [loading, setLoading] = useState(false);
-  const [localMode, setLocalMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [comment, setComment] = useState<string | null>(null);
   const [previousComment, setPreviousComment] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [providers, setProviders] = useState<AiProviderInfo[]>([]);
-  const [provider, setProvider] = useState<AiProvider | "">("");
 
   const totalWords = countWords(strengths, growthAreas, strengthsFileContext, growthFileContext);
-  const configured = providers.filter((p) => p.configured);
-  const useTemplate = configured.length === 0;
-
-  useEffect(() => {
-    api
-      .getAiProviders()
-      .then((res) => {
-        setProviders(res.providers);
-        const openai = res.providers.find((p) => p.id === "openai" && p.configured);
-        const first = openai ?? res.providers.find((p) => p.configured);
-        if (first) setProvider(first.id);
-      })
-      .catch(() => setProviders([]));
-  }, []);
 
   async function readTextFile(
     file: File,
@@ -160,19 +136,17 @@ export function ReportCardComments({ classManaged }: { classManaged: string }) {
       growthAreas: growthAreas.trim(),
       strengthsFileContext: strengthsFileContext.trim() || undefined,
       growthFileContext: growthFileContext.trim() || undefined,
-      provider: provider || undefined,
+      provider: "gemini" as const,
     };
 
     setLoading(true);
     setError(null);
-    setLocalMode(false);
 
     try {
       const res = await api.generateReportComments(payload);
       setPreviousComment(comment);
       setComment(res.comment);
-      setLocalMode(res.analysisMode === "local");
-      toast.success("Report comment generated.");
+      toast.success(res.analysisMode === "ai" ? "Comment generated with AI." : "Comment generated.");
     } catch (err) {
       const offline =
         (err instanceof ApiError && err.isLlmNotConfigured) ||
@@ -183,8 +157,7 @@ export function ReportCardComments({ classManaged }: { classManaged: string }) {
         const local = draftReportCommentsLocally(payload);
         setPreviousComment(comment);
         setComment(local.comment);
-        setLocalMode(true);
-        toast.success("Comment generated locally.");
+        toast.success("Comment generated.");
       } else {
         setError(err instanceof Error ? err.message : "Generation failed.");
         toast.error("Could not generate comment.");
@@ -236,42 +209,6 @@ export function ReportCardComments({ classManaged }: { classManaged: string }) {
             </button>
           </div>
         </header>
-
-        {useTemplate ? (
-          <details className="ppt-ai-setup" open>
-            <summary>Enable OpenAI / AI generation</summary>
-            <p className="muted">
-              Add your OpenAI key to backend <code>.env</code>, then restart the server:
-            </p>
-            <pre className="pro-email-env-snippet">{`OPENAI_API_KEY=sk-...
-LLM_TEXT_MODEL=gpt-4o-mini
-LLM_DEFAULT_PROVIDER=openai`}</pre>
-            <p className="muted">
-              Get a key at{" "}
-              <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">
-                platform.openai.com/api-keys
-              </a>
-              .
-            </p>
-          </details>
-        ) : (
-          <div className="field">
-            <span className="field-label">AI provider</span>
-            <div className="chip-group">
-              {configured.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  className={`chip${provider === p.id ? " active" : ""}`}
-                  onClick={() => setProvider(p.id)}
-                  title={p.textModel}
-                >
-                  {providerLabel(p.id)}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         <Field label="Grade level *">
           <select value={gradeLevel} onChange={(e) => setGradeLevel(e.target.value)}>
@@ -412,12 +349,6 @@ LLM_DEFAULT_PROVIDER=openai`}</pre>
         </button>
 
         {loading && <Spinner label="Writing report comment…" />}
-
-        {localMode && comment && !loading && (
-          <span className="pill pill-primary">
-            📋 {useTemplate ? "Local draft — add OPENAI_API_KEY to backend .env" : "Local draft — backend could not reach AI"}
-          </span>
-        )}
 
         {error && !loading && <ErrorNote>{error}</ErrorNote>}
 

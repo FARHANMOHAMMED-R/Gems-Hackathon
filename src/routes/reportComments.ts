@@ -47,7 +47,7 @@ reportCommentsRouter.post(
       systemPrompt: REPORT_COMMENTS_SYSTEM_PROMPT,
       userContent: userParts.join("\n"),
       temperature: 0.5,
-      provider: body.provider as AiProvider | undefined,
+      provider: (body.provider ?? "gemini") as AiProvider,
     });
 
     res.json({
