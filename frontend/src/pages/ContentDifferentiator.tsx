@@ -8,6 +8,7 @@ import {
   READING_PROFILE_LABELS,
 } from "../data/readingProfiles";
 import { levelTextWithProvider } from "../lib/clientTextLeveler";
+import { bootstrapGeminiFromEnv, persistGeminiKeyEverywhere } from "../lib/bootstrapGeminiAi";
 import { friendlyAiErrorMessage, isAiQuotaError } from "../lib/aiErrors";
 import { loadAssistantAiConfig } from "../lib/assistantAiConfig";
 import {
@@ -92,6 +93,7 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
     Boolean(assistantKey?.apiKey && assistantKey.apiKey.length >= 10);
 
   useEffect(() => {
+    bootstrapGeminiFromEnv();
     api
       .getAiProviders()
       .then((res) =>
@@ -103,17 +105,22 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
   }, []);
 
   useEffect(() => {
-    const resolved = resolveTextLevelerCredentials(provider, apiKey, []);
+    bootstrapGeminiFromEnv();
+    const resolved = resolveTextLevelerCredentials(provider, apiKey, backendProviders);
     if (resolved?.apiKey && !apiKey.trim()) {
       setProvider(resolved.provider);
       setApiKey(resolved.apiKey);
       persistTextLevelerCredentials(resolved);
+      setShowApiSettings(false);
     } else if (!apiKey.trim() && assistantKeyReady && assistantKey) {
       setProvider(assistantKey.provider);
       setApiKey(assistantKey.apiKey);
       saveTextLevelerAiConfig({ provider: assistantKey.provider, apiKey: assistantKey.apiKey });
+      setShowApiSettings(false);
+    } else if (resolved?.source === "backend") {
+      setShowApiSettings(false);
     }
-  }, []);
+  }, [backendProviders]);
 
   async function onFilePick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -286,9 +293,13 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
       toast.error("Paste a valid API key.");
       return;
     }
-    saveTextLevelerAiConfig({ provider, apiKey: trimmed });
+    if (provider === "gemini") {
+      persistGeminiKeyEverywhere(trimmed);
+    } else {
+      saveTextLevelerAiConfig({ provider, apiKey: trimmed });
+    }
     setShowApiSettings(false);
-    toast.success(`${TEXT_LEVELER_PROVIDER_LABELS[provider]} connected for Text Leveler.`);
+    toast.success(`${TEXT_LEVELER_PROVIDER_LABELS[provider]} connected — all AI tools updated.`);
   }
 
   async function copyOutput() {
