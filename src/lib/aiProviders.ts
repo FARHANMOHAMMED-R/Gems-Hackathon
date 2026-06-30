@@ -119,10 +119,45 @@ export interface AiCompletionOptions {
   provider?: AiProvider;
   temperature?: number;
   json?: boolean;
+  /** Per-request key from the browser (localhost) when .env has no key. */
+  apiKeyOverride?: string;
+}
+
+function resolveApiKey(provider: AiProvider, override?: string): string {
+  const key = override?.trim();
+  if (key) return key;
+  if (provider === "openai") {
+    const env = process.env.OPENAI_API_KEY?.trim();
+    if (!env) throw new LlmConfigError("OPENAI_API_KEY is not set.");
+    return env;
+  }
+  if (provider === "gemini") {
+    const env = process.env.GEMINI_API_KEY?.trim();
+    if (!env) throw new LlmConfigError("GEMINI_API_KEY is not set.");
+    return env;
+  }
+  const env = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!env) throw new LlmConfigError("ANTHROPIC_API_KEY is not set.");
+  return env;
+}
+
+export function isProviderConfigured(provider: AiProvider, apiKeyOverride?: string): boolean {
+  if (apiKeyOverride?.trim()) return true;
+  if (provider === "openai") return isOpenAiConfigured();
+  if (provider === "gemini") return isGeminiConfigured();
+  return isClaudeConfigured();
 }
 
 async function completeOpenAi(opts: AiCompletionOptions): Promise<string> {
-  const res = await getOpenAiClient().chat.completions.create({
+  const apiKey = resolveApiKey("openai", opts.apiKeyOverride);
+  const client =
+    opts.apiKeyOverride?.trim()
+      ? new OpenAI({
+          apiKey,
+          baseURL: process.env.OPENAI_BASE_URL || undefined,
+        })
+      : getOpenAiClient();
+  const res = await client.chat.completions.create({
     model: openAiModel(),
     temperature: opts.temperature ?? 0.2,
     ...(opts.json ? { response_format: { type: "json_object" } } : {}),
@@ -138,8 +173,7 @@ async function completeOpenAi(opts: AiCompletionOptions): Promise<string> {
 }
 
 async function completeGemini(opts: AiCompletionOptions): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
-  if (!apiKey) throw new LlmConfigError("GEMINI_API_KEY is not set.");
+  const apiKey = resolveApiKey("gemini", opts.apiKeyOverride);
 
   const system = opts.json
     ? `${opts.systemPrompt}\n\n${GROUNDING_GUARDRAIL}\nRespond with valid JSON only.`
@@ -174,8 +208,7 @@ async function completeGemini(opts: AiCompletionOptions): Promise<string> {
 }
 
 async function completeClaude(opts: AiCompletionOptions): Promise<string> {
-  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
-  if (!apiKey) throw new LlmConfigError("ANTHROPIC_API_KEY is not set.");
+  const apiKey = resolveApiKey("claude", opts.apiKeyOverride);
 
   const system = opts.json
     ? `${opts.systemPrompt}\n\n${GROUNDING_GUARDRAIL}\nRespond with valid JSON only, no markdown fences.`
@@ -209,8 +242,13 @@ async function completeClaude(opts: AiCompletionOptions): Promise<string> {
   return body.content?.find((c) => c.type === "text")?.text?.trim() ?? "";
 }
 
+function resolveProviderWithOverride(opts: AiCompletionOptions): AiProvider {
+  if (opts.apiKeyOverride?.trim() && opts.provider) return opts.provider;
+  return resolveProvider(opts.provider);
+}
+
 export async function aiComplete(opts: AiCompletionOptions): Promise<string> {
-  const provider = resolveProvider(opts.provider);
+  const provider = resolveProviderWithOverride(opts);
   switch (provider) {
     case "openai":
       return completeOpenAi(opts);
@@ -224,7 +262,7 @@ export async function aiComplete(opts: AiCompletionOptions): Promise<string> {
 export async function aiCompleteJSON<T = unknown>(
   opts: Omit<AiCompletionOptions, "json">,
 ): Promise<{ data: T; provider: AiProvider }> {
-  const provider = resolveProvider(opts.provider);
+  const provider = resolveProviderWithOverride(opts);
   const raw = await aiComplete({ ...opts, provider, json: true });
   return { data: safeParseJSON<T>(raw), provider };
 }

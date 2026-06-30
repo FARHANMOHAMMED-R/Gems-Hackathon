@@ -2668,6 +2668,127 @@ textarea:focus {
   color: #fff;
 }
 
+.ai-assistant-head-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.ai-assistant-gear {
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.ai-assistant-settings {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-assistant-settings-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ai-assistant-settings-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ai-assistant-settings-label select,
+.ai-assistant-settings-label input {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.ai-assistant-settings-hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.ai-assistant-settings-ok {
+  color: #059669;
+}
+
+.ai-assistant-settings-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ai-assistant-settings-save {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ai-assistant-settings-save:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ai-assistant-settings-clear {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ai-assistant-setup-banner {
+  padding: 10px 14px;
+  background: rgba(124, 58, 237, 0.08);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-assistant-setup-banner p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.ai-assistant-setup-banner button {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .ai-assistant-head strong {
   display: block;
   font-size: 14px;

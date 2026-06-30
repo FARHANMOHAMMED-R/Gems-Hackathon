@@ -483,6 +483,8 @@ export interface AssistantChatRequest {
   teacherName?: string;
   classManaged?: string;
   provider?: AiProvider;
+  /** Browser-stored API key when backend .env has none (localhost). */
+  apiKey?: string;
 }
 
 export interface AssistantChatResponse {

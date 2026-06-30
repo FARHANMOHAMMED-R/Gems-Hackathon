@@ -1,10 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../api/client";
+import type { AiProvider } from "../api/types";
 import {
   ASSISTANT_NAV_LABELS,
   isAssistantNavId,
   localAssistantAnswer,
 } from "../lib/localAssistant";
+import {
+  ASSISTANT_PROVIDER_HINTS,
+  ASSISTANT_PROVIDER_LABELS,
+  clearAssistantAiConfig,
+  loadAssistantAiConfig,
+  saveAssistantAiConfig,
+  type AssistantAiProvider,
+} from "../lib/assistantAiConfig";
 import { fetchWikipediaAnswer, isGeneralKnowledgeQuestion } from "../lib/generalKnowledge";
 
 interface ChatTurn {
@@ -19,8 +28,18 @@ interface AiAssistantProps {
   onNavigate: (pageId: string) => void;
 }
 
+function providerLabel(id: AiProvider | "local"): string {
+  if (id === "openai") return "OpenAI";
+  if (id === "gemini") return "Gemini";
+  if (id === "claude") return "Claude";
+  return "Offline";
+}
+
 export function AiAssistant({ teacherName, classManaged, onNavigate }: AiAssistantProps) {
+  const saved = loadAssistantAiConfig();
+
   const [open, setOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatTurn[]>([
     {
@@ -29,9 +48,31 @@ export function AiAssistant({ teacherName, classManaged, onNavigate }: AiAssista
     },
   ]);
   const [loading, setLoading] = useState(false);
+  const [provider, setProvider] = useState<AssistantAiProvider>(saved?.provider ?? "gemini");
+  const [apiKey, setApiKey] = useState(saved?.apiKey ?? "");
+  const [backendProviders, setBackendProviders] = useState<
+    { id: AiProvider; configured: boolean }[]
+  >([]);
 
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const backendAiReady = backendProviders.some((p) => p.configured);
+  const localKeyReady = apiKey.trim().length >= 10;
+  const aiReady = backendAiReady || localKeyReady;
+
+  const activeProviderLabel = (() => {
+    if (backendAiReady) {
+      const gemini = backendProviders.find((p) => p.id === "gemini" && p.configured);
+      const openai = backendProviders.find((p) => p.id === "openai" && p.configured);
+      if (localKeyReady) return ASSISTANT_PROVIDER_LABELS[provider];
+      if (gemini) return "Gemini";
+      if (openai) return "OpenAI";
+      const any = backendProviders.find((p) => p.configured);
+      return any ? providerLabel(any.id) : "AI";
+    }
+    return localKeyReady ? ASSISTANT_PROVIDER_LABELS[provider] : "Offline";
+  })();
 
   const scrollToBottom = useCallback(() => {
     const el = listRef.current;
@@ -39,11 +80,42 @@ export function AiAssistant({ teacherName, classManaged, onNavigate }: AiAssista
   }, []);
 
   useEffect(() => {
+    api
+      .getAiProviders()
+      .then((res) =>
+        setBackendProviders(
+          res.providers.map((p) => ({ id: p.id, configured: p.configured })),
+        ),
+      )
+      .catch(() => setBackendProviders([]));
+  }, [open]);
+
+  useEffect(() => {
     if (open) {
       scrollToBottom();
       window.setTimeout(() => inputRef.current?.focus(), 120);
     }
   }, [open, messages, scrollToBottom]);
+
+  function saveKey() {
+    const trimmed = apiKey.trim();
+    if (trimmed.length < 10) return;
+    saveAssistantAiConfig({ provider, apiKey: trimmed });
+    setSettingsOpen(false);
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content: `${ASSISTANT_PROVIDER_LABELS[provider]} is connected. Ask me anything!`,
+      },
+    ]);
+  }
+
+  function removeKey() {
+    clearAssistantAiConfig();
+    setApiKey("");
+    setSettingsOpen(false);
+  }
 
   function goToPage(pageId: string) {
     if (!isAssistantNavId(pageId)) return;
@@ -66,6 +138,11 @@ export function AiAssistant({ teacherName, classManaged, onNavigate }: AiAssista
     const msg = input.trim();
     if (!msg || loading) return;
 
+    if (!aiReady) {
+      setSettingsOpen(true);
+      return;
+    }
+
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: msg }]);
     setLoading(true);
@@ -74,13 +151,18 @@ export function AiAssistant({ teacherName, classManaged, onNavigate }: AiAssista
       .filter((m) => m.role === "user" || m.role === "assistant")
       .map((m) => ({ role: m.role, content: m.content }));
 
+    const chatProvider: AiProvider = localKeyReady
+      ? provider
+      : (backendProviders.find((p) => p.configured)?.id ?? provider);
+
     try {
       const res = await api.assistantChat({
         message: msg,
         history,
         teacherName,
         classManaged,
-        provider: "gemini",
+        provider: chatProvider,
+        ...(localKeyReady ? { apiKey: apiKey.trim() } : {}),
       });
       handleResult(res.reply.trim(), res.navigateTo);
     } catch (err) {
@@ -113,17 +195,88 @@ export function AiAssistant({ teacherName, classManaged, onNavigate }: AiAssista
           <header className="ai-assistant-head">
             <div>
               <strong>Gems Assist AI</strong>
-              <span className="ai-assistant-sub">Gemini AI · general & app help</span>
+              <span className="ai-assistant-sub">
+                {aiReady ? `${activeProviderLabel} · general & app help` : "Add an API key to enable AI"}
+              </span>
             </div>
-            <button
-              type="button"
-              className="ai-assistant-close"
-              onClick={() => setOpen(false)}
-              aria-label="Close assistant"
-            >
-              ×
-            </button>
+            <div className="ai-assistant-head-actions">
+              <button
+                type="button"
+                className="ai-assistant-gear"
+                onClick={() => setSettingsOpen((s) => !s)}
+                aria-label="AI settings"
+                title="API key settings"
+              >
+                ⚙
+              </button>
+              <button
+                type="button"
+                className="ai-assistant-close"
+                onClick={() => setOpen(false)}
+                aria-label="Close assistant"
+              >
+                ×
+              </button>
+            </div>
           </header>
+
+          {settingsOpen && (
+            <div className="ai-assistant-settings">
+              <p className="ai-assistant-settings-title">Connect Gemini or OpenAI</p>
+              <label className="ai-assistant-settings-label">
+                Provider
+                <select
+                  value={provider}
+                  onChange={(e) => setProvider(e.target.value as AssistantAiProvider)}
+                >
+                  <option value="gemini">Google Gemini (free)</option>
+                  <option value="openai">OpenAI ChatGPT</option>
+                </select>
+              </label>
+              <label className="ai-assistant-settings-label">
+                API key
+                <input
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="Paste your API key"
+                  autoComplete="off"
+                />
+              </label>
+              <p className="ai-assistant-settings-hint">
+                {ASSISTANT_PROVIDER_HINTS[provider]}. Stored in this browser only.
+              </p>
+              {backendAiReady && (
+                <p className="ai-assistant-settings-hint ai-assistant-settings-ok">
+                  Backend .env also has a key — browser key overrides when saved.
+                </p>
+              )}
+              <div className="ai-assistant-settings-actions">
+                <button
+                  type="button"
+                  className="ai-assistant-settings-save"
+                  onClick={saveKey}
+                  disabled={apiKey.trim().length < 10}
+                >
+                  Save key
+                </button>
+                {localKeyReady && (
+                  <button type="button" className="ai-assistant-settings-clear" onClick={removeKey}>
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {!aiReady && !settingsOpen && (
+            <div className="ai-assistant-setup-banner">
+              <p>Add a free Gemini or OpenAI key to unlock full AI answers.</p>
+              <button type="button" onClick={() => setSettingsOpen(true)}>
+                Set up API key
+              </button>
+            </div>
+          )}
 
           <div className="ai-assistant-messages" ref={listRef}>
             {messages.map((m, i) => (
@@ -161,7 +314,7 @@ export function AiAssistant({ teacherName, classManaged, onNavigate }: AiAssista
                   void send();
                 }
               }}
-              placeholder="Type your question…"
+              placeholder={aiReady ? "Type your question…" : "Set up API key first…"}
               disabled={loading}
               aria-label="Message to AI assistant"
             />

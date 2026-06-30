@@ -3,9 +3,7 @@ import { z } from "zod";
 import { asyncHandler } from "../lib/http";
 import {
   aiCompleteJSON,
-  isClaudeConfigured,
-  isGeminiConfigured,
-  isOpenAiConfigured,
+  isProviderConfigured,
   type AiProvider,
 } from "../lib/aiProviders";
 import { fetchWikipediaAnswer, isGeneralKnowledgeQuestion } from "../lib/generalKnowledge";
@@ -28,6 +26,8 @@ const chatSchema = z.object({
   teacherName: z.string().trim().optional(),
   classManaged: z.string().trim().optional(),
   provider: z.enum(["openai", "gemini", "claude"]).optional(),
+  /** Browser-stored key for localhost when backend .env has no key. */
+  apiKey: z.string().trim().min(10).max(512).optional(),
 });
 
 function buildUserContent(
@@ -49,14 +49,22 @@ function buildUserContent(
 }
 
 /** Assistant prefers Gemini for general knowledge, then OpenAI. */
-function pickAssistantProvider(requested?: AiProvider): AiProvider | null {
-  if (requested === "gemini" && isGeminiConfigured()) return "gemini";
-  if (requested === "openai" && isOpenAiConfigured()) return "openai";
-  if (requested === "claude" && isClaudeConfigured()) return "claude";
-  if (isGeminiConfigured()) return "gemini";
-  if (isOpenAiConfigured()) return "openai";
-  if (isClaudeConfigured()) return "claude";
-  return null;
+function pickAssistantProvider(
+  requested?: AiProvider,
+  apiKey?: string,
+): AiProvider | null {
+  const tryProvider = (p: AiProvider) =>
+    isProviderConfigured(p, apiKey) ? p : null;
+
+  if (requested) {
+    const picked = tryProvider(requested);
+    if (picked) return picked;
+  }
+  return (
+    tryProvider("gemini") ??
+    tryProvider("openai") ??
+    tryProvider("claude")
+  );
 }
 
 function sanitizeNav(raw: unknown): string | undefined {
@@ -77,7 +85,7 @@ assistantRouter.post(
       return;
     }
 
-    const provider = pickAssistantProvider(body.provider);
+    const provider = pickAssistantProvider(body.provider, body.apiKey);
 
     if (provider) {
       try {
@@ -89,6 +97,7 @@ assistantRouter.post(
           userContent: buildUserContent(body.message, body.history, context),
           temperature: 0.55,
           provider,
+          apiKeyOverride: body.apiKey,
         });
 
         const navigateTo = sanitizeNav(result.navigateTo);
