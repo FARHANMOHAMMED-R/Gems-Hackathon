@@ -84,7 +84,7 @@ function buildTeacherNav(teacher: TeacherSession): NavItem[] {
       label: "Blueprint Generator",
       icon: "📋",
       blurb: "Exam paper topic & marks map",
-      render: () => <BlueprintGenerator />,
+      render: () => <BlueprintGenerator classManaged={classManaged} />,
     },
     {
       id: "content",

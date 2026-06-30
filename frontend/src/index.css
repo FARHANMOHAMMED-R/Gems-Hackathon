@@ -2960,3 +2960,201 @@ textarea:focus {
 .lecture-saved-btn .muted {
   font-size: 12px;
 }
+
+/* ---- GEMS PT Blueprint ---- */
+.blueprint-pt-page {
+  max-width: 1400px;
+}
+
+.blueprint-pt-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(360px, 1.1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .blueprint-pt-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.blueprint-pt-form {
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.blueprint-pt-output {
+  min-width: 0;
+}
+
+.blueprint-pt-actions {
+  margin-bottom: 12px;
+}
+
+.gems-bp-form-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gems-bp-section-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 100px 64px auto;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.gems-bp-chapter-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.gems-bp-chapter-row input:first-of-type {
+  flex: 1;
+}
+
+.gems-bp-unit-block {
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+
+.gems-bp-unit-block summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.gems-bp-matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.gems-bp-matrix-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.gems-bp-matrix-grid textarea {
+  font-size: 12px;
+  min-height: 80px;
+}
+
+.gems-bp-document {
+  background: #fff;
+  color: #111;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: "Times New Roman", Times, serif;
+  font-size: 13px;
+}
+
+.gems-bp-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.gems-bp-school {
+  font-weight: 700;
+  font-size: 14px;
+  margin: 0 0 6px;
+}
+
+.gems-bp-title {
+  font-size: 16px;
+  margin: 0 0 8px;
+  text-decoration: underline;
+}
+
+.gems-bp-subject {
+  font-weight: 700;
+  margin: 0;
+}
+
+.gems-bp-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+  font-size: 12px;
+}
+
+.gems-bp-table th,
+.gems-bp-table td {
+  border: 1px solid #333;
+  padding: 6px 8px;
+  vertical-align: top;
+}
+
+.gems-bp-table th {
+  background: #b8cce4;
+  font-weight: 700;
+  text-align: center;
+}
+
+.gems-bp-total-row td {
+  background: #dce6f1;
+  font-weight: 600;
+}
+
+.gems-bp-concept {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.gems-bp-cell {
+  line-height: 1.35;
+}
+
+.gems-bp-line.tag-ku {
+  color: #0e7490;
+  font-weight: 600;
+}
+
+.gems-bp-line.tag-app {
+  color: #a21caf;
+  font-weight: 600;
+}
+
+.gems-bp-line.tag-hot {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.gems-bp-line.tag-choice {
+  font-style: italic;
+  font-size: 11px;
+}
+
+.gems-bp-footer {
+  text-align: center;
+  font-size: 11px;
+  margin: 12px 0 0;
+}
+
+@media print {
+  .sidebar,
+  .topbar,
+  .blueprint-pt-form,
+  .blueprint-pt-actions,
+  .ai-assistant-fab,
+  .pro-email-crumb {
+    display: none !important;
+  }
+
+  .gems-bp-document {
+    border: none;
+    padding: 0;
+  }
+}

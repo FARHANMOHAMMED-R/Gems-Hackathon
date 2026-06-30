@@ -4,12 +4,25 @@ import { asyncHandler, ApiError } from "../lib/http";
 import { completeJSON, transcribeDocument, isLlmConfigured } from "../lib/llm";
 import { extractDocumentText } from "../lib/documentExtract";
 import { generateBlueprintLocally } from "../lib/localBlueprintGenerator";
+import { buildPtBlueprintDocument, ptBlueprintFormSchema } from "../lib/ptBlueprint";
 import {
   BLUEPRINT_SYSTEM_PROMPT,
   VISION_TRANSCRIBE_SYSTEM_PROMPT,
 } from "../lib/prompts";
 
 export const blueprintRouter = Router();
+
+blueprintRouter.post(
+  "/generate-pt-blueprint",
+  asyncHandler(async (req, res) => {
+    const form = ptBlueprintFormSchema.parse(req.body);
+    if (form.chapters.length !== form.units.length) {
+      throw new ApiError(422, "Each chapter needs a matching unit matrix row.");
+    }
+    const document = buildPtBlueprintDocument(form);
+    res.json({ document, analysisMode: "local" as const });
+  }),
+);
 
 const schema = z
   .object({

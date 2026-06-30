@@ -1,361 +1,316 @@
-import { useRef, useState } from "react";
-import { api, ApiError } from "../api/client";
-import type { ExamBlueprint, GenerateBlueprintResponse } from "../api/types";
-import { extractUploadedText } from "../lib/extractDocumentText";
-import { generateBlueprintLocally } from "../lib/localBlueprintGenerator";
-import { Card, EmptyState, ErrorNote, Field, Spinner } from "../components/ui";
+import { useState } from "react";
+import { api } from "../api/client";
+import { GemsPtBlueprintView } from "../components/GemsPtBlueprintView";
+import { buildPtBlueprintDocument } from "../lib/buildPtBlueprint";
+import {
+  CHEMISTRY_PT1_EXEMPLAR,
+  DEFAULT_PT_SECTIONS,
+  emptyUnitRow,
+} from "../lib/ptBlueprintDefaults";
+import type { PtBlueprintDocument, PtBlueprintForm, PtSectionRow } from "../lib/ptBlueprintTypes";
+import { ErrorNote, Field, Spinner } from "../components/ui";
 import { useToast } from "../components/Toast";
 
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error(`Could not read ${file.name}`));
-    reader.readAsDataURL(file);
-  });
+function defaultGrade(classManaged: string): string {
+  const dash = classManaged.indexOf("-");
+  const num = dash > 0 ? parseInt(classManaged.slice(0, dash), 10) : NaN;
+  return Number.isFinite(num) ? String(num) : "11";
 }
 
-function BlueprintView({ blueprint, localMode }: { blueprint: ExamBlueprint; localMode: boolean }) {
+function SectionEditor({
+  sections,
+  onChange,
+}: {
+  sections: PtSectionRow[];
+  onChange: (s: PtSectionRow[]) => void;
+}) {
+  function update(i: number, patch: Partial<PtSectionRow>) {
+    const next = sections.map((row, idx) => {
+      if (idx !== i) return row;
+      const merged = { ...row, ...patch };
+      const count = parseInt(merged.questionCountLabel.replace(/\D/g, ""), 10) || 0;
+      merged.totalMarks = count * merged.marksPerQuestion;
+      return merged;
+    });
+    onChange(next);
+  }
+
   return (
-    <div className="blueprint-result">
-      {localMode && (
-        <div className="info-note" style={{ marginBottom: 12 }}>
-          📋 Local blueprint — add <code>OPENAI_API_KEY</code> for full AI topic & Bloom's analysis.
+    <div className="gems-bp-form-sections">
+      {sections.map((s, i) => (
+        <div key={s.sectionId} className="gems-bp-section-row">
+          <strong>Section {s.sectionId}</strong>
+          <input
+            value={s.typology}
+            onChange={(e) => update(i, { typology: e.target.value })}
+            placeholder="Typology"
+          />
+          <input
+            value={s.questionCountLabel}
+            onChange={(e) => update(i, { questionCountLabel: e.target.value })}
+            placeholder="No. of questions"
+          />
+          <input
+            type="number"
+            min={1}
+            value={s.marksPerQuestion}
+            onChange={(e) => update(i, { marksPerQuestion: Number(e.target.value) || 1 })}
+            placeholder="Marks"
+          />
+          <span className="muted">= {s.totalMarks} marks</span>
         </div>
-      )}
-
-      <div className="blueprint-summary-card">
-        <h3>{blueprint.examTitle}</h3>
-        <div className="blueprint-stats">
-          <span>
-            <strong>{blueprint.totalMarks}</strong> total marks
-          </span>
-          {blueprint.durationMinutes != null && (
-            <span>
-              <strong>{blueprint.durationMinutes}</strong> min
-            </span>
-          )}
-          <span>
-            <strong>{blueprint.sections.reduce((n, s) => n + s.questions.length, 0)}</strong>{" "}
-            questions
-          </span>
-        </div>
-        <p className="muted">{blueprint.summary}</p>
-      </div>
-
-      <div className="grid grid-2 blueprint-charts">
-        <Card title="Topic distribution" subtitle="Marks by unit / topic">
-          {blueprint.topicDistribution.length === 0 ? (
-            <p className="muted">No topics detected.</p>
-          ) : (
-            <table className="roster-table blueprint-table">
-              <thead>
-                <tr>
-                  <th>Topic</th>
-                  <th>Qs</th>
-                  <th>Marks</th>
-                  <th>%</th>
-                </tr>
-              </thead>
-              <tbody>
-                {blueprint.topicDistribution.map((t) => (
-                  <tr key={t.topic}>
-                    <td>{t.topic}</td>
-                    <td>{t.questionCount}</td>
-                    <td>{t.marks}</td>
-                    <td>
-                      <div className="blueprint-bar-wrap">
-                        <div className="blueprint-bar" style={{ width: `${t.percentage}%` }} />
-                        <span>{t.percentage}%</span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </Card>
-
-        <Card title="Cognitive levels" subtitle="Bloom's taxonomy breakdown">
-          {blueprint.cognitiveDistribution.length === 0 ? (
-            <p className="muted">No levels detected.</p>
-          ) : (
-            <table className="roster-table blueprint-table">
-              <thead>
-                <tr>
-                  <th>Level</th>
-                  <th>Marks</th>
-                  <th>%</th>
-                </tr>
-              </thead>
-              <tbody>
-                {blueprint.cognitiveDistribution.map((c) => (
-                  <tr key={c.level}>
-                    <td>{c.level}</td>
-                    <td>{c.marks}</td>
-                    <td>
-                      <div className="blueprint-bar-wrap">
-                        <div
-                          className="blueprint-bar cognitive"
-                          style={{ width: `${c.percentage}%` }}
-                        />
-                        <span>{c.percentage}%</span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </Card>
-      </div>
-
-      {blueprint.sections.map((section) => (
-        <Card
-          key={section.name}
-          title={section.name}
-          subtitle={
-            section.instructions ||
-            `${section.questions.length} question(s) · ${section.sectionMarks} marks`
-          }
-        >
-          {section.questions.length === 0 ? (
-            <p className="muted">No questions parsed in this section.</p>
-          ) : (
-            <div className="roster-table-wrap">
-              <table className="roster-table blueprint-table">
-                <thead>
-                  <tr>
-                    <th>Q#</th>
-                    <th>Marks</th>
-                    <th>Type</th>
-                    <th>Topic</th>
-                    <th>Cognitive</th>
-                    <th>Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {section.questions.map((q) => (
-                    <tr key={`${section.name}-${q.number}`}>
-                      <td>{q.number}</td>
-                      <td>{q.marks}</td>
-                      <td>{q.questionType}</td>
-                      <td>{q.topic}</td>
-                      <td>
-                        <span className={`bloom-tag bloom-${q.cognitiveLevel.toLowerCase()}`}>
-                          {q.cognitiveLevel}
-                        </span>
-                      </td>
-                      <td className="blueprint-desc">{q.description}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Card>
       ))}
     </div>
   );
 }
 
-export function BlueprintGenerator() {
+export function BlueprintGenerator({ classManaged }: { classManaged: string }) {
   const toast = useToast();
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const [subject, setSubject] = useState("");
-  const [examTitle, setExamTitle] = useState("");
-  const [durationMinutes, setDurationMinutes] = useState<number | "">("");
-  const [rawText, setRawText] = useState("");
-  const [images, setImages] = useState<{ name: string; dataUrl: string }[]>([]);
-
+  const [form, setForm] = useState<PtBlueprintForm>({
+    schoolName: "GEMS UNITED INDIAN SCHOOL, ABU DHABI",
+    blueprintTitle: "PT 1 BLUEPRINT – 2026-27",
+    grade: defaultGrade(classManaged),
+    subject: "",
+    sections: DEFAULT_PT_SECTIONS.map((s) => ({ ...s })),
+    chapters: [{ serial: 1, chapterName: "", totalMarks: 0 }],
+    units: [emptyUnitRow(1)],
+  });
+  const [doc, setDoc] = useState<PtBlueprintDocument | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<GenerateBlueprintResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function onFiles(files: FileList | null) {
-    if (!files?.length) return;
-    try {
-      const loaded = await Promise.all(
-        Array.from(files).map(async (f) => ({
-          name: f.name,
-          dataUrl: await fileToDataUrl(f),
-        })),
+  function loadExemplar() {
+    setForm(CHEMISTRY_PT1_EXEMPLAR);
+    setDoc(null);
+    setError(null);
+    toast.success("Loaded Chemistry PT1 exemplar.");
+  }
+
+  function addChapter() {
+    const n = form.chapters.length + 1;
+    setForm((f) => ({
+      ...f,
+      chapters: [...f.chapters, { serial: n, chapterName: "", totalMarks: 0 }],
+      units: [...f.units, emptyUnitRow(n)],
+    }));
+  }
+
+  function removeChapter(i: number) {
+    if (form.chapters.length <= 1) return;
+    setForm((f) => ({
+      ...f,
+      chapters: f.chapters.filter((_, idx) => idx !== i),
+      units: f.units.filter((_, idx) => idx !== i),
+    }));
+  }
+
+  function updateChapter(i: number, name: string, total: number) {
+    setForm((f) => {
+      const chapters = f.chapters.map((c, idx) =>
+        idx === i ? { ...c, chapterName: name, totalMarks: total } : c,
       );
-      setImages((prev) => [...prev, ...loaded]);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to read file.");
-    } finally {
-      if (fileRef.current) fileRef.current.value = "";
-    }
-  }
-
-  function removeImage(name: string) {
-    setImages((prev) => prev.filter((i) => i.name !== name));
-  }
-
-  async function resolveExamText(): Promise<string> {
-    const pasted = rawText.trim();
-    if (pasted) return pasted;
-    if (images.length === 0) return "";
-    return extractUploadedText(images.map((i) => i.dataUrl));
-  }
-
-  async function runLocalBlueprint(text: string): Promise<GenerateBlueprintResponse> {
-    const blueprint = generateBlueprintLocally(text, {
-      subject: subject.trim() || undefined,
-      examTitle: examTitle.trim() || undefined,
-      durationMinutes: durationMinutes === "" ? undefined : Number(durationMinutes),
+      const units = f.units.map((u, idx) =>
+        idx === i ? { ...u, concept: name, chapterTotal: total } : u,
+      );
+      return { ...f, chapters, units };
     });
-    return { rawScannedText: text, analysisMode: "local", blueprint };
   }
 
   async function generate() {
-    if (images.length === 0 && !rawText.trim()) {
-      toast.error("Upload the exam paper or paste its text.");
+    if (!form.subject.trim()) {
+      toast.error("Enter the subject (e.g. Chemistry).");
+      return;
+    }
+    if (form.chapters.some((c) => !c.chapterName.trim())) {
+      toast.error("Fill in every chapter / unit name.");
       return;
     }
 
     setLoading(true);
-    setResult(null);
     setError(null);
 
-    const opts = {
-      subject: subject.trim() || undefined,
-      examTitle: examTitle.trim() || undefined,
-      durationMinutes: durationMinutes === "" ? undefined : Number(durationMinutes),
-      images: images.length ? images.map((i) => i.dataUrl) : undefined,
-      rawScannedText: rawText.trim() || undefined,
-    };
-
     try {
-      const res = await api.generateBlueprint(opts);
-      setResult(res);
-      toast.success(
-        res.analysisMode === "local" ? "Blueprint generated locally." : "Blueprint ready.",
-      );
-    } catch (err) {
+      const res = await api.generatePtBlueprint(form);
+      setDoc(res.document);
+      toast.success("PT blueprint ready.");
+    } catch {
       try {
-        const text = await resolveExamText();
-        if (!text.trim()) {
-          const hint =
-            err instanceof ApiError && err.status === 404
-              ? "Backend route missing — restart the server (npm run dev). For PDF-only uploads, ensure the PDF has selectable text."
-              : "Could not read text from the file. Try pasting the exam text, or use a PDF with selectable text (not a scanned image-only PDF).";
-          throw new Error(hint);
-        }
-        const local = await runLocalBlueprint(text);
-        setResult(local);
-        toast.success("Blueprint generated from PDF locally.");
-      } catch (fallbackErr) {
-        const message =
-          fallbackErr instanceof Error ? fallbackErr.message : "Blueprint generation failed.";
-        setError(message);
-        toast.error(message);
+        setDoc(buildPtBlueprintDocument(form));
+        toast.success("Blueprint generated.");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Could not generate blueprint.");
+        toast.error("Generation failed.");
       }
     } finally {
       setLoading(false);
     }
   }
 
+  function printBlueprint() {
+    window.print();
+  }
+
   return (
-    <div className="blueprint-page">
-      <div className="grid grid-2">
-        <Card
-          title="Blueprint Generator"
-          subtitle="Upload an exam paper — get marks, topics & Bloom's breakdown"
-        >
-          <p className="muted" style={{ marginBottom: 16 }}>
-            Upload a question paper (PDF/image) or paste text. The tool builds a CBSE-style blueprint
-            showing section structure, mark distribution, topics, and cognitive levels.
-          </p>
+    <div className="pro-email-page blueprint-pt-page">
+      <nav className="pro-email-crumb" aria-label="Breadcrumb">
+        Teacher Tools <span aria-hidden>›</span> Blueprint Generator
+      </nav>
 
-          <Field label="Subject">
+      <div className="blueprint-pt-layout">
+        <div className="pro-email-card blueprint-pt-form">
+          <header className="pro-email-card-head">
+            <div>
+              <h2 className="pro-email-title">PT Blueprint Generator</h2>
+              <p className="pro-email-desc">
+                Answer the questions below to build a GEMS-style PT blueprint with chapter marks,
+                section typology, and unit matrix.
+              </p>
+            </div>
+            <button type="button" className="pro-email-link-btn" onClick={loadExemplar}>
+              Show exemplar
+            </button>
+          </header>
+
+          <Field label="School name *">
             <input
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="e.g. Physics, Chemistry, Mathematics"
+              value={form.schoolName}
+              onChange={(e) => setForm((f) => ({ ...f, schoolName: e.target.value }))}
             />
           </Field>
 
-          <Field label="Exam title (optional)">
+          <Field label="Blueprint title *" hint="e.g. PT 1 BLUEPRINT – 2026-27">
             <input
-              type="text"
-              value={examTitle}
-              onChange={(e) => setExamTitle(e.target.value)}
-              placeholder="e.g. Unit Test 2 — Kinematics"
+              value={form.blueprintTitle}
+              onChange={(e) => setForm((f) => ({ ...f, blueprintTitle: e.target.value }))}
             />
           </Field>
 
-          <Field label="Duration in minutes (optional)">
-            <input
-              type="number"
-              min={1}
-              max={600}
-              value={durationMinutes}
-              onChange={(e) =>
-                setDurationMinutes(e.target.value === "" ? "" : Number(e.target.value))
-              }
-              placeholder="e.g. 180"
-            />
-          </Field>
-
-          <div className="field">
-            <span className="field-label">Exam paper (PDF or image)</span>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*,.pdf,application/pdf"
-              multiple
-              onChange={(e) => onFiles(e.target.files)}
-            />
-            <p className="field-hint">PDFs with selectable text work best. Scanned image-only PDFs may need pasted text.</p>
-            {images.length > 0 && (
-              <ul className="file-list">
-                {images.map((img) => (
-                  <li key={img.name}>
-                    {img.name}
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => removeImage(img.name)}>
-                      Remove
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+          <div className="grid grid-2">
+            <Field label="Grade *">
+              <input
+                value={form.grade}
+                onChange={(e) => setForm((f) => ({ ...f, grade: e.target.value }))}
+                placeholder="11"
+              />
+            </Field>
+            <Field label="Subject *">
+              <input
+                value={form.subject}
+                onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value.toUpperCase() }))}
+                placeholder="CHEMISTRY"
+              />
+            </Field>
           </div>
 
-          <Field label="Or paste exam text" hint="Question paper text only — not student answers">
-            <textarea
-              value={rawText}
-              onChange={(e) => setRawText(e.target.value)}
-              placeholder="Section A — Attempt all questions…&#10;1. Define velocity… [2 marks]&#10;2. Derive equations of motion… [5 marks]"
-              rows={8}
+          <div className="field">
+            <span className="field-label">Section typology *</span>
+            <span className="field-hint">MCQ, short answer, case study, long &amp; very long answer</span>
+            <SectionEditor
+              sections={form.sections}
+              onChange={(sections) => setForm((f) => ({ ...f, sections }))}
             />
-          </Field>
+          </div>
 
-          <button type="button" className="btn btn-primary btn-block" onClick={generate} disabled={loading}>
-            {loading ? "Analyzing paper…" : "Generate blueprint"}
+          <div className="field">
+            <span className="field-label">Chapters / units *</span>
+            {form.chapters.map((c, i) => (
+              <div key={i} className="gems-bp-chapter-row">
+                <span>{i + 1}.</span>
+                <input
+                  value={c.chapterName}
+                  onChange={(e) => updateChapter(i, e.target.value, c.totalMarks)}
+                  placeholder="Chapter name"
+                />
+                <input
+                  type="number"
+                  min={0}
+                  value={c.totalMarks || ""}
+                  onChange={(e) =>
+                    updateChapter(i, c.chapterName, Number(e.target.value) || 0)
+                  }
+                  placeholder="Marks"
+                  style={{ width: 72 }}
+                />
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => removeChapter(i)}>
+                  ×
+                </button>
+              </div>
+            ))}
+            <button type="button" className="btn btn-ghost btn-sm" onClick={addChapter}>
+              + Add chapter
+            </button>
+          </div>
+
+          <div className="field">
+            <span className="field-label">Unit question matrix *</span>
+            <span className="field-hint">
+              For each mark column, list question numbers. Use (K/U), (APP), HOT, (INTERNAL CHOICE)
+              tags — one per line.
+            </span>
+            {form.units.map((u, i) => (
+              <details key={i} className="gems-bp-unit-block" open={i === 0}>
+                <summary>
+                  Unit {i + 1}: {form.chapters[i]?.chapterName || "Untitled"}
+                </summary>
+                <div className="gems-bp-matrix-grid">
+                  {(
+                    [
+                      ["mark1", "1 mark"],
+                      ["mark2", "2 marks"],
+                      ["mark3", "3 marks"],
+                      ["mark4CaseBased", "4 marks case based"],
+                      ["mark5", "5 marks"],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <label key={key}>
+                      {label}
+                      <textarea
+                        rows={4}
+                        value={u[key]}
+                        onChange={(e) =>
+                          setForm((f) => ({
+                            ...f,
+                            units: f.units.map((row, idx) =>
+                              idx === i ? { ...row, [key]: e.target.value } : row,
+                            ),
+                          }))
+                        }
+                        placeholder={`e.g.\n2 QUESTIONS\nQ.NO.1 (K/U)`}
+                      />
+                    </label>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className="pro-email-generate"
+            onClick={() => void generate()}
+            disabled={loading}
+          >
+            {loading ? "Building…" : "✦ Generate PT Blueprint"}
           </button>
-        </Card>
+        </div>
 
-        <Card title="Blueprint output" subtitle="Structured exam analysis">
-          {loading && <Spinner label="Building blueprint from exam paper…" />}
+        <div className="blueprint-pt-output">
+          {loading && <Spinner label="Building blueprint…" />}
           {error && !loading && <ErrorNote>{error}</ErrorNote>}
-          {!loading && !error && !result && (
-            <EmptyState
-              icon="📋"
-              title="No blueprint yet"
-              hint="Upload your exam paper and click Generate blueprint."
-            />
+          {!loading && !doc && !error && (
+            <p className="muted">Fill the form and click Generate to preview your PT blueprint.</p>
           )}
-          {result && !loading && (
-            <BlueprintView
-              blueprint={result.blueprint}
-              localMode={result.analysisMode === "local"}
-            />
+          {doc && !loading && (
+            <>
+              <div className="blueprint-pt-actions">
+                <button type="button" className="btn btn-primary btn-sm" onClick={printBlueprint}>
+                  Print / Save PDF
+                </button>
+              </div>
+              <GemsPtBlueprintView doc={doc} />
+            </>
           )}
-        </Card>
+        </div>
       </div>
     </div>
   );

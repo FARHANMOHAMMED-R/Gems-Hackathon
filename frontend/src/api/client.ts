@@ -6,6 +6,8 @@ import type {
   ScanOcrStatusResponse,
   GenerateBlueprintRequest,
   GenerateBlueprintResponse,
+  GeneratePtBlueprintResponse,
+  PtBlueprintForm,
   AvailabilityResponse,
   AwardReason,
   AwardResponse,
@@ -206,6 +208,13 @@ export const api = {
 
   generateBlueprint: (body: GenerateBlueprintRequest, signal?: AbortSignal) =>
     request<GenerateBlueprintResponse>("/api/generate-blueprint", {
+      method: "POST",
+      body,
+      signal,
+    }),
+
+  generatePtBlueprint: (body: PtBlueprintForm, signal?: AbortSignal) =>
+    request<GeneratePtBlueprintResponse>("/api/generate-pt-blueprint", {
       method: "POST",
       body,
       signal,

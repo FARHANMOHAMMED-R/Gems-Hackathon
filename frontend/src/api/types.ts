@@ -114,6 +114,41 @@ export interface GenerateBlueprintResponse {
   blueprint: ExamBlueprint;
 }
 
+export interface PtBlueprintForm {
+  schoolName: string;
+  blueprintTitle: string;
+  grade: string;
+  subject: string;
+  sections: {
+    sectionId: string;
+    typology: string;
+    questionCountLabel: string;
+    marksPerQuestion: number;
+    totalMarks: number;
+  }[];
+  chapters: { serial: number; chapterName: string; totalMarks: number }[];
+  units: {
+    unit: number;
+    concept: string;
+    mark1: string;
+    mark2: string;
+    mark3: string;
+    mark4CaseBased: string;
+    mark5: string;
+    chapterTotal: number;
+  }[];
+}
+
+export interface PtBlueprintDocument extends PtBlueprintForm {
+  totalQuestions: number;
+  totalMarks: number;
+}
+
+export interface GeneratePtBlueprintResponse {
+  document: PtBlueprintDocument;
+  analysisMode: "local";
+}
+
 // --- Assessment assigner ---
 export type AssessmentDifficulty = "Easy" | "Medium" | "Hard" | "Mixed";
 
