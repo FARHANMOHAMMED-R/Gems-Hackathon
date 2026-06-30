@@ -2963,29 +2963,30 @@ textarea:focus {
 
 /* ---- GEMS PT Blueprint ---- */
 .blueprint-pt-page {
-  max-width: 1400px;
+  width: 100%;
+  max-width: 100%;
+  padding: 8px 0 32px;
 }
 
-.blueprint-pt-layout {
-  display: grid;
-  grid-template-columns: minmax(320px, 1fr) minmax(360px, 1.1fr);
-  gap: 20px;
-  align-items: start;
-}
-
-@media (max-width: 1100px) {
-  .blueprint-pt-layout {
-    grid-template-columns: 1fr;
-  }
+.blueprint-pt-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
 }
 
 .blueprint-pt-form {
-  max-height: calc(100vh - 120px);
-  overflow-y: auto;
+  max-height: none;
+  overflow: visible;
 }
 
-.blueprint-pt-output {
-  min-width: 0;
+.blueprint-pt-preview {
+  width: 100%;
+}
+
+.blueprint-pt-empty {
+  padding: 24px 28px;
+  text-align: center;
 }
 
 .blueprint-pt-actions {
@@ -3058,6 +3059,8 @@ textarea:focus {
   border-radius: var(--radius-sm);
   font-family: "Times New Roman", Times, serif;
   font-size: 13px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .gems-bp-header {
@@ -3087,6 +3090,7 @@ textarea:focus {
   border-collapse: collapse;
   margin-bottom: 16px;
   font-size: 12px;
+  table-layout: fixed;
 }
 
 .gems-bp-table th,
@@ -3094,6 +3098,13 @@ textarea:focus {
   border: 1px solid #333;
   padding: 6px 8px;
   vertical-align: top;
+  word-wrap: break-word;
+}
+
+.gems-bp-table-matrix {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .gems-bp-table th {

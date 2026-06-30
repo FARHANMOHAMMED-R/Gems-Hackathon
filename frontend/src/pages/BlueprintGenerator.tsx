@@ -152,12 +152,12 @@ export function BlueprintGenerator({ classManaged }: { classManaged: string }) {
   }
 
   return (
-    <div className="pro-email-page blueprint-pt-page">
+    <div className="blueprint-pt-page">
       <nav className="pro-email-crumb" aria-label="Breadcrumb">
         Teacher Tools <span aria-hidden>›</span> Blueprint Generator
       </nav>
 
-      <div className="blueprint-pt-layout">
+      <div className="blueprint-pt-stack">
         <div className="pro-email-card blueprint-pt-form">
           <header className="pro-email-card-head">
             <div>
@@ -295,11 +295,15 @@ export function BlueprintGenerator({ classManaged }: { classManaged: string }) {
           </button>
         </div>
 
-        <div className="blueprint-pt-output">
+        <section className="blueprint-pt-preview" aria-live="polite">
           {loading && <Spinner label="Building blueprint…" />}
           {error && !loading && <ErrorNote>{error}</ErrorNote>}
           {!loading && !doc && !error && (
-            <p className="muted">Fill the form and click Generate to preview your PT blueprint.</p>
+            <div className="blueprint-pt-empty pro-email-card">
+              <p className="muted">
+                Fill the form above and click Generate to preview your PT blueprint here.
+              </p>
+            </div>
           )}
           {doc && !loading && (
             <>
@@ -311,7 +315,7 @@ export function BlueprintGenerator({ classManaged }: { classManaged: string }) {
               <GemsPtBlueprintView doc={doc} />
             </>
           )}
-        </div>
+        </section>
       </div>
     </div>
   );
