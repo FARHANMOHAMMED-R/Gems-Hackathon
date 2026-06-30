@@ -5,6 +5,7 @@ import {
   aiCompleteJSON,
   getConfiguredProviders,
   isAnyAiConfigured,
+  isProviderConfigured,
   type AiProvider,
 } from "../lib/aiProviders";
 import { generatePptLocally } from "../lib/localPptGenerator";
@@ -32,6 +33,7 @@ const generateSchema = z.object({
   provider: providerSchema,
   engine: engineSchema,
   skyworkApiKey: z.string().trim().min(10).max(512).optional(),
+  apiKey: z.string().trim().min(10).max(512).optional(),
 });
 
 aiRouter.get(
@@ -93,9 +95,24 @@ pptRouter.post(
     let analysisMode: "ai" | "local";
     let providerUsed: AiProvider | "local" = "local";
 
-    if (isAnyAiConfigured()) {
+    const browserKey = body.apiKey?.trim();
+    const hasBrowserKey = Boolean(browserKey && browserKey.length >= 10);
+    const hasServerAi = isAnyAiConfigured();
+    const canUseAi = hasBrowserKey || hasServerAi;
+
+    if (canUseAi) {
+      const chosen: AiProvider = (() => {
+        if (body.provider && isProviderConfigured(body.provider, browserKey)) {
+          return body.provider;
+        }
+        if (isProviderConfigured("gemini", browserKey)) return "gemini";
+        if (isProviderConfigured("openai", browserKey)) return "openai";
+        if (isProviderConfigured("claude", browserKey)) return "claude";
+        return body.provider ?? "gemini";
+      })();
+
       const { data, provider } = await aiCompleteJSON<PptDeck>({
-        provider: body.provider,
+        provider: chosen,
         systemPrompt: PPT_SYSTEM_PROMPT,
         userContent: [
           `Class: ${body.classManaged} (Grade ${body.grade})`,
@@ -109,6 +126,7 @@ pptRouter.post(
           .filter(Boolean)
           .join("\n"),
         temperature: 0.4,
+        apiKeyOverride: browserKey,
       });
 
       if (!data.slides?.length) {

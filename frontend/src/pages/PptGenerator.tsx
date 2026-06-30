@@ -8,6 +8,15 @@ import {
   SKYWORK_PPT_KEY_URL,
   SKYWORK_PPT_PRODUCT_URL,
 } from "../lib/pptAiConfig";
+import {
+  loadTextLevelerAiConfig,
+  saveTextLevelerAiConfig,
+  TEXT_LEVELER_PROVIDER_HINTS,
+  TEXT_LEVELER_PROVIDER_LABELS,
+  TEXT_LEVELER_PROVIDER_PLACEHOLDERS,
+  type TextLevelerProvider,
+} from "../lib/textLevelerAiConfig";
+import { loadAssistantAiConfig } from "../lib/assistantAiConfig";
 import { Card, EmptyState, ErrorNote, Field, Spinner } from "../components/ui";
 import { useToast } from "../components/Toast";
 
@@ -43,8 +52,10 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
   const toast = useToast();
   const grade = useMemo(() => parseGrade(classManaged), [classManaged]);
 
+  const savedGems = loadTextLevelerAiConfig();
   const [providers, setProviders] = useState<AiProviderInfo[]>([]);
-  const [provider, setProvider] = useState<AiProvider | "">("");
+  const [provider, setProvider] = useState<TextLevelerProvider>(savedGems?.provider ?? "gemini");
+  const [gemsApiKey, setGemsApiKey] = useState(savedGems?.apiKey ?? "");
   const [engine, setEngine] = useState<PptEngine>("gems");
   const [skyworkKey, setSkyworkKey] = useState(loadSkyworkPptApiKey);
 
@@ -62,17 +73,43 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
   useEffect(() => {
     api
       .getAiProviders()
-      .then((res) => {
-        setProviders(res.providers);
-        const first = res.providers.find((p) => p.configured);
-        if (first) setProvider(first.id);
-      })
+      .then((res) => setProviders(res.providers))
       .catch(() => setProviders([]));
   }, []);
 
   const configured = providers.filter((p) => p.configured);
-  const useTemplate = engine === "gems" && configured.length === 0;
+  const gemsKeyReady = gemsApiKey.trim().length >= 10;
   const skyworkReady = skyworkKey.trim().length >= 10;
+  const backendAiReady = configured.length > 0;
+  const canUseGems = gemsKeyReady || backendAiReady;
+  const canGenerate =
+    engine === "skywork" ? skyworkReady : canUseGems;
+
+  function saveGemsKey() {
+    const trimmed = gemsApiKey.trim();
+    if (trimmed.length < 10) {
+      toast.error("Paste a valid API key.");
+      return;
+    }
+    saveTextLevelerAiConfig({ provider, apiKey: trimmed });
+    toast.success(`${TEXT_LEVELER_PROVIDER_LABELS[provider]} key saved.`);
+  }
+
+  function useAssistantKey() {
+    const assistant = loadAssistantAiConfig();
+    if (!assistant?.apiKey || assistant.apiKey.length < 10) {
+      toast.error("Set a key in the ✦ AI assistant first (bottom-right).");
+      return;
+    }
+    if (assistant.provider !== "openai" && assistant.provider !== "gemini") {
+      toast.error("Assistant must use OpenAI or Gemini.");
+      return;
+    }
+    setProvider(assistant.provider);
+    setGemsApiKey(assistant.apiKey);
+    saveTextLevelerAiConfig({ provider: assistant.provider, apiKey: assistant.apiKey });
+    toast.success(`Using ${TEXT_LEVELER_PROVIDER_LABELS[assistant.provider]} from assistant.`);
+  }
 
   function saveSkyworkKey() {
     const trimmed = skyworkKey.trim();
@@ -95,15 +132,27 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
       return;
     }
 
+    if (engine === "gems" && !canUseGems) {
+      toast.error("Add a Gemini or OpenAI API key below.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setResult(null);
     setProgress(engine === "skywork" ? "Connecting to Skywork AI… (5–10 min)" : null);
 
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), SKYWORK_TIMEOUT_MS);
+    const timeout = window.setTimeout(
+      () => controller.abort(),
+      engine === "skywork" ? SKYWORK_TIMEOUT_MS : 3 * 60 * 1000,
+    );
 
     try {
+      if (engine === "gems" && gemsKeyReady) {
+        saveTextLevelerAiConfig({ provider, apiKey: gemsApiKey.trim() });
+      }
+
       const res = await api.generatePpt(
         {
           classManaged,
@@ -113,9 +162,10 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
           chapters: chapters.trim(),
           slideCount,
           additionalNotes: additionalNotes.trim() || undefined,
-          provider: engine === "gems" ? provider || undefined : undefined,
+          provider: engine === "gems" ? provider : undefined,
           engine,
           skyworkApiKey: engine === "skywork" ? skyworkKey.trim() : undefined,
+          apiKey: engine === "gems" && gemsKeyReady ? gemsApiKey.trim() : undefined,
         },
         controller.signal,
       );
@@ -159,9 +209,7 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
         subtitle={
           engine === "skywork"
             ? `Skywork AI slides for Grade ${grade} (${classManaged})`
-            : useTemplate
-              ? `Lesson slides for Grade ${grade} (${classManaged})`
-              : `AI lesson slides for Grade ${grade} (${classManaged})`
+            : `AI lesson slides for Grade ${grade} (${classManaged})`
         }
       >
         <div className="field">
@@ -184,10 +232,55 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
           </div>
           <p className="field-hint">
             {engine === "skywork"
-              ? "Professional AI-designed decks via Skywork (5–10 min)."
-              : "Fast slides via ChatGPT, Gemini, or Claude."}
+              ? "Professional designed decks (5–10 min). Needs Skywork key."
+              : "Fast AI slides — paste a free Gemini or ChatGPT key below."}
           </p>
         </div>
+
+        {engine === "gems" && (
+          <div className="text-leveler-key-box">
+            <Field label="AI provider *">
+              <select
+                value={provider}
+                onChange={(e) => setProvider(e.target.value as TextLevelerProvider)}
+              >
+                {(Object.keys(TEXT_LEVELER_PROVIDER_LABELS) as TextLevelerProvider[]).map((p) => (
+                  <option key={p} value={p}>
+                    {TEXT_LEVELER_PROVIDER_LABELS[p]}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="API key *" hint={TEXT_LEVELER_PROVIDER_HINTS[provider]}>
+              <input
+                type="password"
+                value={gemsApiKey}
+                onChange={(e) => setGemsApiKey(e.target.value)}
+                placeholder={TEXT_LEVELER_PROVIDER_PLACEHOLDERS[provider]}
+                autoComplete="off"
+              />
+            </Field>
+            <div className="text-leveler-key-actions">
+              <button
+                type="button"
+                className="pro-email-generate"
+                style={{ marginTop: 0, flex: 1 }}
+                onClick={saveGemsKey}
+                disabled={!gemsKeyReady}
+              >
+                Save API key
+              </button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={useAssistantKey}>
+                Use assistant key
+              </button>
+            </div>
+            {backendAiReady && !gemsKeyReady && (
+              <p className="field-hint" style={{ marginTop: 8, marginBottom: 0 }}>
+                Server AI is available — a browser key still gives the fastest setup.
+              </p>
+            )}
+          </div>
+        )}
 
         {engine === "skywork" && (
           <div className="text-leveler-key-box">
@@ -244,40 +337,6 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
           </div>
         )}
 
-        {engine === "gems" && !useTemplate && (
-          <div className="field">
-            <span className="field-label">AI provider</span>
-            <div className="chip-group">
-              {configured.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  className={`chip${provider === p.id ? " active" : ""}`}
-                  onClick={() => setProvider(p.id)}
-                  title={p.textModel}
-                >
-                  {providerLabel(p.id)}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {engine === "gems" && useTemplate && (
-          <details className="ppt-ai-setup">
-            <summary>Enable AI-written slides (optional)</summary>
-            <p className="muted">
-              Add <code>GEMINI_API_KEY</code> from{" "}
-              <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
-                Google AI Studio
-              </a>
-              , or <code>OPENAI_API_KEY</code> / <code>ANTHROPIC_API_KEY</code> to backend{" "}
-              <code>.env</code>, then restart the server. Or switch to <strong>Skywork AI</strong>{" "}
-              with a browser key.
-            </p>
-          </details>
-        )}
-
         <Field label="Subject">
           <select value={subject} onChange={(e) => setSubject(e.target.value)}>
             {SUBJECTS.map((s) => (
@@ -329,7 +388,7 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
         <button
           className="btn btn-primary btn-block"
           onClick={() => void generate()}
-          disabled={loading || (engine === "skywork" && !skyworkReady)}
+          disabled={loading || !canGenerate}
         >
           {loading
             ? engine === "skywork"
@@ -337,7 +396,7 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
               : "Generating slides…"
             : engine === "skywork"
               ? "Generate with Skywork AI"
-              : "Generate PowerPoint"}
+              : "✦ Generate with AI"}
         </button>
       </Card>
 
@@ -362,9 +421,7 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
             hint={
               engine === "skywork"
                 ? "Add your Skywork key, fill in topic and chapters, then generate."
-                : useTemplate
-                  ? "Fill in topic and chapters, then generate a template deck."
-                  : "Fill in topic and chapters, pick an AI, and generate."
+                : "Add a Gemini or ChatGPT key, fill in topic and chapters, then generate."
             }
           />
         )}

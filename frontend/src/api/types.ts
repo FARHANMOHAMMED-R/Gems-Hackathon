@@ -279,6 +279,7 @@ export interface GeneratePptRequest {
   provider?: AiProvider;
   engine?: PptEngine;
   skyworkApiKey?: string;
+  apiKey?: string;
 }
 
 export interface PptGenerateResponse {
