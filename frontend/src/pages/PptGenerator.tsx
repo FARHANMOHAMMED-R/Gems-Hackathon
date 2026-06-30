@@ -19,6 +19,7 @@ import {
 import { loadAssistantAiConfig } from "../lib/assistantAiConfig";
 import { buildPptxBase64, deckFileName } from "../lib/buildPptx";
 import { clientGeneratePptDeck } from "../lib/clientPptGenerator";
+import { resolveGemsApiKey, resolveSkyworkApiKey } from "../lib/resolvePptCredentials";
 import { Card, EmptyState, ErrorNote, Field, Spinner } from "../components/ui";
 import { useToast } from "../components/Toast";
 
@@ -71,6 +72,19 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
   const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PptGenerateResponse | null>(null);
+  const [showApiSettings, setShowApiSettings] = useState(false);
+
+  useEffect(() => {
+    const creds = resolveGemsApiKey(gemsApiKey, provider);
+    if (creds) {
+      setProvider(creds.provider);
+      setGemsApiKey(creds.apiKey);
+      saveTextLevelerAiConfig(creds);
+    }
+
+    const sky = resolveSkyworkApiKey(skyworkKey);
+    if (sky) setSkyworkKey(sky);
+  }, []);
 
   useEffect(() => {
     api
@@ -80,11 +94,13 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
   }, []);
 
   const configured = providers.filter((p) => p.configured);
-  const gemsKeyReady = gemsApiKey.trim().length >= 10;
-  const skyworkReady = skyworkKey.trim().length >= 10;
+  const gemsCreds = resolveGemsApiKey(gemsApiKey, provider);
+  const gemsKeyReady = Boolean(gemsCreds);
+  const skyworkResolved = resolveSkyworkApiKey(skyworkKey);
+  const skyworkReady = Boolean(skyworkResolved);
   const backendAiReady = configured.length > 0;
-  const canUseGems = gemsKeyReady || backendAiReady;
-  const canGenerate = engine === "skywork" ? skyworkReady : canUseGems;
+  const gemsAiReady = gemsKeyReady || backendAiReady;
+  const formReady = topic.trim().length > 0 && chapters.trim().length > 0;
 
   function saveGemsKey() {
     const trimmed = gemsApiKey.trim();
@@ -128,13 +144,9 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
       return;
     }
 
-    if (engine === "skywork" && !skyworkReady) {
-      toast.error("Add your Skywork API key below.");
-      return;
-    }
-
-    if (engine === "gems" && !canUseGems) {
-      toast.error("Add a Gemini or OpenAI API key below.");
+    if (engine === "skywork" && !skyworkResolved) {
+      setShowApiSettings(true);
+      toast.error("Skywork needs a one-time API key — paste it below, then generate again.");
       return;
     }
 
@@ -150,14 +162,17 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
     );
 
     try {
-      const trimmedGemsKey = gemsApiKey.trim();
-      const trimmedSkyworkKey = skyworkKey.trim();
+      const creds = resolveGemsApiKey(gemsApiKey, provider);
+      const trimmedSkyworkKey = resolveSkyworkApiKey(skyworkKey) ?? "";
 
-      if (engine === "gems" && gemsKeyReady) {
-        saveTextLevelerAiConfig({ provider, apiKey: trimmedGemsKey });
-        setProgress(`Calling ${TEXT_LEVELER_PROVIDER_LABELS[provider]}…`);
+      if (engine === "gems" && creds) {
+        saveTextLevelerAiConfig(creds);
+        setProvider(creds.provider);
+        setGemsApiKey(creds.apiKey);
+        setShowApiSettings(false);
+        setProgress(`Calling ${TEXT_LEVELER_PROVIDER_LABELS[creds.provider]}…`);
 
-        const deck = await clientGeneratePptDeck(provider, trimmedGemsKey, {
+        const deck = await clientGeneratePptDeck(creds.provider, creds.apiKey, {
           classManaged,
           grade,
           subject,
@@ -176,14 +191,14 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
           fileName,
           pptxBase64,
           analysisMode: "ai",
-          providerUsed: provider,
+          providerUsed: creds.provider,
           slideCount: deck.slides.length,
         });
-        toast.success(`Created ${deck.slides.length} AI slides with ${TEXT_LEVELER_PROVIDER_LABELS[provider]}.`);
+        toast.success(`Created ${deck.slides.length} slides with ${TEXT_LEVELER_PROVIDER_LABELS[creds.provider]}.`);
         return;
       }
 
-      if (engine === "skywork") {
+      if (engine === "skywork" && trimmedSkyworkKey) {
         saveSkyworkPptApiKey(trimmedSkyworkKey);
       }
 
@@ -196,16 +211,22 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
           chapters: chapters.trim(),
           slideCount,
           additionalNotes: additionalNotes.trim() || undefined,
-          provider: engine === "gems" ? provider : undefined,
+          provider: engine === "gems" ? creds?.provider ?? provider : undefined,
           engine,
-          skyworkApiKey: engine === "skywork" ? trimmedSkyworkKey : undefined,
-          apiKey: engine === "gems" && gemsKeyReady ? trimmedGemsKey : undefined,
+          skyworkApiKey: engine === "skywork" ? trimmedSkyworkKey || undefined : undefined,
+          apiKey: engine === "gems" ? creds?.apiKey : undefined,
         },
         controller.signal,
       );
       setResult(res);
       if (engine === "skywork") {
         saveSkyworkPptApiKey(trimmedSkyworkKey);
+      }
+      if (res.analysisMode === "local" && engine === "gems" && !creds) {
+        toast.info("Outline deck created. Add a free Gemini key once for AI slides.");
+        setShowApiSettings(true);
+      } else {
+        setShowApiSettings(false);
       }
       toast.success(
         res.analysisMode === "skywork"
@@ -222,10 +243,12 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
             : "Request timed out. Check your API key and try again.",
         );
       } else if (err instanceof ApiError && err.isLlmNotConfigured) {
-        setError("Add a Gemini or OpenAI API key below, or use Skywork AI for professional decks.");
+        setError("Could not reach AI. Add a free Gemini key below, or try again.");
+        setShowApiSettings(true);
       } else {
         const msg = err instanceof Error ? err.message : "Generation failed.";
         setError(msg);
+        setShowApiSettings(true);
       }
       toast.error(err instanceof Error ? err.message : "Could not generate PPT.");
     } finally {
@@ -271,119 +294,39 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
           </div>
           <p className="field-hint">
             {engine === "skywork"
-              ? "Professional designed decks (5–10 min). Needs Skywork key."
-              : "Fast AI slides — paste a free Gemini or ChatGPT key below."}
+              ? "Professional designed decks (5–10 min)."
+              : "Fast AI slides — fill topic below and click Generate."}
           </p>
         </div>
 
-        {engine === "gems" && (
-          <div className="text-leveler-key-box">
-            <Field label="AI provider *">
-              <select
-                value={provider}
-                onChange={(e) => setProvider(e.target.value as TextLevelerProvider)}
-              >
-                {(Object.keys(TEXT_LEVELER_PROVIDER_LABELS) as TextLevelerProvider[]).map((p) => (
-                  <option key={p} value={p}>
-                    {TEXT_LEVELER_PROVIDER_LABELS[p]}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="API key *" hint={TEXT_LEVELER_PROVIDER_HINTS[provider]}>
-              <input
-                type="password"
-                value={gemsApiKey}
-                onChange={(e) => setGemsApiKey(e.target.value)}
-                placeholder={TEXT_LEVELER_PROVIDER_PLACEHOLDERS[provider]}
-                autoComplete="off"
-              />
-            </Field>
-            <div className="text-leveler-key-actions">
-              <button
-                type="button"
-                className="pro-email-generate"
-                style={{ marginTop: 0, flex: 1 }}
-                onClick={saveGemsKey}
-                disabled={!gemsKeyReady}
-              >
-                Save API key
-              </button>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={useAssistantKey}>
-                Use assistant key
-              </button>
-            </div>
-            {gemsKeyReady && (
-              <p className="field-hint" style={{ color: "#059669", marginTop: 8, marginBottom: 0 }}>
-                ✓ {TEXT_LEVELER_PROVIDER_LABELS[provider]} ready — click Generate (no backend needed)
-              </p>
-            )}
-            {backendAiReady && !gemsKeyReady && (
-              <p className="field-hint" style={{ marginTop: 8, marginBottom: 0 }}>
-                Server AI is available — a browser key still gives the fastest setup.
-              </p>
-            )}
-          </div>
+        {engine === "gems" && gemsAiReady && !showApiSettings && (
+          <p className="field-hint" style={{ color: "#059669", marginBottom: 12 }}>
+            ✓ AI connected
+            {gemsCreds ? ` (${TEXT_LEVELER_PROVIDER_LABELS[gemsCreds.provider]})` : " (server)"}
+            {" — "}
+            <button
+              type="button"
+              className="pro-email-link-btn"
+              style={{ padding: 0, fontSize: "inherit" }}
+              onClick={() => setShowApiSettings(true)}
+            >
+              Change key
+            </button>
+          </p>
         )}
 
-        {engine === "skywork" && (
-          <div className="text-leveler-key-box">
-            <Field
-              label="Skywork API key *"
-              hint={
-                <>
-                  Get a free key at{" "}
-                  <a href={SKYWORK_PPT_KEY_URL} target="_blank" rel="noreferrer">
-                    skywork.ai API settings
-                  </a>{" "}
-                  — stored in this browser only.
-                </>
-              }
+        {engine === "skywork" && skyworkReady && !showApiSettings && (
+          <p className="field-hint" style={{ color: "#059669", marginBottom: 12 }}>
+            ✓ Skywork connected —{" "}
+            <button
+              type="button"
+              className="pro-email-link-btn"
+              style={{ padding: 0, fontSize: "inherit" }}
+              onClick={() => setShowApiSettings(true)}
             >
-              <input
-                type="password"
-                value={skyworkKey}
-                onChange={(e) => setSkyworkKey(e.target.value)}
-                placeholder="sk-… or your Skywork key"
-                autoComplete="off"
-              />
-            </Field>
-            <div className="text-leveler-key-actions">
-              <button
-                type="button"
-                className="pro-email-generate"
-                style={{ marginTop: 0, flex: 1 }}
-                onClick={saveSkyworkKey}
-                disabled={!skyworkReady}
-              >
-                Save Skywork key
-              </button>
-              {skyworkReady && (
-                <button
-                  type="button"
-                  className="pro-email-link-btn"
-                  onClick={() => {
-                    clearSkyworkPptApiKey();
-                    setSkyworkKey("");
-                  }}
-                >
-                  Remove
-                </button>
-              )}
-            </div>
-            {skyworkReady && (
-              <p className="field-hint" style={{ color: "#059669", marginTop: 8, marginBottom: 0 }}>
-                ✓ Skywork key ready — professional deck in 5–10 min
-              </p>
-            )}
-            <p className="field-hint" style={{ marginTop: 8, marginBottom: 0 }}>
-              Powered by{" "}
-              <a href={SKYWORK_PPT_PRODUCT_URL} target="_blank" rel="noreferrer">
-                Skywork PPT Generator
-              </a>
-              . Generation usually takes 5–10 minutes — keep this tab open.
-            </p>
-          </div>
+              Change key
+            </button>
+          </p>
         )}
 
         <Field label="Subject">
@@ -434,10 +377,108 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
           />
         </Field>
 
+        {engine === "gems" && !gemsAiReady && !showApiSettings && (
+          <p className="field-hint" style={{ marginBottom: 12 }}>
+            <button
+              type="button"
+              className="pro-email-link-btn"
+              style={{ padding: 0, fontSize: "inherit" }}
+              onClick={() => setShowApiSettings(true)}
+            >
+              Optional: connect Gemini for AI slides
+            </button>
+            {" "}(or generate an outline deck now)
+          </p>
+        )}
+
+        {showApiSettings && (
+          <details className="ppt-ai-setup" open>
+            <summary>{engine === "skywork" ? "Skywork API (one-time setup)" : "AI API (one-time setup)"}</summary>
+            {engine === "gems" ? (
+              <div className="text-leveler-key-box" style={{ marginTop: 10 }}>
+                <Field label="AI provider">
+                  <select
+                    value={provider}
+                    onChange={(e) => setProvider(e.target.value as TextLevelerProvider)}
+                  >
+                    {(Object.keys(TEXT_LEVELER_PROVIDER_LABELS) as TextLevelerProvider[]).map((p) => (
+                      <option key={p} value={p}>
+                        {TEXT_LEVELER_PROVIDER_LABELS[p]}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="API key" hint={TEXT_LEVELER_PROVIDER_HINTS[provider]}>
+                  <input
+                    type="password"
+                    value={gemsApiKey}
+                    onChange={(e) => setGemsApiKey(e.target.value)}
+                    placeholder={TEXT_LEVELER_PROVIDER_PLACEHOLDERS[provider]}
+                    autoComplete="off"
+                  />
+                </Field>
+                <div className="text-leveler-key-actions">
+                  <button type="button" className="btn btn-primary btn-sm" onClick={saveGemsKey}>
+                    Save key
+                  </button>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={useAssistantKey}>
+                    Use assistant key
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-leveler-key-box" style={{ marginTop: 10 }}>
+                <Field
+                  label="Skywork API key"
+                  hint={
+                    <>
+                      Free key at{" "}
+                      <a href={SKYWORK_PPT_KEY_URL} target="_blank" rel="noreferrer">
+                        skywork.ai API settings
+                      </a>
+                    </>
+                  }
+                >
+                  <input
+                    type="password"
+                    value={skyworkKey}
+                    onChange={(e) => setSkyworkKey(e.target.value)}
+                    placeholder="Your Skywork key"
+                    autoComplete="off"
+                  />
+                </Field>
+                <div className="text-leveler-key-actions">
+                  <button type="button" className="btn btn-primary btn-sm" onClick={saveSkyworkKey}>
+                    Save key
+                  </button>
+                  {skyworkReady && (
+                    <button
+                      type="button"
+                      className="pro-email-link-btn"
+                      onClick={() => {
+                        clearSkyworkPptApiKey();
+                        setSkyworkKey("");
+                      }}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <p className="field-hint" style={{ marginTop: 8, marginBottom: 0 }}>
+                  <a href={SKYWORK_PPT_PRODUCT_URL} target="_blank" rel="noreferrer">
+                    Skywork PPT Generator
+                  </a>{" "}
+                  — keep tab open 5–10 min while generating.
+                </p>
+              </div>
+            )}
+          </details>
+        )}
+
         <button
           className="btn btn-primary btn-block"
           onClick={() => void generate()}
-          disabled={loading || !canGenerate}
+          disabled={loading || !formReady}
         >
           {loading
             ? engine === "skywork"
@@ -467,11 +508,7 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
           <EmptyState
             icon="📊"
             title="No presentation yet"
-            hint={
-              engine === "skywork"
-                ? "Add your Skywork key, fill in topic and chapters, then generate."
-                : "Add a Gemini or ChatGPT key, fill in topic and chapters, then generate."
-            }
+            hint="Fill in topic and chapters on the left, then click Generate."
           />
         )}
 
