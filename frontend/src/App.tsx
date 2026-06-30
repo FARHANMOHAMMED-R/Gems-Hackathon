@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { api } from "./api/client";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { Dashboard } from "./pages/Dashboard";
+import { ClassDojo } from "./pages/ClassDojo";
 import { ScanAnalyzer } from "./pages/ScanAnalyzer";
 import { BlueprintGenerator } from "./pages/BlueprintGenerator";
 import { ContentDifferentiator } from "./pages/ContentDifferentiator";
 import { SubstitutionFinder } from "./pages/SubstitutionFinder";
 import { LabBooking } from "./pages/LabBooking";
 import { ThreeDLab } from "./pages/ThreeDLab";
-import { ParentMailer } from "./pages/ParentMailer";
+import { ProfessionalEmail } from "./pages/ProfessionalEmail";
+import { ReportCardComments } from "./pages/ReportCardComments";
 import { AssessmentAssigner } from "./pages/AssessmentAssigner";
 import { PptGenerator } from "./pages/PptGenerator";
 import { PerformanceTracker } from "./pages/PerformanceTracker";
@@ -43,17 +45,30 @@ function buildTeacherNav(teacher: TeacherSession): NavItem[] {
     {
       id: "dashboard",
       label: "Dashboard",
-      icon: "🏆",
-      blurb: "Token leaderboard & rewards",
+      icon: "🏠",
+      blurb: "Home — all your tools",
       render: (onNavigate) => (
-        <Dashboard classManaged={classManaged} onNavigate={onNavigate} />
+        <Dashboard
+          classManaged={classManaged}
+          teacherName={teacher.name}
+          onNavigate={onNavigate}
+        />
+      ),
+    },
+    {
+      id: "classdojo",
+      label: "Class Dojo",
+      icon: "⭐",
+      blurb: "Points, rewards & leaderboard",
+      render: (onNavigate) => (
+        <ClassDojo classManaged={classManaged} onNavigate={onNavigate} />
       ),
     },
     {
       id: "students",
-      label: "Class Roster",
+      label: "Student list",
       icon: "👥",
-      blurb: "Edit students & roll numbers",
+      blurb: "Change names, rolls & school IDs",
       render: () => <ClassStudents classManaged={classManaged} />,
     },
     {
@@ -147,16 +162,22 @@ function buildTeacherNav(teacher: TeacherSession): NavItem[] {
     },
     {
       id: "mailer",
-      label: "Parent Mailer",
+      label: "Professional Email",
       icon: "✉️",
-      blurb: "Draft parent update emails",
+      blurb: "AI professional email communication",
       render: () => (
-        <ParentMailer
-          classManaged={classManaged}
+        <ProfessionalEmail
           teacherEmail={teacher.email}
           teacherName={teacher.name}
         />
       ),
+    },
+    {
+      id: "reportcomments",
+      label: "Report Comments",
+      icon: "📋",
+      blurb: "AI report card & EOY student comments",
+      render: () => <ReportCardComments classManaged={classManaged} />,
     },
   ];
 }
@@ -308,7 +329,7 @@ export function App() {
     return (
       <div className="signin-page">
         <div className="signin-shell">
-          <p className="signin-footnote">Checking class roster…</p>
+          <p className="signin-footnote">Checking student list…</p>
         </div>
       </div>
     );

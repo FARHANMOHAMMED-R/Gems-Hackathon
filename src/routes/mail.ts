@@ -3,8 +3,14 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { asyncHandler, ApiError } from "../lib/http";
 import { complete, isLlmConfigured } from "../lib/llm";
-import { PARENT_MAIL_SYSTEM_PROMPT } from "../lib/prompts";
+import {
+  aiCompleteJSON,
+  isAnyAiConfigured,
+  type AiProvider,
+} from "../lib/aiProviders";
+import { PARENT_MAIL_SYSTEM_PROMPT, PROFESSIONAL_EMAIL_SYSTEM_PROMPT } from "../lib/prompts";
 import { draftParentMailLocally } from "../lib/localParentMailer";
+import { draftProfessionalEmailLocally } from "../lib/localProfessionalEmail";
 import {
   defaultMailSubject,
   isMailConfigured,
@@ -34,6 +40,22 @@ const sendOneSchema = z.object({
   body: z.string().trim().min(1),
   replyTo: z.string().trim().email().optional(),
   saveParentEmail: z.boolean().optional(),
+});
+
+const providerSchema = z.enum(["openai", "gemini", "claude"]).optional();
+
+const professionalEmailSchema = z.object({
+  authorName: z.string().trim().min(1, "Author name is required."),
+  content: z.string().trim().min(1, "Content to include in the email is required."),
+  fileContext: z.string().trim().optional(),
+  provider: providerSchema,
+});
+
+const sendProfessionalSchema = z.object({
+  to: z.string().trim().email(),
+  subject: z.string().trim().min(1),
+  body: z.string().trim().min(1),
+  replyTo: z.string().trim().email().optional(),
 });
 
 const sendBatchSchema = z.object({
@@ -137,6 +159,75 @@ mailRouter.get(
         : process.env.SMTP_HOST?.trim()
           ? "smtp"
           : null,
+    });
+  }),
+);
+
+mailRouter.post(
+  "/generate-professional-email",
+  asyncHandler(async (req, res) => {
+    const body = professionalEmailSchema.parse(req.body);
+
+    if (!isAnyAiConfigured()) {
+      const draft = draftProfessionalEmailLocally(
+        body.authorName,
+        body.content,
+        body.fileContext,
+      );
+      res.json({ ...draft, analysisMode: "local" as const });
+      return;
+    }
+
+    const userParts = [
+      `Author name (sign the email with this name): ${body.authorName}`,
+      "",
+      "Content to include in the email:",
+      body.content,
+    ];
+    if (body.fileContext?.trim()) {
+      userParts.push("", "Additional context from an attached file:", body.fileContext.trim());
+    }
+
+    const { data: result, provider } = await aiCompleteJSON<{ subject: string; body: string }>({
+      systemPrompt: PROFESSIONAL_EMAIL_SYSTEM_PROMPT,
+      userContent: userParts.join("\n"),
+      temperature: 0.45,
+      provider: body.provider as AiProvider | undefined,
+    });
+
+    res.json({
+      subject: result.subject?.trim() || "Professional communication",
+      body: result.body?.trim() || body.content,
+      analysisMode: "ai" as const,
+      providerUsed: provider,
+    });
+  }),
+);
+
+mailRouter.post(
+  "/send-professional-email",
+  asyncHandler(async (req, res) => {
+    if (!isMailConfigured()) {
+      throw new ApiError(
+        503,
+        "Email is not configured. Set RESEND_API_KEY or SMTP credentials in .env.",
+        "MAIL_NOT_CONFIGURED",
+      );
+    }
+
+    const payload = sendProfessionalSchema.parse(req.body);
+    const sent = await sendEmail({
+      to: payload.to,
+      subject: payload.subject,
+      text: payload.body,
+      replyTo: payload.replyTo,
+    });
+
+    res.json({
+      ok: true,
+      to: payload.to,
+      messageId: sent.messageId,
+      provider: sent.provider,
     });
   }),
 );

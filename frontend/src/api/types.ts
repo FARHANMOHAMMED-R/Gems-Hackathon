@@ -425,7 +425,53 @@ export interface DeleteLabReservationResponse {
   deletedId: string;
 }
 
-// --- Parent mailer ---
+// --- Professional email ---
+export interface GenerateProfessionalEmailRequest {
+  authorName: string;
+  content: string;
+  fileContext?: string;
+  provider?: AiProvider;
+}
+
+export interface GenerateProfessionalEmailResponse {
+  subject: string;
+  body: string;
+  analysisMode?: "ai" | "local";
+  providerUsed?: AiProvider;
+}
+
+export interface SendProfessionalEmailRequest {
+  to: string;
+  subject: string;
+  body: string;
+  replyTo?: string;
+}
+
+export interface SendProfessionalEmailResponse {
+  ok: boolean;
+  to: string;
+  messageId?: string;
+  provider?: string;
+}
+
+// --- Report card comments ---
+export interface GenerateReportCommentsRequest {
+  gradeLevel: string;
+  studentPronouns: string;
+  strengths: string;
+  growthAreas: string;
+  strengthsFileContext?: string;
+  growthFileContext?: string;
+  provider?: AiProvider;
+}
+
+export interface GenerateReportCommentsResponse {
+  comment: string;
+  analysisMode?: "ai" | "local";
+  providerUsed?: AiProvider;
+}
+
+// --- Parent mailer (legacy) ---
 export interface GenerateMailRequest {
   studentId: string;
   teacherSummary?: string;

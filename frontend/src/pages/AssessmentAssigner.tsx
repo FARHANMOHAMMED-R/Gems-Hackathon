@@ -133,7 +133,7 @@ export function AssessmentAssigner({
       }
       if (res.failed > 0 || res.skipped > 0) {
         toast.error(
-          `${res.failed} failed, ${res.skipped} skipped (no parent email). Add emails in Class Roster.`,
+          `${res.failed} failed, ${res.skipped} skipped (no parent email). Add emails in Student list.`,
         );
       }
     } catch (err) {
@@ -162,7 +162,7 @@ export function AssessmentAssigner({
     if (!recipients) {
       loadRecipients().then((r) => {
         if (!r?.withEmail) {
-          toast.error("No parent emails on file. Add them in Class Roster first.");
+          toast.error("No parent emails on file. Add them in Student list first.");
           return;
         }
         setShowSendConfirm(true);
@@ -170,7 +170,7 @@ export function AssessmentAssigner({
       return;
     }
     if (recipients.withEmail === 0) {
-      toast.error("No parent emails on file. Add them in Class Roster first.");
+      toast.error("No parent emails on file. Add them in Student list first.");
       return;
     }
     setShowSendConfirm(true);
@@ -396,7 +396,7 @@ export function AssessmentAssigner({
             {recipients.withoutEmail > 0 && (
               <p className="muted">
                 {recipients.withoutEmail} student(s) have no parent email — they will be skipped.
-                Add emails in Class Roster.
+                Add emails in Student list.
               </p>
             )}
             <p className="muted" style={{ fontSize: 13 }}>

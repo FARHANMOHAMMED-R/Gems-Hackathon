@@ -16,6 +16,12 @@ import type {
   GenerateMailResponse,
   GenerateMailBatchRequest,
   GenerateMailBatchResponse,
+  GenerateProfessionalEmailRequest,
+  GenerateProfessionalEmailResponse,
+  SendProfessionalEmailRequest,
+  SendProfessionalEmailResponse,
+  GenerateReportCommentsRequest,
+  GenerateReportCommentsResponse,
   SendMailRequest,
   SendMailResponse,
   SendMailBatchRequest,
@@ -251,7 +257,29 @@ export const api = {
       },
     ),
 
-  // Parent mailer
+  // Professional email
+  generateProfessionalEmail: (body: GenerateProfessionalEmailRequest, signal?: AbortSignal) =>
+    request<GenerateProfessionalEmailResponse>("/api/generate-professional-email", {
+      method: "POST",
+      body,
+      signal,
+    }),
+  sendProfessionalEmail: (body: SendProfessionalEmailRequest, signal?: AbortSignal) =>
+    request<SendProfessionalEmailResponse>("/api/send-professional-email", {
+      method: "POST",
+      body,
+      signal,
+    }),
+
+  // Report card comments
+  generateReportComments: (body: GenerateReportCommentsRequest, signal?: AbortSignal) =>
+    request<GenerateReportCommentsResponse>("/api/generate-report-comments", {
+      method: "POST",
+      body,
+      signal,
+    }),
+
+  // Parent mailer (legacy)
   generateMail: (body: GenerateMailRequest, signal?: AbortSignal) =>
     request<GenerateMailResponse>("/api/generate-mail", {
       method: "POST",

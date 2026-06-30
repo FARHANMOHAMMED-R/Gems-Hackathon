@@ -173,8 +173,8 @@ export function ClassStudents({ classManaged }: { classManaged: string }) {
   return (
     <div className="page">
       <Card
-        title="Manage class roster"
-        subtitle={`Class ${classManaged} — edit names, roll numbers, and school IDs. Token balances are kept when you edit.`}
+        title="Student list"
+        subtitle={`Class ${classManaged} — change names, roll numbers, and school IDs. Point balances are kept when you edit.`}
       >
         {loading && (
           <div style={{ padding: 24, textAlign: "center" }}>

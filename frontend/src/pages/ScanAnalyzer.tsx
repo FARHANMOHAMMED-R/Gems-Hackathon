@@ -73,7 +73,7 @@ export function ScanAnalyzer({ classManaged }: { classManaged: string }) {
 
   async function analyze() {
     if (!studentId) {
-      toast.error("Select a student from your class roster.");
+      toast.error("Select a student from your student list.");
       return;
     }
     if (images.length === 0 && !rawText.trim()) {
@@ -120,7 +120,7 @@ export function ScanAnalyzer({ classManaged }: { classManaged: string }) {
 
   return (
     <div className="grid grid-2">
-      <Card title="Notebook / Exam Analyzer" subtitle="Linked to your class roster">
+      <Card title="Notebook / Exam Analyzer" subtitle="Linked to your student list">
         <div className="field">
           <span className="field-label">Mode</span>
           <div className="chip-group">
@@ -163,9 +163,9 @@ export function ScanAnalyzer({ classManaged }: { classManaged: string }) {
 
         <Field label="Student" hint="Pick by name — roll no. and school ID are saved automatically.">
           {loadingStudents ? (
-            <Spinner label="Loading class roster…" />
+            <Spinner label="Loading student list…" />
           ) : students.length === 0 ? (
-            <p className="muted">No students in this class. Set up the roster first.</p>
+            <p className="muted">No students in this class. Set up the student list first.</p>
           ) : (
             <select value={studentId} onChange={(e) => setStudentId(e.target.value)}>
               {students.map((s) => (
@@ -237,7 +237,7 @@ export function ScanAnalyzer({ classManaged }: { classManaged: string }) {
         </button>
       </Card>
 
-      <Card title="Results" subtitle="Scores feed into parent mailer & records">
+      <Card title="Results" subtitle="Scores feed into student records">
         {loading && (
           <Spinner
             label={

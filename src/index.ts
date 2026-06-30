@@ -22,6 +22,7 @@ import { assessmentRouter } from "./routes/assessment";
 import { pptRouter, aiRouter } from "./routes/ppt";
 import { performanceRouter } from "./routes/performance";
 import { lectureRouter } from "./routes/lecture";
+import { reportCommentsRouter } from "./routes/reportComments";
 
 const app = express();
 
@@ -71,7 +72,8 @@ app.use("/api", blueprintRouter); // 2b. Exam Blueprint Generator
 app.use("/api", differentiateContentRouter); // 3. Differentiated Content Generation
 app.use("/api", substitutionRouter); // 4a. Smart Substitution
 app.use("/api", labsRouter); // 4b. Lab Booking Scheduler
-app.use("/api", mailRouter); // 5a. Parent Mailer
+app.use("/api", mailRouter); // Professional Email + legacy mail routes
+app.use("/api", reportCommentsRouter); // Report card / EOY comments
 app.use("/api", assessmentRouter); // 5c. Assessment Assigner
 app.use("/api", pptRouter); // 5d. PPT Generator
 app.use("/api", aiRouter); // AI provider status

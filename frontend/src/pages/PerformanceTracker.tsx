@@ -319,7 +319,7 @@ export function PerformanceTracker({ classManaged }: { classManaged: string }) {
           <EmptyState
             icon="👥"
             title="No students in this class"
-            hint="Add students in Class Roster first."
+            hint="Add students in Student list first."
           />
         )}
 

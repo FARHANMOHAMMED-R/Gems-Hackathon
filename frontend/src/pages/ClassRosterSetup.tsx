@@ -70,10 +70,10 @@ export function ClassRosterSetup({
         classManaged: teacher.classManaged,
         students,
       });
-      toast.success(`Class roster saved — ${students.length} students synced to server.`);
+      toast.success(`Student list saved — ${students.length} students synced to server.`);
     } catch {
       toast.success(
-        `Class roster saved (${students.length} students). Backend offline — run npm run dev to sync.`,
+        `Student list saved (${students.length} students). Backend offline — run npm run dev to sync.`,
       );
     } finally {
       setSaving(false);
@@ -89,7 +89,7 @@ export function ClassRosterSetup({
         >
           <p className="muted" style={{ marginBottom: 16 }}>
             Enter each student's <strong>name</strong>, <strong>roll number</strong>, and{" "}
-            <strong>school ID</strong>. This powers the notebook analyzer, parent mailer, and
+            <strong>school ID</strong>. This powers the notebook analyzer, professional email, and
             token leaderboard.
           </p>
 
@@ -159,7 +159,7 @@ export function ClassRosterSetup({
               onClick={save}
               disabled={saving}
             >
-              {saving ? "Saving…" : "Save class roster"}
+              {saving ? "Saving…" : "Save student list"}
             </button>
           </div>
 
