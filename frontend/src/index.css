@@ -82,6 +82,15 @@ code {
   position: sticky;
   top: 0;
   height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.brand,
+.teacher-chip,
+.teacher-notif-box,
+.sidebar-foot {
+  flex-shrink: 0;
 }
 
 .brand {
@@ -117,6 +126,11 @@ code {
   flex-direction: column;
   gap: 4px;
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0 -4px;
+  padding: 0 4px 4px;
 }
 
 .nav-item {
@@ -184,6 +198,18 @@ code {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding-top: 8px;
+}
+
+.sidebar-foot .btn-ghost {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #e7e9f3;
+}
+
+.sidebar-foot .btn-ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
 }
 
 .teacher-chip {
@@ -1237,6 +1263,9 @@ textarea:focus {
     transform: translateX(-100%);
     transition: transform 0.2s ease;
     box-shadow: var(--shadow-lg);
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
   }
   .sidebar.open {
     transform: translateX(0);
