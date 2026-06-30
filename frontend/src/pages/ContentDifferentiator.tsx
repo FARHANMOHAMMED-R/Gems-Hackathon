@@ -9,11 +9,14 @@ import {
 } from "../data/readingProfiles";
 import { clientGeminiLevelText, clientOpenAiLevelText } from "../lib/clientTextLeveler";
 import {
-  clearTextLevelerOpenAiKey,
-  loadTextLevelerOpenAiKey,
-  saveTextLevelerOpenAiKey,
+  clearTextLevelerAiConfig,
+  loadTextLevelerAiConfig,
+  saveTextLevelerAiConfig,
+  TEXT_LEVELER_PROVIDER_HINTS,
+  TEXT_LEVELER_PROVIDER_LABELS,
+  TEXT_LEVELER_PROVIDER_PLACEHOLDERS,
+  type TextLevelerProvider,
 } from "../lib/textLevelerAiConfig";
-import { loadAssistantAiConfig } from "../lib/assistantAiConfig";
 import { ErrorNote, Field, Spinner } from "../components/ui";
 import { useToast } from "../components/Toast";
 
@@ -51,16 +54,15 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
   const [error, setError] = useState<string | null>(null);
   const [previousHtml, setPreviousHtml] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [openAiKey, setOpenAiKey] = useState(loadTextLevelerOpenAiKey);
-  const [showKeyField, setShowKeyField] = useState(!loadTextLevelerOpenAiKey());
+  const savedAi = loadTextLevelerAiConfig();
+  const [provider, setProvider] = useState<TextLevelerProvider>(savedAi?.provider ?? "gemini");
+  const [apiKey, setApiKey] = useState(savedAi?.apiKey ?? "");
+  const [showKeyField, setShowKeyField] = useState(!savedAi);
+  const [usedProvider, setUsedProvider] = useState<TextLevelerProvider | null>(null);
 
   const combinedText = [content, fileContext].filter(Boolean).join("\n\n");
   const totalWords = countWords(content, fileContext);
-  const assistantConfig = loadAssistantAiConfig();
-  const openAiReady = openAiKey.trim().length >= 10;
-  const geminiReady =
-    assistantConfig?.provider === "gemini" && assistantConfig.apiKey.trim().length >= 10;
-  const aiReady = openAiReady || geminiReady;
+  const aiReady = apiKey.trim().length >= 10;
 
   async function onFilePick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -116,40 +118,27 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
 
     if (!aiReady) {
       setShowKeyField(true);
-      toast.error("Add your OpenAI API key below to level text.");
+      toast.error("Add your Gemini or OpenAI API key below to level text.");
       return;
     }
 
     setLoading(true);
     setHtml(null);
     setAnalysisMode(null);
+    setUsedProvider(null);
     setError(null);
 
     const text = combinedText.trim();
+    const trimmedKey = apiKey.trim();
 
     try {
       let markdown: string;
       let mode: "ai" | "local" = "ai";
 
-      if (openAiReady) {
-        markdown = await clientOpenAiLevelText(openAiKey.trim(), text, gradeLevel, readingProfile);
-      } else if (geminiReady && assistantConfig) {
-        markdown = await clientGeminiLevelText(
-          assistantConfig.apiKey,
-          text,
-          gradeLevel,
-          readingProfile,
-        );
+      if (provider === "openai") {
+        markdown = await clientOpenAiLevelText(trimmedKey, text, gradeLevel, readingProfile);
       } else {
-        const res = await api.differentiate({
-          content: text,
-          gradeLevel,
-          readingProfile,
-          provider: "openai",
-          apiKey: openAiKey.trim() || assistantConfig?.apiKey,
-        });
-        markdown = res.content;
-        mode = res.analysisMode ?? "ai";
+        markdown = await clientGeminiLevelText(trimmedKey, text, gradeLevel, readingProfile);
       }
 
       const rendered = await marked.parse(markdown);
@@ -157,21 +146,23 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
       setHtml(rendered);
       setResultGrade(gradeLevel);
       setAnalysisMode(mode);
-      toast.success(`Leveled for ${gradeLevel} with AI.`);
+      setUsedProvider(provider);
+      toast.success(`Leveled for ${gradeLevel} with ${TEXT_LEVELER_PROVIDER_LABELS[provider]}.`);
     } catch (err) {
       try {
         const res = await api.differentiate({
           content: text,
           gradeLevel,
           readingProfile,
-          provider: "openai",
-          apiKey: openAiKey.trim(),
+          provider,
+          apiKey: trimmedKey,
         });
         const rendered = await marked.parse(res.content);
         setPreviousHtml(html);
         setHtml(rendered);
         setResultGrade(gradeLevel);
         setAnalysisMode(res.analysisMode ?? "ai");
+        setUsedProvider(provider);
         toast.success(`Leveled for ${gradeLevel}.`);
       } catch (fallbackErr) {
         setError(
@@ -181,22 +172,22 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
               ? err.message
               : "Generation failed.",
         );
-        toast.error("Could not level text — check your OpenAI key.");
+        toast.error(`Could not level text — check your ${TEXT_LEVELER_PROVIDER_LABELS[provider]} key.`);
       }
     } finally {
       setLoading(false);
     }
   }
 
-  function saveOpenAiKey() {
-    const trimmed = openAiKey.trim();
+  function saveAiKey() {
+    const trimmed = apiKey.trim();
     if (trimmed.length < 10) {
-      toast.error("Paste a valid OpenAI API key.");
+      toast.error("Paste a valid API key.");
       return;
     }
-    saveTextLevelerOpenAiKey(trimmed);
+    saveTextLevelerAiConfig({ provider, apiKey: trimmed });
     setShowKeyField(false);
-    toast.success("OpenAI key saved for Text Leveler.");
+    toast.success(`${TEXT_LEVELER_PROVIDER_LABELS[provider]} connected for Text Leveler.`);
   }
 
   async function copyOutput() {
@@ -321,17 +312,29 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
           </span>
         </div>
 
-        {(showKeyField || !openAiReady) && (
+        {(showKeyField || !aiReady) && (
           <div className="text-leveler-key-box">
+            <Field label="AI provider *">
+              <select
+                value={provider}
+                onChange={(e) => setProvider(e.target.value as TextLevelerProvider)}
+              >
+                {(Object.keys(TEXT_LEVELER_PROVIDER_LABELS) as TextLevelerProvider[]).map((p) => (
+                  <option key={p} value={p}>
+                    {TEXT_LEVELER_PROVIDER_LABELS[p]}
+                  </option>
+                ))}
+              </select>
+            </Field>
             <Field
-              label="OpenAI API key *"
-              hint="Required for real grade-level rewriting. Get one at platform.openai.com/api-keys — stored in this browser only."
+              label="API key *"
+              hint={TEXT_LEVELER_PROVIDER_HINTS[provider]}
             >
               <input
                 type="password"
-                value={openAiKey}
-                onChange={(e) => setOpenAiKey(e.target.value)}
-                placeholder="sk-…"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder={TEXT_LEVELER_PROVIDER_PLACEHOLDERS[provider]}
                 autoComplete="off"
               />
             </Field>
@@ -340,18 +343,18 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
                 type="button"
                 className="pro-email-generate"
                 style={{ marginTop: 0, flex: 1 }}
-                onClick={saveOpenAiKey}
-                disabled={openAiKey.trim().length < 10}
+                onClick={saveAiKey}
+                disabled={apiKey.trim().length < 10}
               >
-                Save OpenAI key
+                Save API key
               </button>
-              {openAiReady && (
+              {aiReady && (
                 <button
                   type="button"
                   className="pro-email-link-btn"
                   onClick={() => {
-                    clearTextLevelerOpenAiKey();
-                    setOpenAiKey("");
+                    clearTextLevelerAiConfig();
+                    setApiKey("");
                   }}
                 >
                   Remove
@@ -361,27 +364,27 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
           </div>
         )}
 
-        {openAiReady && !showKeyField && (
+        {aiReady && !showKeyField && (
           <p className="field-hint" style={{ color: "#059669" }}>
-            ✓ OpenAI connected —{" "}
+            ✓ {TEXT_LEVELER_PROVIDER_LABELS[provider]} connected —{" "}
             <button
               type="button"
               className="pro-email-link-btn"
               style={{ padding: 0, fontSize: "inherit" }}
               onClick={() => setShowKeyField(true)}
             >
-              Change key
+              Change provider or key
             </button>
           </p>
         )}
 
-        {!openAiReady && !showKeyField && (
+        {!aiReady && !showKeyField && (
           <button
             type="button"
             className="pro-email-link-btn"
             onClick={() => setShowKeyField(true)}
           >
-            Add OpenAI API key
+            Add Gemini or OpenAI API key
           </button>
         )}
 
@@ -414,12 +417,12 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
               </header>
               {analysisMode === "local" && (
                 <span className="pill pill-primary" style={{ marginBottom: 12, display: "inline-block" }}>
-                  📘 Shortened locally — add OpenAI key for full rewrite
+                  📘 Shortened locally — add an API key for full rewrite
                 </span>
               )}
-              {analysisMode === "ai" && (
+              {analysisMode === "ai" && usedProvider && (
                 <span className="pill pill-primary" style={{ marginBottom: 12, display: "inline-block" }}>
-                  ✦ AI-leveled with OpenAI
+                  ✦ AI-leveled with {TEXT_LEVELER_PROVIDER_LABELS[usedProvider]}
                 </span>
               )}
               <div className="markdown pro-email-body" dangerouslySetInnerHTML={{ __html: html }} />
