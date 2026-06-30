@@ -1,10 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "../api/client";
 import type {
+  AiProvider,
   AssessmentDifficulty,
   AssessmentRecipientsResponse,
   GeneratedAssessment,
 } from "../api/types";
+import {
+  defaultAssessmentEmailSubject,
+  formatAssessmentForStudents,
+} from "../lib/assessmentFormat";
+import { clientGenerateAssessment } from "../lib/clientAssessmentGenerator";
+import { loadAssistantAiConfig } from "../lib/assistantAiConfig";
+import {
+  persistTextLevelerCredentials,
+  resolveTextLevelerCredentials,
+} from "../lib/resolveTextLevelerCredentials";
+import {
+  loadTextLevelerAiConfig,
+  saveTextLevelerAiConfig,
+  TEXT_LEVELER_PROVIDER_HINTS,
+  TEXT_LEVELER_PROVIDER_LABELS,
+  TEXT_LEVELER_PROVIDER_PLACEHOLDERS,
+  type TextLevelerProvider,
+} from "../lib/textLevelerAiConfig";
 import { Card, EmptyState, ErrorNote, Field, Spinner } from "../components/ui";
 import { useToast } from "../components/Toast";
 
@@ -30,6 +49,14 @@ export function AssessmentAssigner({
   const toast = useToast();
   const grade = useMemo(() => parseGrade(classManaged), [classManaged]);
 
+  const savedAi = loadTextLevelerAiConfig();
+  const [provider, setProvider] = useState<TextLevelerProvider>(savedAi?.provider ?? "openai");
+  const [apiKey, setApiKey] = useState(savedAi?.apiKey ?? "");
+  const [showApiSettings, setShowApiSettings] = useState(false);
+  const [backendProviders, setBackendProviders] = useState<
+    { id: AiProvider; configured: boolean }[]
+  >([]);
+
   const [subject, setSubject] = useState("Physics");
   const [chapters, setChapters] = useState("");
   const [topics, setTopics] = useState("");
@@ -43,6 +70,7 @@ export function AssessmentAssigner({
   const [showSendConfirm, setShowSendConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [localMode, setLocalMode] = useState(false);
+  const [aiProviderUsed, setAiProviderUsed] = useState<TextLevelerProvider | null>(null);
   const [mailConfigured, setMailConfigured] = useState<boolean | null>(null);
 
   const [assessment, setAssessment] = useState<GeneratedAssessment | null>(null);
@@ -55,7 +83,52 @@ export function AssessmentAssigner({
 
   useEffect(() => {
     api.getMailStatus().then((s) => setMailConfigured(s.configured)).catch(() => setMailConfigured(false));
+    api
+      .getAiProviders()
+      .then((res) => setBackendProviders(res.providers))
+      .catch(() => setBackendProviders([]));
   }, []);
+
+  useEffect(() => {
+    const creds = resolveTextLevelerCredentials(provider, apiKey, []);
+    if (creds?.apiKey && !apiKey.trim()) {
+      setProvider(creds.provider);
+      setApiKey(creds.apiKey);
+      persistTextLevelerCredentials(creds);
+    }
+  }, []);
+
+  const creds = resolveTextLevelerCredentials(provider, apiKey, backendProviders);
+  const aiReady = Boolean(creds);
+  const formReady = chapters.trim().length > 0 && topics.trim().length > 0;
+
+  function saveKey() {
+    const trimmed = apiKey.trim();
+    if (trimmed.length < 10) {
+      toast.error("Paste a valid API key.");
+      return;
+    }
+    saveTextLevelerAiConfig({ provider, apiKey: trimmed });
+    setShowApiSettings(false);
+    toast.success(`${TEXT_LEVELER_PROVIDER_LABELS[provider]} key saved.`);
+  }
+
+  function useAssistantKey() {
+    const assistant = loadAssistantAiConfig();
+    if (!assistant?.apiKey || assistant.apiKey.length < 10) {
+      toast.error("Set a key in the ✦ AI assistant first (bottom-right → ⚙).");
+      return;
+    }
+    if (assistant.provider !== "openai" && assistant.provider !== "gemini") {
+      toast.error("Assistant must use OpenAI or Gemini.");
+      return;
+    }
+    setProvider(assistant.provider);
+    setApiKey(assistant.apiKey);
+    saveTextLevelerAiConfig({ provider: assistant.provider, apiKey: assistant.apiKey });
+    setShowApiSettings(false);
+    toast.success(`Using ${TEXT_LEVELER_PROVIDER_LABELS[assistant.provider]} from assistant.`);
+  }
 
   async function loadRecipients() {
     try {
@@ -69,10 +142,12 @@ export function AssessmentAssigner({
   }
 
   async function generate() {
-    if (!chapters.trim() || !topics.trim()) {
+    if (!formReady) {
       toast.error("Enter chapters and topics for the assessment.");
       return;
     }
+
+    const resolved = resolveTextLevelerCredentials(provider, apiKey, backendProviders);
 
     setLoading(true);
     setError(null);
@@ -80,28 +155,70 @@ export function AssessmentAssigner({
     setStudentBody("");
     setSendResults(null);
     setShowSendConfirm(false);
+    setAiProviderUsed(null);
+
+    const input = {
+      classManaged,
+      grade,
+      subject,
+      chapters: chapters.trim(),
+      topics: topics.trim(),
+      difficulty,
+      questionCount,
+      durationMinutes,
+      additionalNotes: additionalNotes.trim() || undefined,
+    };
 
     try {
+      if (resolved?.apiKey) {
+        persistTextLevelerCredentials(resolved);
+        setProvider(resolved.provider);
+        setApiKey(resolved.apiKey);
+        setShowApiSettings(false);
+
+        const generated = await clientGenerateAssessment(resolved.provider, resolved.apiKey, input);
+        setAssessment(generated);
+        setStudentBody(formatAssessmentForStudents(generated));
+        setEmailSubject(defaultAssessmentEmailSubject(generated, classManaged));
+        setLocalMode(false);
+        setAiProviderUsed(resolved.provider);
+        await loadRecipients();
+        toast.success(
+          `Created ${generated.questions.length} questions with ${TEXT_LEVELER_PROVIDER_LABELS[resolved.provider]}.`,
+        );
+        return;
+      }
+
       const res = await api.generateAssessment({
-        classManaged,
-        grade,
-        subject,
-        chapters: chapters.trim(),
-        topics: topics.trim(),
-        difficulty,
-        questionCount,
-        durationMinutes,
-        additionalNotes: additionalNotes.trim() || undefined,
+        ...input,
+        provider: resolved?.provider,
       });
+
       setAssessment(res.assessment);
       setStudentBody(res.studentBody);
       setEmailSubject(res.emailSubject);
       setLocalMode(res.analysisMode === "local");
+      if (res.analysisMode === "ai") {
+        const used =
+          res.providerUsed === "openai" || res.providerUsed === "gemini"
+            ? res.providerUsed
+            : resolved?.provider ?? null;
+        setAiProviderUsed(used);
+      } else {
+        toast.info("Template questions created. Add an OpenAI key for custom AI questions.");
+        setShowApiSettings(true);
+      }
       await loadRecipients();
-      toast.success("Assessment created.");
+      toast.success(
+        res.analysisMode === "ai"
+          ? `Created ${res.assessment.questions.length} AI questions.`
+          : "Assessment created.",
+      );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not generate assessment.");
-      toast.error("Generation failed.");
+      const msg = err instanceof Error ? err.message : "Could not generate assessment.";
+      setError(msg);
+      setShowApiSettings(true);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -183,9 +300,27 @@ export function AssessmentAssigner({
         subtitle={`AI builds assessments for Grade ${grade} (${classManaged})`}
       >
         <p className="muted" style={{ marginBottom: 12 }}>
-          Teaching <strong>{classManaged}</strong> as <strong>{teacherName}</strong>. The AI uses
-          your grade, chapters, topics, and difficulty to create a ready-to-send assessment.
+          Teaching <strong>{classManaged}</strong> as <strong>{teacherName}</strong>. Fill chapters
+          and topics, then generate exam-ready questions with OpenAI.
         </p>
+
+        {aiReady && !showApiSettings && (
+          <p className="field-hint" style={{ color: "#059669", marginBottom: 12 }}>
+            ✓ AI connected
+            {creds?.apiKey
+              ? ` (${TEXT_LEVELER_PROVIDER_LABELS[creds.provider]})`
+              : " (server)"}
+            {" — "}
+            <button
+              type="button"
+              className="pro-email-link-btn"
+              style={{ padding: 0, fontSize: "inherit" }}
+              onClick={() => setShowApiSettings(true)}
+            >
+              Change key
+            </button>
+          </p>
+        )}
 
         {mailConfigured === false && (
           <details className="ppt-ai-setup">
@@ -279,13 +414,65 @@ export function AssessmentAssigner({
           />
         </Field>
 
-        <button className="btn btn-primary btn-block" onClick={generate} disabled={loading}>
-          {loading ? "Creating assessment…" : "Generate assessment with AI"}
+        {!aiReady && !showApiSettings && (
+          <p className="field-hint" style={{ marginBottom: 12 }}>
+            <button
+              type="button"
+              className="pro-email-link-btn"
+              style={{ padding: 0, fontSize: "inherit" }}
+              onClick={() => setShowApiSettings(true)}
+            >
+              Connect OpenAI for AI questions
+            </button>
+            {" "}(or generate a template without a key)
+          </p>
+        )}
+
+        {showApiSettings && (
+          <details className="ppt-ai-setup" open>
+            <summary>AI API (one-time setup)</summary>
+            <div className="text-leveler-key-box" style={{ marginTop: 10 }}>
+              <Field label="AI provider">
+                <select
+                  value={provider}
+                  onChange={(e) => setProvider(e.target.value as TextLevelerProvider)}
+                >
+                  <option value="openai">{TEXT_LEVELER_PROVIDER_LABELS.openai}</option>
+                  <option value="gemini">{TEXT_LEVELER_PROVIDER_LABELS.gemini}</option>
+                </select>
+              </Field>
+              <Field label="API key" hint={TEXT_LEVELER_PROVIDER_HINTS[provider]}>
+                <input
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder={TEXT_LEVELER_PROVIDER_PLACEHOLDERS[provider]}
+                  autoComplete="off"
+                />
+              </Field>
+              <div className="text-leveler-key-actions">
+                <button type="button" className="btn btn-primary btn-sm" onClick={saveKey}>
+                  Save key
+                </button>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={useAssistantKey}>
+                  Use assistant key
+                </button>
+              </div>
+            </div>
+          </details>
+        )}
+
+        <button
+          className="btn btn-primary btn-block"
+          onClick={() => void generate()}
+          disabled={loading || !formReady}
+        >
+          {loading ? "Creating assessment…" : "✦ Generate questions with AI"}
         </button>
       </Card>
 
       <Card title="Preview & send" subtitle="Review, then email all parents">
-        {loading && <Spinner label="AI is writing your assessment…" />}
+        {loading && <Spinner label="AI is writing your assessment questions…" />}
         {error && !loading && <ErrorNote>{error}</ErrorNote>}
 
         {!loading && !error && !assessment && (
@@ -299,7 +486,14 @@ export function AssessmentAssigner({
         {assessment && !loading && (
           <div className="stack" style={{ gap: 16 }}>
             {localMode && (
-              <span className="pill pill-primary">📑 Template assessment — add AI key for custom questions</span>
+              <span className="pill pill-primary">
+                📑 Template assessment — connect OpenAI for custom questions
+              </span>
+            )}
+            {aiProviderUsed && !localMode && (
+              <span className="pill pill-primary">
+                ✦ Generated with {TEXT_LEVELER_PROVIDER_LABELS[aiProviderUsed]}
+              </span>
             )}
 
             <div>
@@ -326,7 +520,7 @@ export function AssessmentAssigner({
                         {q.marks} mark{q.marks === 1 ? "" : "s"} · {q.questionType}
                       </span>
                     </div>
-                    <p>{q.questionText}</p>
+                    <p style={{ whiteSpace: "pre-wrap" }}>{q.questionText}</p>
                     <p className="muted" style={{ fontSize: 12 }}>
                       {q.chapter} · {q.topic} · {q.difficulty}
                     </p>

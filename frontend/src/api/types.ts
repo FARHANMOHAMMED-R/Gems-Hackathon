@@ -186,6 +186,8 @@ export interface GenerateAssessmentRequest {
   questionCount?: number;
   durationMinutes?: number;
   additionalNotes?: string;
+  provider?: "openai" | "gemini";
+  apiKey?: string;
 }
 
 export interface GenerateAssessmentResponse {
@@ -193,6 +195,7 @@ export interface GenerateAssessmentResponse {
   studentBody: string;
   emailSubject: string;
   analysisMode: "ai" | "local";
+  providerUsed?: AiProvider;
 }
 
 export interface SendAssessmentRequest {

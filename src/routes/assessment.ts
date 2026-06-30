@@ -2,7 +2,12 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { asyncHandler, ApiError } from "../lib/http";
-import { completeJSON, isLlmConfigured } from "../lib/llm";
+import {
+  aiCompleteJSON,
+  isAnyAiConfigured,
+  isProviderConfigured,
+  type AiProvider,
+} from "../lib/aiProviders";
 import { ASSESSMENT_SYSTEM_PROMPT } from "../lib/prompts";
 import {
   defaultAssessmentEmailSubject,
@@ -26,6 +31,8 @@ const generateSchema = z.object({
   questionCount: z.coerce.number().int().min(1).max(30).default(5),
   durationMinutes: z.coerce.number().int().min(10).max(300).optional(),
   additionalNotes: z.string().trim().optional(),
+  provider: z.enum(["openai", "gemini"]).optional(),
+  apiKey: z.string().trim().min(10).max(512).optional(),
 });
 
 const sendSchema = z.object({
@@ -46,29 +53,59 @@ assessmentRouter.post(
   "/generate-assessment",
   asyncHandler(async (req, res) => {
     const body = generateSchema.parse(req.body);
-    const hasLlm = isLlmConfigured();
+    const browserKey = body.apiKey?.trim();
+    const hasBrowserKey = Boolean(browserKey && browserKey.length >= 10);
+    const hasServerAi = isAnyAiConfigured();
+    const canUseAi = hasBrowserKey || hasServerAi;
 
     let assessment: GeneratedAssessment;
     let analysisMode: "ai" | "local";
+    let providerUsed: AiProvider | "local" = "local";
 
-    if (hasLlm) {
-      assessment = await completeJSON<GeneratedAssessment>({
-        systemPrompt: ASSESSMENT_SYSTEM_PROMPT,
-        userContent: [
-          `Class / grade: ${body.grade} (Class ${body.classManaged})`,
-          `Subject: ${body.subject}`,
-          `Chapters: ${body.chapters}`,
-          `Topics: ${body.topics}`,
-          `Difficulty: ${body.difficulty}`,
-          `Number of questions: ${body.questionCount}`,
-          body.durationMinutes ? `Target duration: ${body.durationMinutes} minutes` : "",
-          body.additionalNotes ? `Teacher notes: ${body.additionalNotes}` : "",
-        ]
-          .filter(Boolean)
-          .join("\n"),
-        temperature: 0.35,
-      });
-      analysisMode = "ai";
+    if (canUseAi) {
+      const chosen: AiProvider = (() => {
+        if (body.provider && isProviderConfigured(body.provider, browserKey)) {
+          return body.provider;
+        }
+        if (isProviderConfigured("openai", browserKey)) return "openai";
+        if (isProviderConfigured("gemini", browserKey)) return "gemini";
+        if (isProviderConfigured("claude", browserKey)) return "claude";
+        return body.provider ?? "openai";
+      })();
+
+      try {
+        const { data, provider } = await aiCompleteJSON<GeneratedAssessment>({
+          provider: chosen,
+          systemPrompt: ASSESSMENT_SYSTEM_PROMPT,
+          userContent: [
+            `Class / grade: ${body.grade} (Class ${body.classManaged})`,
+            `Subject: ${body.subject}`,
+            `Chapters: ${body.chapters}`,
+            `Topics: ${body.topics}`,
+            `Difficulty: ${body.difficulty}`,
+            `Number of questions: ${body.questionCount}`,
+            body.durationMinutes ? `Target duration: ${body.durationMinutes} minutes` : "",
+            body.additionalNotes ? `Teacher notes: ${body.additionalNotes}` : "",
+          ]
+            .filter(Boolean)
+            .join("\n"),
+          temperature: 0.35,
+          apiKeyOverride: browserKey,
+        });
+        assessment = data;
+        analysisMode = "ai";
+        providerUsed = provider;
+      } catch (err) {
+        if (hasBrowserKey) {
+          throw new ApiError(
+            422,
+            err instanceof Error
+              ? err.message
+              : "AI assessment generation failed. Check your API key and try again.",
+          );
+        }
+        throw err;
+      }
     } else {
       assessment = generateAssessmentLocally({
         grade: body.grade,
@@ -96,6 +133,7 @@ assessmentRouter.post(
       studentBody,
       emailSubject,
       analysisMode,
+      providerUsed: analysisMode === "ai" ? providerUsed : undefined,
     });
   }),
 );
