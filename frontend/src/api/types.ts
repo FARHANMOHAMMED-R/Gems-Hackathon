@@ -486,6 +486,7 @@ export interface AssistantChatRequest {
 
 export interface AssistantChatResponse {
   reply: string;
+  navigateTo?: string;
   analysisMode?: "ai" | "local";
   providerUsed?: AiProvider;
 }

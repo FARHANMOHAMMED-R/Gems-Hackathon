@@ -465,7 +465,11 @@ export function App() {
         />
       )}
 
-      <AiAssistant teacherName={displayName} classManaged={teacher?.classManaged} />
+      <AiAssistant
+        teacherName={displayName}
+        classManaged={teacher?.classManaged}
+        onNavigate={setActive}
+      />
     </div>
   );
 }

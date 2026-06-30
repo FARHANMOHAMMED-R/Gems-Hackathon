@@ -2,13 +2,13 @@ import { Router } from "express";
 import { z } from "zod";
 import { asyncHandler } from "../lib/http";
 import {
-  aiComplete,
+  aiCompleteJSON,
   isGeminiConfigured,
   isOpenAiConfigured,
   type AiProvider,
 } from "../lib/aiProviders";
 import { ASSISTANT_SYSTEM_PROMPT } from "../lib/prompts";
-import { localAssistantReply } from "../lib/localAssistant";
+import { isAssistantNavId, localAssistantAnswer } from "../lib/localAssistant";
 
 export const assistantRouter = Router();
 
@@ -42,7 +42,6 @@ function buildUserContent(
     lines.push(`${turn.role === "user" ? "Teacher" : "Assistant"}: ${turn.content}`);
   }
   lines.push(`Teacher: ${message}`);
-  lines.push("Assistant:");
   return lines.join("\n");
 }
 
@@ -50,6 +49,12 @@ function pickProvider(): AiProvider | null {
   if (isOpenAiConfigured()) return "openai";
   if (isGeminiConfigured()) return "gemini";
   return null;
+}
+
+function sanitizeNav(raw: unknown): string | undefined {
+  if (typeof raw !== "string" || !raw.trim()) return undefined;
+  const id = raw.trim();
+  return isAssistantNavId(id) ? id : undefined;
 }
 
 assistantRouter.post(
@@ -60,24 +65,29 @@ assistantRouter.post(
 
     const provider = pickProvider();
     if (!provider) {
-      res.json({
-        reply: localAssistantReply(body.message, context),
-        analysisMode: "local" as const,
-      });
+      const local = localAssistantAnswer(body.message, context);
+      res.json({ ...local, analysisMode: "local" as const });
       return;
     }
 
-    const reply = await aiComplete({
+    const { data: result, provider: providerUsed } = await aiCompleteJSON<{
+      reply: string;
+      navigateTo?: string | null;
+    }>({
       systemPrompt: ASSISTANT_SYSTEM_PROMPT,
       userContent: buildUserContent(body.message, body.history, context),
       temperature: 0.55,
       provider,
     });
 
+    const navigateTo = sanitizeNav(result.navigateTo);
+    const fallback = localAssistantAnswer(body.message, context);
+
     res.json({
-      reply: reply.trim() || localAssistantReply(body.message, context),
+      reply: result.reply?.trim() || fallback.reply,
+      navigateTo: navigateTo ?? fallback.navigateTo,
       analysisMode: "ai" as const,
-      providerUsed: provider,
+      providerUsed,
     });
   }),
 );

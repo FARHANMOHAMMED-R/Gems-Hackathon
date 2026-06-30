@@ -2777,12 +2777,20 @@ textarea:focus {
   cursor: not-allowed;
 }
 
-.ai-assistant-speaking {
-  margin: 0;
-  padding: 0 12px 8px;
-  font-size: 11px;
-  color: var(--text-muted);
-  text-align: center;
+.ai-assistant-goto {
+  display: block;
+  margin: 4px 0 8px 4px;
+  padding: 6px 10px;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ai-assistant-goto:hover {
+  background: rgba(124, 58, 237, 0.08);
 }
 
 @media (max-width: 480px) {
