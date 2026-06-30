@@ -84,5 +84,21 @@ await page.locator(".nav-item").filter({ hasText: "Blueprint Generator" }).click
 await page.waitForTimeout(400);
 await shot(page, "04-blueprint-generator.png");
 
+await page.locator(".nav-item").filter({ hasText: "Text Leveler" }).click();
+await page.waitForTimeout(400);
+await shot(page, "05-text-leveler.png");
+
+await page.locator(".nav-item").filter({ hasText: "Substitution Finder" }).click();
+await page.waitForTimeout(400);
+await shot(page, "06-substitution-finder.png");
+
+await page.locator(".nav-item").filter({ hasText: "Lab Booking" }).click();
+await page.waitForTimeout(600);
+await shot(page, "07-lab-booking.png");
+
+await page.locator(".nav-item").filter({ hasText: "PPT Generator" }).click();
+await page.waitForTimeout(400);
+await shot(page, "08-ppt-generator.png");
+
 await browser.close();
 console.log("Done → docs/screenshots/");

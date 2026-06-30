@@ -14,18 +14,13 @@
 </p>
 
 <p align="center">
-  <a href="https://gems-class-flow.base44.app"><strong>🌐 Live app (any device) →</strong></a>
+  <a href="https://gems-class-flow.base44.app"><strong>🌐 Live demo →</strong></a>
   &nbsp;·&nbsp;
   <a href="http://localhost:5173"><strong>Local :5173 →</strong></a>
   &nbsp;·&nbsp;
+  <a href="http://localhost:4000/health"><strong>API health →</strong></a>
+  &nbsp;·&nbsp;
   <a href="https://github.com/FARHANMOHAMMED-R/Gems-Hackathon"><strong>GitHub →</strong></a>
-</p>
-
-<p align="center">
-  <sub>
-    Share your local app publicly: run <code>npm run share</code> at the repo root → get an
-    <code>https://</code> link for any phone or laptop
-  </sub>
 </p>
 
 <p align="center">
@@ -34,85 +29,59 @@
 
 ---
 
-## Universal link — works on any device
+## Project overview
 
-### Hosted (always on)
+**Gems Assist** is a full-stack teacher workspace built for the GEMS Hackathon. It replaces scattered spreadsheets and manual workflows with one app where CBSE teachers can:
+
+- **Grade faster** — OCR exam papers and notebooks with multi-provider AI
+- **Differentiate instruction** — adapt any passage to a target grade level (Text Leveler)
+- **Run the school day** — find substitute teachers by period, book labs without double-booking
+- **Communicate** — draft parent emails, generate assessments, and award student tokens
+
+The stack is **React + Vite** on the frontend, **Express + Prisma + SQLite** on the backend, with **OpenAI, Gemini, and Claude** for AI features. Teachers sign in with name and class; admins use passcode `farhan`.
+
+---
+
+## Live demo links
 
 | | URL |
 |---|---|
-| **🌐 Open Gems Assist** | [**https://gems-class-flow.base44.app**](https://gems-class-flow.base44.app) |
+| **Hosted app (any device)** | [**https://gems-class-flow.base44.app**](https://gems-class-flow.base44.app) |
+| **Local website** | [http://localhost:5173](http://localhost:5173) |
+| **Local API** | [http://localhost:4000](http://localhost:4000) |
+| **Health check** | [http://localhost:4000/health](http://localhost:4000/health) |
+| **GitHub** | [github.com/FARHANMOHAMMED-R/Gems-Hackathon](https://github.com/FARHANMOHAMMED-R/Gems-Hackathon) |
 
-### Your local app → public share link (full website + API)
+> **Note:** The hosted base44 link is frontend-only. For the full stack (API + AI), run locally or use `npm run share` to expose your local app publicly.
 
-Turn **http://localhost:5173** into a link anyone can open:
+### Share local app on any network
 
 ```bash
 npm run share
 ```
 
-This command:
-1. Starts Gems Assist at **http://localhost:5173** (builds first if needed)
-2. Prints a public **https://…** link that forwards to your local `:5173`
-
-Share that link on any phone, tablet, or laptop — any network, no Wi‑Fi password.
-
-```
-══════════════════════════════════════════════════
-  Local:   http://localhost:5173
-  Share:   https://your-name.loca.lt
-══════════════════════════════════════════════════
-```
-
-Keep the terminal open while others use the Share link. Press **Ctrl+C** to stop.
-
-> **Note:** The hosted base44 link is frontend-only. `npm run share` runs the **full stack** locally (API + AI keys from your `.env`).
+Starts **http://localhost:5173** and prints a public **https://…** link for phones, tablets, or laptops on any network.
 
 ---
 
-## Quick links
-
-| | URL |
-|---|---|
-| **Universal app (recommended)** | [**https://gems-class-flow.base44.app**](https://gems-class-flow.base44.app) |
-| **GitHub repository** | [github.com/FARHANMOHAMMED-R/Gems-Hackathon](https://github.com/FARHANMOHAMMED-R/Gems-Hackathon) |
-| **Share local :5173 publicly** | Run `npm run share` → get https link |
-| **Local website** | [http://localhost:5173](http://localhost:5173) |
-| **Local API** | [http://localhost:4000](http://localhost:4000) |
-| **Health check** | [http://localhost:4000/health](http://localhost:4000/health) |
-
----
-
-## Clone the repo
-
-```bash
-gh repo clone FARHANMOHAMMED-R/Gems-Hackathon
-# or
-git clone https://github.com/FARHANMOHAMMED-R/Gems-Hackathon.git
-cd Gems-Hackathon
-```
-
----
-
-## What it does
-
-Gems Assist gives teachers one place to run a modern classroom:
+## Key features
 
 | Feature | What you get |
 |---------|----------------|
-| **Class Roster** | Add, edit, import students by roll number, school ID & parent email |
 | **Scan Analyzer** | OCR exam papers & notebooks (OpenAI, Gemini, Claude, PDF Guru, Tesseract) |
 | **Blueprint Generator** | Upload a past paper → topic & marks breakdown |
-| **Content Differentiator** | Rewrite lessons for Advanced, Standard, Visual, or Neurodivergent tracks |
+| **Text Leveler** | Rewrite any passage for a target grade level (Gemini / OpenAI) |
+| **PPT Generator** | AI lesson slides (ChatGPT, Gemini, Claude) or offline template `.pptx` |
 | **Substitution Finder** | See which teachers are free by period |
 | **Lab Booking** | Reserve rooms with double-booking protection |
 | **3D Lab** | 115 unique PhET simulations (physics, chemistry & math) |
-| **Teacher Chat** | Staff lounge for cross-class messages |
-| **Lecture Recorder** | Record class audio, pin timestamped notes, AI timeline & summary |
-| **Performance Tracker** | Enter PT1 → Half Yearly → PT2 → Final marks per subject; line graphs per student |
-| **PPT Generator** | AI lesson slides (ChatGPT, Gemini, Claude) or offline template `.pptx` |
+| **Class Roster** | Add, edit, import students by roll number, school ID & parent email |
+| **Performance Tracker** | Enter PT1 → Half Yearly → PT2 → Final marks; line graphs per student |
 | **Parent Mailer** | Draft & send parent update emails (Resend or SMTP) |
-| **Assessment Assigner** | AI-generated assessments by chapter, topic & difficulty — email to parents |
+| **Assessment Assigner** | AI-generated assessments by chapter, topic & difficulty |
 | **Token Matrix** | Award points for answering, kindness & peer support |
+| **Lecture Recorder** | Record class audio, pin timestamped notes, AI timeline & summary |
+| **Teacher Chat** | Staff lounge for cross-class messages |
 | **Admin Dashboard** | Manage labs, broadcast notices, monitor teachers online |
 
 **Sign in**
@@ -122,19 +91,16 @@ Gems Assist gives teachers one place to run a modern classroom:
 | Teacher | Name, class (e.g. `11-A`), email |
 | Admin | Passcode `farhan` |
 
----
+### Demo data (pre-loaded for judges)
 
-## AI providers
+When you run the backend locally, demo data syncs automatically:
 
-Configure one or more keys in backend `.env` — the app picks the best available provider:
+| Tool | Demo state |
+|------|------------|
+| **Substitution Finder** | Irfana Ma'am (CS), Tina Ma'am (Math), Yogesh Sir (CHEM) — each with realistic free/busy periods |
+| **Lab Booking** | Chemistry Lab 2 — Period 1 (Yogesh Sir); Computer Lab 1 — Periods 2 & 6 (Irfana Ma'am) |
 
-| Provider | Env variable | Used for |
-|----------|--------------|----------|
-| **ChatGPT** | `OPENAI_API_KEY` | Grading, PPT, mail, assessments, Whisper OCR |
-| **Gemini** | `GEMINI_API_KEY` | Free-tier text, vision OCR, audio transcription |
-| **Claude** | `ANTHROPIC_API_KEY` | Text, vision OCR, summaries |
-
-Set `LLM_DEFAULT_PROVIDER=openai|gemini|claude` when multiple keys are present.
+Run `npm run seed` to reset demo data manually.
 
 ---
 
@@ -147,25 +113,51 @@ Set `LLM_DEFAULT_PROVIDER=openai|gemini|claude` when multiple keys are present.
       <br /><sub><b>Sign in</b> — teacher or admin</sub>
     </td>
     <td width="50%">
-      <img src="docs/screenshots/03-scan-analyzer.png" alt="Scan Analyzer for notebook and exam grading" />
-      <br /><sub><b>Scan Analyzer</b> — exam & notebook OCR</sub>
+      <img src="docs/screenshots/02-dashboard.png" alt="Dashboard with token leaderboard" />
+      <br /><sub><b>Dashboard</b> — token leaderboard & quick tools</sub>
     </td>
   </tr>
   <tr>
     <td width="50%">
+      <img src="docs/screenshots/03-scan-analyzer.png" alt="Scan Analyzer for notebook and exam grading" />
+      <br /><sub><b>Scan Analyzer</b> — exam & notebook OCR</sub>
+    </td>
+    <td width="50%">
       <img src="docs/screenshots/04-blueprint-generator.png" alt="Exam blueprint generator with topic distribution" />
       <br /><sub><b>Blueprint Generator</b> — marks & topic map</sub>
     </td>
+  </tr>
+  <tr>
     <td width="50%">
-      <img src="docs/screenshots/02-dashboard.png" alt="Dashboard with token leaderboard" />
-      <br /><sub><b>Dashboard</b> — token leaderboard</sub>
+      <img src="docs/screenshots/05-text-leveler.png" alt="Text Leveler adapting content to grade level" />
+      <br /><sub><b>Text Leveler</b> — adapt text to any grade</sub>
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/06-substitution-finder.png" alt="Substitution Finder showing free teachers" />
+      <br /><sub><b>Substitution Finder</b> — Irfana, Tina, Yogesh</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/07-lab-booking.png" alt="Lab Booking availability grid" />
+      <br /><sub><b>Lab Booking</b> — Chemistry Lab 2 & Computer Lab</sub>
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/08-ppt-generator.png" alt="PPT Generator with AI slide creation" />
+      <br /><sub><b>PPT Generator</b> — AI lesson slides</sub>
     </td>
   </tr>
 </table>
 
+Regenerate screenshots (with dev servers running):
+
+```bash
+node scripts/capture-readme-screenshots.mjs
+```
+
 ---
 
-## Quick start (local development)
+## Quick start
 
 **Requirements:** Node.js 18+, npm 9+
 
@@ -189,27 +181,26 @@ cd frontend && npm install && npm run dev   # → http://localhost:5173
 
 Open **http://localhost:5173**, sign in as a teacher, set up your class roster, and explore.
 
-### Run as one accessible site on :5173
+### Run as one site on :5173
 
 ```bash
 npm run site
 # → http://localhost:5173  (same Wi‑Fi: http://YOUR-LAN-IP:5173)
 ```
 
-### Turn localhost:5173 into a public share link (one command)
+---
 
-```bash
-npm run share
-```
+## AI providers
 
-Starts **http://localhost:5173** and prints a public **https://** URL for any device.
+Configure one or more keys in backend `.env` — the app picks the best available provider:
 
-### Share on other devices (same Wi‑Fi only)
+| Provider | Env variable | Used for |
+|----------|--------------|----------|
+| **ChatGPT** | `OPENAI_API_KEY` | Grading, PPT, mail, assessments, Whisper OCR |
+| **Gemini** | `GEMINI_API_KEY` | Free-tier text, vision OCR, audio transcription |
+| **Claude** | `ANTHROPIC_API_KEY` | Text, vision OCR, summaries |
 
-Vite prints a **Network** URL when the frontend starts, e.g. `http://192.168.1.42:5173`.  
-Other phones and laptops on the **same Wi‑Fi** can open that link — the dev server proxies `/api` to your machine.
-
-For access **outside your Wi‑Fi**, run **`npm run share`** for a public link to your full local app, or open the hosted frontend at **https://gems-class-flow.base44.app**
+Set `LLM_DEFAULT_PROVIDER=openai|gemini|claude` when multiple keys are present. Gemini is the default for Text Leveler and PPT Generator when configured.
 
 ---
 
@@ -255,7 +246,7 @@ Browser  →  React + Vite (:5173)  →  /api proxy  →  Express + Prisma (:400
 | `POST` | `/api/analyze-scan` | OCR + grade exam or notebook |
 | `GET` | `/api/scan/ocr-status` | Which OCR backends are configured |
 | `POST` | `/api/generate-blueprint` | Exam topic & marks blueprint |
-| `POST` | `/api/differentiate-content` | Adapt lesson content |
+| `POST` | `/api/differentiate-content` | Adapt lesson content (Text Leveler) |
 | `GET` | `/api/substitution/check-free` | Free teachers by period |
 | `POST` | `/api/labs/reserve` | Book a lab slot |
 | `GET` | `/api/labs/availability` | Daily availability grid |
@@ -291,7 +282,7 @@ Gems-Hackathon/
 ├── prisma/                 # Schema & seed
 ├── src/
 │   ├── index.ts            # Express app
-│   ├── lib/                # LLM, OCR, audio, PPT, helpers
+│   ├── lib/                # LLM, OCR, audio, PPT, demo data helpers
 │   └── routes/             # REST endpoints
 └── frontend/
     ├── src/pages/          # All app screens
@@ -308,15 +299,10 @@ Gems-Hackathon/
 | Root | `npm run share` | **Local :5173 → public https link** (one command) |
 | Root | `npm run site` | Build + run full app at **http://localhost:5173** |
 | Root | `npm run dev` | Backend with hot reload |
-| Root | `npm run seed` | Load demo students & labs |
+| Root | `npm run seed` | Load demo teachers & lab bookings |
+| Root | `npm run build:all` | Build backend + frontend |
 | `frontend/` | `npm run dev` | Website at **http://localhost:5173** |
 | `frontend/` | `npm run build` | Production bundle |
-
-Regenerate README screenshots (with dev servers running):
-
-```bash
-node scripts/capture-readme-screenshots.mjs
-```
 
 ---
 
