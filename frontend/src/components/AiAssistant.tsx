@@ -71,7 +71,7 @@ export function AiAssistant({ teacherName, classManaged, onNavigate }: AiAssista
       const any = backendProviders.find((p) => p.configured);
       return any ? providerLabel(any.id) : "AI";
     }
-    return localKeyReady ? ASSISTANT_PROVIDER_LABELS[provider] : "Offline";
+    return localKeyReady ? ASSISTANT_PROVIDER_LABELS[provider] : "Wikipedia";
   })();
 
   const scrollToBottom = useCallback(() => {
@@ -134,18 +134,41 @@ export function AiAssistant({ teacherName, classManaged, onNavigate }: AiAssista
     }
   }
 
+  async function tryFreeAnswer(msg: string): Promise<boolean> {
+    const local = localAssistantAnswer(msg, { teacherName, classManaged });
+    if (local.navigateTo) {
+      handleResult(local.reply, local.navigateTo);
+      return true;
+    }
+    if (isGeneralKnowledgeQuestion(msg)) {
+      const wiki = await fetchWikipediaAnswer(msg);
+      if (wiki) {
+        handleResult(wiki);
+        return true;
+      }
+    }
+    if (!aiReady) {
+      handleResult(local.reply);
+      return true;
+    }
+    return false;
+  }
+
   async function send() {
     const msg = input.trim();
     if (!msg || loading) return;
 
-    if (!aiReady) {
-      setSettingsOpen(true);
-      return;
-    }
-
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: msg }]);
     setLoading(true);
+
+    if (!aiReady) {
+      const answered = await tryFreeAnswer(msg);
+      if (answered) {
+        setLoading(false);
+        return;
+      }
+    }
 
     const history = messages
       .filter((m) => m.role === "user" || m.role === "assistant")
@@ -196,7 +219,9 @@ export function AiAssistant({ teacherName, classManaged, onNavigate }: AiAssista
             <div>
               <strong>Gems Assist AI</strong>
               <span className="ai-assistant-sub">
-                {aiReady ? `${activeProviderLabel} · general & app help` : "Add an API key to enable AI"}
+                {aiReady
+                  ? `${activeProviderLabel} · general & app help`
+                  : "Free · Wikipedia & app help"}
               </span>
             </div>
             <div className="ai-assistant-head-actions">
@@ -270,11 +295,11 @@ export function AiAssistant({ teacherName, classManaged, onNavigate }: AiAssista
           )}
 
           {!aiReady && !settingsOpen && (
-            <div className="ai-assistant-setup-banner">
-              <p>Add a free Gemini or OpenAI key to unlock full AI answers.</p>
-              <button type="button" onClick={() => setSettingsOpen(true)}>
-                Set up API key
-              </button>
+            <div className="ai-assistant-setup-banner ai-assistant-setup-banner-subtle">
+              <p>
+                Works free for history &amp; science questions. Tap ⚙ to optionally add Gemini for
+                smarter answers.
+              </p>
             </div>
           )}
 
@@ -314,7 +339,7 @@ export function AiAssistant({ teacherName, classManaged, onNavigate }: AiAssista
                   void send();
                 }
               }}
-              placeholder={aiReady ? "Type your question…" : "Set up API key first…"}
+              placeholder="Type your question…"
               disabled={loading}
               aria-label="Message to AI assistant"
             />
