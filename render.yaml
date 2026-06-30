@@ -14,7 +14,9 @@ services:
       - key: DATABASE_URL
         value: file:./data/prod.db
       - key: LLM_DEFAULT_PROVIDER
-        value: gemini
+        value: openai
+      - key: OPENAI_API_KEY
+        sync: false
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_MODEL

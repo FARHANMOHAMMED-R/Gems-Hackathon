@@ -30,6 +30,7 @@ import {
 } from "./lib/authSession";
 import { hasLocalRoster } from "./lib/classRoster";
 import { TeacherNotificationBox } from "./components/TeacherNotificationBox";
+import { AiAssistant } from "./components/AiAssistant";
 
 interface NavItem {
   id: string;
@@ -463,6 +464,8 @@ export function App() {
           aria-hidden
         />
       )}
+
+      <AiAssistant teacherName={displayName} classManaged={teacher?.classManaged} />
     </div>
   );
 }

@@ -22,6 +22,8 @@ import type {
   SendProfessionalEmailResponse,
   GenerateReportCommentsRequest,
   GenerateReportCommentsResponse,
+  AssistantChatRequest,
+  AssistantChatResponse,
   SendMailRequest,
   SendMailResponse,
   SendMailBatchRequest,
@@ -274,6 +276,14 @@ export const api = {
   // Report card comments
   generateReportComments: (body: GenerateReportCommentsRequest, signal?: AbortSignal) =>
     request<GenerateReportCommentsResponse>("/api/generate-report-comments", {
+      method: "POST",
+      body,
+      signal,
+    }),
+
+  // AI assistant
+  assistantChat: (body: AssistantChatRequest, signal?: AbortSignal) =>
+    request<AssistantChatResponse>("/api/assistant/chat", {
       method: "POST",
       body,
       signal,

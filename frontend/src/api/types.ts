@@ -471,6 +471,25 @@ export interface GenerateReportCommentsResponse {
   providerUsed?: AiProvider;
 }
 
+// --- AI assistant ---
+export interface AssistantChatTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface AssistantChatRequest {
+  message: string;
+  history?: AssistantChatTurn[];
+  teacherName?: string;
+  classManaged?: string;
+}
+
+export interface AssistantChatResponse {
+  reply: string;
+  analysisMode?: "ai" | "local";
+  providerUsed?: AiProvider;
+}
+
 // --- Parent mailer (legacy) ---
 export interface GenerateMailRequest {
   studentId: string;

@@ -23,6 +23,7 @@ import { pptRouter, aiRouter } from "./routes/ppt";
 import { performanceRouter } from "./routes/performance";
 import { lectureRouter } from "./routes/lecture";
 import { reportCommentsRouter } from "./routes/reportComments";
+import { assistantRouter } from "./routes/assistant";
 
 const app = express();
 
@@ -74,6 +75,7 @@ app.use("/api", substitutionRouter); // 4a. Smart Substitution
 app.use("/api", labsRouter); // 4b. Lab Booking Scheduler
 app.use("/api", mailRouter); // Professional Email + legacy mail routes
 app.use("/api", reportCommentsRouter); // Report card / EOY comments
+app.use("/api", assistantRouter); // Floating AI assistant
 app.use("/api", assessmentRouter); // 5c. Assessment Assigner
 app.use("/api", pptRouter); // 5d. PPT Generator
 app.use("/api", aiRouter); // AI provider status
