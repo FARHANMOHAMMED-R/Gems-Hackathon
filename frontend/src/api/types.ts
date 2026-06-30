@@ -265,6 +265,8 @@ export interface PptDeck {
   slides: PptSlide[];
 }
 
+export type PptEngine = "gems" | "skywork";
+
 export interface GeneratePptRequest {
   classManaged: string;
   grade: string;
@@ -275,15 +277,18 @@ export interface GeneratePptRequest {
   audience?: "students" | "teachers";
   additionalNotes?: string;
   provider?: AiProvider;
+  engine?: PptEngine;
+  skyworkApiKey?: string;
 }
 
 export interface PptGenerateResponse {
   deck: PptDeck;
   fileName: string;
   pptxBase64: string;
-  analysisMode: "ai" | "local";
-  providerUsed: AiProvider | "local";
+  analysisMode: "ai" | "local" | "skywork";
+  providerUsed: AiProvider | "local" | "skywork";
   slideCount: number;
+  skyworkDownloadUrl?: string;
 }
 
 // --- Performance tracker ---

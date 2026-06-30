@@ -9,12 +9,16 @@ import {
 } from "../lib/aiProviders";
 import { generatePptLocally } from "../lib/localPptGenerator";
 import { buildPptxBuffer, deckFileName, type PptDeck } from "../lib/pptBuilder";
+import { deckFromSkyworkOutline, placeholderSkyworkDeck } from "../lib/skyworkPptDeck";
+import { buildSkyworkQuery, generateSkyworkPpt } from "../lib/skyworkPpt";
 import { PPT_SYSTEM_PROMPT } from "../lib/prompts";
 
 export const pptRouter = Router();
 export const aiRouter = Router();
 
 const providerSchema = z.enum(["openai", "gemini", "claude"]).optional();
+
+const engineSchema = z.enum(["gems", "skywork"]).optional().default("gems");
 
 const generateSchema = z.object({
   classManaged: z.string().min(1),
@@ -26,6 +30,8 @@ const generateSchema = z.object({
   audience: z.enum(["students", "teachers"]).default("students"),
   additionalNotes: z.string().trim().optional(),
   provider: providerSchema,
+  engine: engineSchema,
+  skyworkApiKey: z.string().trim().min(10).max(512).optional(),
 });
 
 aiRouter.get(
@@ -39,6 +45,49 @@ pptRouter.post(
   "/generate-ppt",
   asyncHandler(async (req, res) => {
     const body = generateSchema.parse(req.body);
+
+    if (body.engine === "skywork") {
+      const skyworkKey =
+        body.skyworkApiKey?.trim() || process.env.SKYWORK_API_KEY?.trim() || "";
+      if (!skyworkKey) {
+        throw new ApiError(
+          422,
+          "Skywork API key required. Get one at skywork.ai/?openApiKeySetting=1",
+        );
+      }
+
+      const query = buildSkyworkQuery(body);
+      const skywork = await generateSkyworkPpt({
+        query,
+        apiKey: skyworkKey,
+        language: "English",
+      });
+
+      const deck: PptDeck = skywork.outline.trim()
+        ? deckFromSkyworkOutline(skywork.outline, {
+            topic: body.topic,
+            subject: body.subject,
+            grade: body.grade,
+          })
+        : placeholderSkyworkDeck({
+            topic: body.topic,
+            subject: body.subject,
+            grade: body.grade,
+            slideCount: body.slideCount,
+          });
+
+      const fileName = deckFileName(deck, body.classManaged).replace(/\.pptx$/i, "-skywork.pptx");
+
+      return res.json({
+        deck,
+        fileName,
+        pptxBase64: skywork.pptxBuffer.toString("base64"),
+        analysisMode: "skywork" as const,
+        providerUsed: "skywork" as const,
+        slideCount: deck.slides.length,
+        skyworkDownloadUrl: skywork.downloadUrl,
+      });
+    }
 
     let deck: PptDeck;
     let analysisMode: "ai" | "local";
