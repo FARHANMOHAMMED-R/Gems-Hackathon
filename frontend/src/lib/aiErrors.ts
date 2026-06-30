@@ -9,7 +9,7 @@ export function friendlyAiErrorMessage(err: unknown, provider?: string): string 
   if (isAiQuotaError(err)) {
     if (provider === "openai" || /openai/i.test(raw)) {
       return (
-        "OpenAI credits are used up. Switch to Google Gemini (free key at aistudio.google.com/apikey)."
+        "OpenAI credits are used up — switched to Google Gemini. Paste a free key at aistudio.google.com/apikey below, then generate again."
       );
     }
     return "AI rate limit or quota reached. Wait a minute or switch provider in the dropdown below.";

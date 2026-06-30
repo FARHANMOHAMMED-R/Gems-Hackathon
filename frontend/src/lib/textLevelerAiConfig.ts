@@ -23,7 +23,7 @@ export const TEXT_LEVELER_PROVIDER_PLACEHOLDERS: Record<TextLevelerProvider, str
   openai: "sk-…",
 };
 
-/** Dropdown order — Gemini first everywhere. */
+/** Dropdown order — Gemini first (free tier). */
 export const TEXT_LEVELER_PROVIDERS: TextLevelerProvider[] = ["gemini", "openai"];
 
 function migrateLegacyOpenAiKey(): TextLevelerAiConfig | null {

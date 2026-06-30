@@ -8,12 +8,14 @@ import {
   READING_PROFILE_LABELS,
 } from "../data/readingProfiles";
 import { levelTextWithProvider } from "../lib/clientTextLeveler";
-import { bootstrapGeminiFromEnv, persistGeminiKeyEverywhere } from "../lib/bootstrapGeminiAi";
+import { bootstrapAiFromEnv, persistOpenAiKeyEverywhere, persistGeminiKeyEverywhere } from "../lib/bootstrapAiKeys";
 import { friendlyAiErrorMessage, isAiQuotaError } from "../lib/aiErrors";
 import { loadAssistantAiConfig } from "../lib/assistantAiConfig";
 import {
+  alternateTextLevelerProvider,
   defaultTextLevelerProvider,
   persistTextLevelerCredentials,
+  resolveCredentialsForProvider,
   resolveTextLevelerCredentials,
   type TextLevelerCredentialSource,
   type TextLevelerCredentials,
@@ -93,7 +95,7 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
     Boolean(assistantKey?.apiKey && assistantKey.apiKey.length >= 10);
 
   useEffect(() => {
-    bootstrapGeminiFromEnv();
+    bootstrapAiFromEnv();
     api
       .getAiProviders()
       .then((res) =>
@@ -105,7 +107,7 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
   }, []);
 
   useEffect(() => {
-    bootstrapGeminiFromEnv();
+    bootstrapAiFromEnv();
     const resolved = resolveTextLevelerCredentials(provider, apiKey, backendProviders);
     if (resolved?.apiKey && !apiKey.trim()) {
       setProvider(resolved.provider);
@@ -187,7 +189,7 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
     });
     if (res.analysisMode === "local") {
       throw new Error(
-        "Server could not reach AI — paste a free Gemini key from aistudio.google.com/apikey below.",
+        "Server could not reach AI — add a free Gemini key from aistudio.google.com/apikey below.",
       );
     }
     return { markdown: res.content, mode: res.analysisMode ?? "ai" };
@@ -206,7 +208,7 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
     const resolved = resolveTextLevelerCredentials(provider, apiKey, backendProviders);
     if (!resolved) {
       setShowApiSettings(true);
-      toast.error("Connect a Gemini key once below, then generate again.");
+      toast.error("Connect a Gemini or OpenAI key below, then generate again.");
       return;
     }
 
@@ -235,18 +237,22 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
       } catch (firstErr) {
         if (!isAiQuotaError(firstErr)) throw firstErr;
 
-        const alternate: TextLevelerProvider =
-          activeCreds.provider === "openai" ? "gemini" : "openai";
-        const altCreds = resolveTextLevelerCredentials(alternate, "", backendProviders);
-        if (!altCreds || altCreds.provider === activeCreds.provider) throw firstErr;
+        const alternate = alternateTextLevelerProvider(activeCreds.provider);
+        const altCreds = resolveCredentialsForProvider(alternate, "", backendProviders);
+        if (!altCreds || altCreds.provider === activeCreds.provider) {
+          setProvider(alternate);
+          setApiKey("");
+          throw firstErr;
+        }
 
-        toast.info(`${TEXT_LEVELER_PROVIDER_LABELS[activeCreds.provider]} limit — trying ${TEXT_LEVELER_PROVIDER_LABELS[alternate]}…`);
+        toast.info(
+          `${TEXT_LEVELER_PROVIDER_LABELS[activeCreds.provider]} limit — trying ${TEXT_LEVELER_PROVIDER_LABELS[alternate]}…`,
+        );
         activeCreds = altCreds;
         persistTextLevelerCredentials(activeCreds);
-        if (activeCreds.apiKey) {
-          setProvider(activeCreds.provider);
-          setApiKey(activeCreds.apiKey);
-        }
+        setProvider(activeCreds.provider);
+        if (activeCreds.apiKey) setApiKey(activeCreds.apiKey);
+        else setApiKey("");
         result = await levelTextWithCreds(activeCreds, text);
       }
 
@@ -261,7 +267,12 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
         `Leveled for ${gradeLevel} with ${TEXT_LEVELER_PROVIDER_LABELS[activeCreds.provider]}.`,
       );
     } catch (err) {
-      const msg = friendlyAiErrorMessage(err, resolved.provider);
+      const msg = friendlyAiErrorMessage(err, activeCreds?.provider ?? resolved.provider);
+      if (isAiQuotaError(err)) {
+        const fallback = alternateTextLevelerProvider(activeCreds?.provider ?? resolved.provider);
+        setProvider(fallback);
+        setApiKey("");
+      }
       setError(msg);
       setShowApiSettings(true);
       toast.error(msg);
@@ -293,7 +304,9 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
       toast.error("Paste a valid API key.");
       return;
     }
-    if (provider === "gemini") {
+    if (provider === "openai") {
+      persistOpenAiKeyEverywhere(trimmed);
+    } else if (provider === "gemini") {
       persistGeminiKeyEverywhere(trimmed);
     } else {
       saveTextLevelerAiConfig({ provider, apiKey: trimmed });
@@ -429,7 +442,7 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
             ✓ AI connected
             {creds?.apiKey
               ? ` (${TEXT_LEVELER_PROVIDER_LABELS[creds.provider]})`
-              : " (server Gemini)"}
+              : " (server AI)"}
             {" — "}
             <button
               type="button"
@@ -450,7 +463,7 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
               style={{ padding: 0, fontSize: "inherit" }}
               onClick={() => setShowApiSettings(true)}
             >
-              Connect Gemini for AI
+              Connect Gemini or OpenAI for AI
             </button>
           </p>
         )}

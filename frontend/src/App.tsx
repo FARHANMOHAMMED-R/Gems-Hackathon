@@ -31,7 +31,7 @@ import {
 import { hasLocalRoster } from "./lib/classRoster";
 import { TeacherNotificationBox } from "./components/TeacherNotificationBox";
 import { AiAssistant } from "./components/AiAssistant";
-import { bootstrapGeminiFromEnv } from "./lib/bootstrapGeminiAi";
+import { bootstrapAiFromEnv } from "./lib/bootstrapAiKeys";
 
 interface NavItem {
   id: string;
@@ -215,7 +215,7 @@ export function App() {
       : [];
 
   useEffect(() => {
-    bootstrapGeminiFromEnv();
+    bootstrapAiFromEnv();
   }, []);
 
   useEffect(() => {

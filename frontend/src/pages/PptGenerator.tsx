@@ -18,13 +18,17 @@ import {
   type TextLevelerProvider,
 } from "../lib/textLevelerAiConfig";
 import { loadAssistantAiConfig } from "../lib/assistantAiConfig";
-import { bootstrapGeminiFromEnv, persistGeminiKeyEverywhere } from "../lib/bootstrapGeminiAi";
+import { bootstrapAiFromEnv, persistOpenAiKeyEverywhere, persistGeminiKeyEverywhere } from "../lib/bootstrapAiKeys";
+import { friendlyAiErrorMessage, isAiQuotaError } from "../lib/aiErrors";
 import { buildPptxBase64, deckFileName } from "../lib/buildPptx";
 import { clientGeneratePptDeck } from "../lib/clientPptGenerator";
 import {
+  alternateTextLevelerProvider,
   defaultTextLevelerProvider,
   persistTextLevelerCredentials,
+  resolveCredentialsForProvider,
   resolveTextLevelerCredentials,
+  type TextLevelerCredentials,
 } from "../lib/resolveTextLevelerCredentials";
 import { resolveSkyworkApiKey } from "../lib/resolvePptCredentials";
 import { Card, EmptyState, ErrorNote, Field, Spinner } from "../components/ui";
@@ -84,7 +88,7 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
   const [showApiSettings, setShowApiSettings] = useState(false);
 
   useEffect(() => {
-    bootstrapGeminiFromEnv();
+    bootstrapAiFromEnv();
     api
       .getAiProviders()
       .then((res) => setProviders(res.providers))
@@ -102,7 +106,7 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
   const formReady = topic.trim().length > 0 && chapters.trim().length > 0;
 
   useEffect(() => {
-    bootstrapGeminiFromEnv();
+    bootstrapAiFromEnv();
     const resolved = resolveTextLevelerCredentials(provider, gemsApiKey, backendProviders);
     if (resolved?.apiKey && !gemsApiKey.trim()) {
       setProvider(resolved.provider);
@@ -123,7 +127,9 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
       toast.error("Paste a valid API key.");
       return;
     }
-    if (provider === "gemini") {
+    if (provider === "openai") {
+      persistOpenAiKeyEverywhere(trimmed);
+    } else if (provider === "gemini") {
       persistGeminiKeyEverywhere(trimmed);
     } else {
       saveTextLevelerAiConfig({ provider, apiKey: trimmed });
@@ -144,7 +150,9 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
     }
     setProvider(assistant.provider);
     setGemsApiKey(assistant.apiKey);
-    if (assistant.provider === "gemini") {
+    if (assistant.provider === "openai") {
+      persistOpenAiKeyEverywhere(assistant.apiKey);
+    } else if (assistant.provider === "gemini") {
       persistGeminiKeyEverywhere(assistant.apiKey);
     } else {
       saveTextLevelerAiConfig({ provider: assistant.provider, apiKey: assistant.apiKey });
@@ -191,13 +199,13 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
       const trimmedSkyworkKey = resolveSkyworkApiKey(skyworkKey) ?? "";
 
       if (engine === "gems" && creds?.apiKey) {
-        persistTextLevelerCredentials(creds);
-        setProvider(creds.provider);
-        setGemsApiKey(creds.apiKey);
+        let activeCreds = creds as TextLevelerCredentials & { apiKey: string };
+        persistTextLevelerCredentials(activeCreds);
+        setProvider(activeCreds.provider);
+        setGemsApiKey(activeCreds.apiKey);
         setShowApiSettings(false);
-        setProgress(`Calling ${TEXT_LEVELER_PROVIDER_LABELS[creds.provider]}…`);
 
-        const deck = await clientGeneratePptDeck(creds.provider, creds.apiKey, {
+        const deckInput = {
           classManaged,
           grade,
           subject,
@@ -205,7 +213,33 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
           chapters: chapters.trim(),
           slideCount,
           additionalNotes: additionalNotes.trim() || undefined,
-        });
+        };
+
+        let deck;
+        try {
+          setProgress(`Calling ${TEXT_LEVELER_PROVIDER_LABELS[activeCreds.provider]}…`);
+          deck = await clientGeneratePptDeck(activeCreds.provider, activeCreds.apiKey, deckInput);
+        } catch (firstErr) {
+          if (!isAiQuotaError(firstErr)) throw firstErr;
+
+          const alternate = alternateTextLevelerProvider(activeCreds.provider);
+          const altCreds = resolveCredentialsForProvider(alternate, "", backendProviders);
+          if (!altCreds?.apiKey || altCreds.provider === activeCreds.provider) {
+            setProvider(alternate);
+            setGemsApiKey("");
+            throw firstErr;
+          }
+
+          toast.info(
+            `${TEXT_LEVELER_PROVIDER_LABELS[activeCreds.provider]} limit — trying ${TEXT_LEVELER_PROVIDER_LABELS[alternate]}…`,
+          );
+          activeCreds = { ...altCreds, apiKey: altCreds.apiKey };
+          persistTextLevelerCredentials(activeCreds);
+          setProvider(activeCreds.provider);
+          setGemsApiKey(activeCreds.apiKey);
+          setProgress(`Calling ${TEXT_LEVELER_PROVIDER_LABELS[activeCreds.provider]}…`);
+          deck = await clientGeneratePptDeck(activeCreds.provider, activeCreds.apiKey, deckInput);
+        }
 
         setProgress("Building PowerPoint file…");
         const pptxBase64 = await buildPptxBase64(deck);
@@ -216,10 +250,10 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
           fileName,
           pptxBase64,
           analysisMode: "ai",
-          providerUsed: creds.provider,
+          providerUsed: activeCreds.provider,
           slideCount: deck.slides.length,
         });
-        toast.success(`Created ${deck.slides.length} slides with ${TEXT_LEVELER_PROVIDER_LABELS[creds.provider]}.`);
+        toast.success(`Created ${deck.slides.length} slides with ${TEXT_LEVELER_PROVIDER_LABELS[activeCreds.provider]}.`);
         return;
       }
 
@@ -249,7 +283,7 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
       }
       if (res.analysisMode === "local" && engine === "gems" && !creds) {
         setShowApiSettings(true);
-        toast.info("Add a free Gemini key below for AI slides, or use the outline deck.");
+        toast.info("Add a Gemini or OpenAI key below for AI slides, or use the outline deck.");
       } else {
         setShowApiSettings(false);
       }
@@ -268,14 +302,22 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
             : "Request timed out. Check your API key and try again.",
         );
       } else if (err instanceof ApiError && err.isLlmNotConfigured) {
-        setError("Could not reach AI. Add a free Gemini key below, or try again.");
+        setError("Could not reach AI. Add a Gemini key below, or try again.");
         setShowApiSettings(true);
       } else {
-        const msg = err instanceof Error ? err.message : "Generation failed.";
+        const msg = friendlyAiErrorMessage(err, provider);
+        if (isAiQuotaError(err)) {
+          setProvider(alternateTextLevelerProvider(provider));
+          setGemsApiKey("");
+        }
         setError(msg);
         setShowApiSettings(true);
       }
-      toast.error(err instanceof Error ? err.message : "Could not generate PPT.");
+      toast.error(
+        err instanceof ApiError && err.isLlmNotConfigured
+          ? "Could not reach AI."
+          : friendlyAiErrorMessage(err, provider),
+      );
     } finally {
       window.clearTimeout(timeout);
       setLoading(false);
@@ -329,7 +371,7 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
             ✓ AI connected
             {gemsCreds?.apiKey
               ? ` (${TEXT_LEVELER_PROVIDER_LABELS[gemsCreds.provider]})`
-              : " (server Gemini)"}
+              : " (server AI)"}
             {" — "}
             <button
               type="button"
@@ -412,7 +454,7 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
               style={{ padding: 0, fontSize: "inherit" }}
               onClick={() => setShowApiSettings(true)}
             >
-              Connect Gemini for AI slides
+              Connect Gemini or OpenAI for AI slides
             </button>
             {" "}(outline deck works without a key)
           </p>
