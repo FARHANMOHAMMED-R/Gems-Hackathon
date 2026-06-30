@@ -3,7 +3,7 @@ const FEATURES = [
   { id: "students", icon: "👥", label: "Student list", blurb: "Change names, rolls & school IDs" },
   { id: "scan", icon: "📝", label: "Scan Analyzer", blurb: "AI grading for exams & notebooks" },
   { id: "blueprint", icon: "📋", label: "Blueprint Generator", blurb: "Exam paper topic & marks map" },
-  { id: "content", icon: "🎯", label: "Content Differentiator", blurb: "Adapt lessons to every learner" },
+  { id: "content", icon: "📖", label: "Text Leveler", blurb: "Adapt text to any grade level" },
   { id: "substitution", icon: "🔁", label: "Substitution Finder", blurb: "Find free teachers by period" },
   { id: "labs", icon: "🔬", label: "Lab Booking", blurb: "Reserve labs, avoid clashes" },
   { id: "3dlab", icon: "🧪", label: "3D Lab", blurb: "PhET physics, chemistry & math sims" },

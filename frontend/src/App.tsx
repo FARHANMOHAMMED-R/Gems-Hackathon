@@ -88,10 +88,10 @@ function buildTeacherNav(teacher: TeacherSession): NavItem[] {
     },
     {
       id: "content",
-      label: "Content Differentiator",
-      icon: "🎯",
-      blurb: "Adapt lessons to every learner",
-      render: () => <ContentDifferentiator />,
+      label: "Text Leveler",
+      icon: "📖",
+      blurb: "Adapt text to any grade reading level",
+      render: () => <ContentDifferentiator classManaged={classManaged} />,
     },
     {
       id: "substitution",

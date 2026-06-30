@@ -345,22 +345,50 @@ export interface ProcessLectureRequest {
   provider?: AiProvider;
 }
 
-// --- Content differentiation ---
+// --- Text Leveler (content differentiation) ---
 export type DifferentiationTarget =
   | "Advanced"
   | "Standard"
   | "Simplified Visual"
   | "Neurodivergent";
 
+export type GradeLevel =
+  | "Pre-K"
+  | "Kindergarten"
+  | "1st grade"
+  | "2nd grade"
+  | "3rd grade"
+  | "4th grade"
+  | "5th grade"
+  | "6th grade"
+  | "7th grade"
+  | "8th grade"
+  | "9th grade"
+  | "10th grade"
+  | "11th grade"
+  | "12th grade";
+
+export type ReadingProfile =
+  | "None"
+  | "Dyslexia"
+  | "ADHD"
+  | "English Language Learner"
+  | "Visual impairment";
+
 export interface DifferentiateRequest {
   content: string;
-  target: DifferentiationTarget;
+  gradeLevel: GradeLevel;
+  readingProfile?: ReadingProfile;
+  provider?: AiProvider;
+  apiKey?: string;
 }
 
 export interface DifferentiateResponse {
-  target: DifferentiationTarget;
+  gradeLevel: GradeLevel;
+  readingProfile?: ReadingProfile;
   content: string;
   analysisMode?: "ai" | "local";
+  providerUsed?: AiProvider;
 }
 
 // --- Substitution ---

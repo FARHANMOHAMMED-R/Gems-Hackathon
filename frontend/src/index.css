@@ -2551,6 +2551,21 @@ textarea:focus {
   color: var(--text-muted);
 }
 
+.text-leveler-key-box {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(124, 58, 237, 0.04);
+}
+
+.text-leveler-key-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
 .pro-email-generate {
   width: 100%;
   padding: 14px 20px;

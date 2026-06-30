@@ -69,7 +69,7 @@ Return strict JSON:
 Be grounded only in the uploaded paper. If marks are not stated, infer typical CBSE weightings honestly and note uncertainty in descriptions.`;
 
 /* ------------------------------------------------------------------ */
-/* 3. Differentiated Content Generation                               */
+/* 3. Text Leveler (formerly Content Differentiator)                  */
 /* ------------------------------------------------------------------ */
 
 export type DifferentiationTarget =
@@ -78,7 +78,7 @@ export type DifferentiationTarget =
   | "Simplified Visual"
   | "Neurodivergent";
 
-/** Exact per-target system prompts for /api/differentiate-content. */
+/** @deprecated — use TEXT_LEVELER_SYSTEM_PROMPT with gradeLevel */
 export const DIFFERENTIATION_PROMPTS: Record<DifferentiationTarget, string> = {
   Advanced:
     "Convert this educational content into a high-level academic research primer containing extended exploratory concepts, deeper mathematical frameworks, and logic proofs.",

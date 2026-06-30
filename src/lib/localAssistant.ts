@@ -23,7 +23,7 @@ export const ASSISTANT_NAV_LABELS: Record<AssistantNavId, string> = {
   students: "Student list",
   scan: "Scan Analyzer",
   blueprint: "Blueprint Generator",
-  content: "Content Differentiator",
+  content: "Text Leveler",
   substitution: "Substitution Finder",
   labs: "Lab Booking",
   "3dlab": "3D Lab",
@@ -83,7 +83,7 @@ export function detectAppNavigation(message: string): AssistantNavId | null {
   if (/lecture.?record|record.?class|transcri/.test(q)) {
     return "lecture";
   }
-  if (/differentiat|dyslexia|adhd|adapt.?content|iep/.test(q)) {
+  if (/text.?level|level.?text|reading.?level|differentiat|dyslexia|adhd|adapt.?content|iep/.test(q)) {
     return "content";
   }
   if (/substitut|cover.?class|free.?teacher/.test(q)) {
