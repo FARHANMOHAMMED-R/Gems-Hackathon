@@ -6,6 +6,13 @@ const SYSTEM_PROMPT =
   "Keep the same facts but use vocabulary and sentence length appropriate for that grade. " +
   "Return markdown only.";
 
+const GEMINI_MODELS = [
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-latest",
+  "gemini-1.5-flash-8b",
+];
+
 function gradeRules(gradeLevel: GradeLevel): string {
   if (gradeLevel === "Pre-K" || gradeLevel === "Kindergarten") {
     return (
@@ -31,14 +38,13 @@ function profileHint(profile: ReadingProfile): string {
   return "";
 }
 
-export async function clientOpenAiLevelText(
-  apiKey: string,
+function buildUserPrompt(
   content: string,
   gradeLevel: GradeLevel,
   readingProfile: ReadingProfile,
-): Promise<string> {
+): string {
   const profileLine = profileHint(readingProfile);
-  const userPrompt = [
+  return [
     `TARGET GRADE: ${gradeLevel}`,
     `RULES: ${gradeRules(gradeLevel)}`,
     profileLine ? `PROFILE: ${profileLine}` : "",
@@ -49,6 +55,23 @@ export async function clientOpenAiLevelText(
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+function parseApiError(body: unknown, fallback: string): string {
+  if (body && typeof body === "object") {
+    const err = body as { error?: { message?: string } };
+    if (err.error?.message) return err.error.message;
+  }
+  return fallback;
+}
+
+export async function clientOpenAiLevelText(
+  apiKey: string,
+  content: string,
+  gradeLevel: GradeLevel,
+  readingProfile: ReadingProfile,
+): Promise<string> {
+  const userPrompt = buildUserPrompt(content, gradeLevel, readingProfile);
 
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -72,7 +95,7 @@ export async function clientOpenAiLevelText(
   };
 
   if (!res.ok) {
-    throw new Error(body.error?.message ?? `OpenAI error (${res.status})`);
+    throw new Error(parseApiError(body, `OpenAI error (${res.status})`));
   }
 
   const text = body.choices?.[0]?.message?.content?.trim();
@@ -80,27 +103,13 @@ export async function clientOpenAiLevelText(
   return text;
 }
 
-export async function clientGeminiLevelText(
+async function callGeminiModel(
+  model: string,
   apiKey: string,
-  content: string,
-  gradeLevel: GradeLevel,
-  readingProfile: ReadingProfile,
+  userPrompt: string,
 ): Promise<string> {
-  const profileLine = profileHint(readingProfile);
-  const userPrompt = [
-    `TARGET GRADE: ${gradeLevel}`,
-    `RULES: ${gradeRules(gradeLevel)}`,
-    profileLine ? `PROFILE: ${profileLine}` : "",
-    "",
-    "Rewrite completely — do NOT copy original sentences.",
-    "",
-    content.trim(),
-  ]
-    .filter(Boolean)
-    .join("\n");
-
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(apiKey.trim())}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey.trim())}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -118,10 +127,43 @@ export async function clientGeminiLevelText(
   };
 
   if (!res.ok) {
-    throw new Error(body.error?.message ?? `Gemini error (${res.status})`);
+    throw new Error(parseApiError(body, `Gemini error (${res.status})`));
   }
 
   const text = body.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("").trim();
   if (!text) throw new Error("Gemini returned an empty response.");
   return text;
+}
+
+export async function clientGeminiLevelText(
+  apiKey: string,
+  content: string,
+  gradeLevel: GradeLevel,
+  readingProfile: ReadingProfile,
+): Promise<string> {
+  const userPrompt = buildUserPrompt(content, gradeLevel, readingProfile);
+  let lastError: Error | null = null;
+
+  for (const model of GEMINI_MODELS) {
+    try {
+      return await callGeminiModel(model, apiKey, userPrompt);
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+    }
+  }
+
+  throw lastError ?? new Error("All Gemini models failed.");
+}
+
+export async function levelTextWithProvider(
+  provider: "openai" | "gemini",
+  apiKey: string,
+  content: string,
+  gradeLevel: GradeLevel,
+  readingProfile: ReadingProfile,
+): Promise<string> {
+  if (provider === "openai") {
+    return clientOpenAiLevelText(apiKey, content, gradeLevel, readingProfile);
+  }
+  return clientGeminiLevelText(apiKey, content, gradeLevel, readingProfile);
 }
