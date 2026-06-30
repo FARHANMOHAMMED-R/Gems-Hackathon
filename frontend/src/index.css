@@ -403,6 +403,22 @@ code {
   box-shadow: 0 6px 18px rgba(34, 197, 94, 0.4);
 }
 
+.dashboard-dojo {
+  margin-top: 8px;
+}
+
+.dashboard-dojo-title {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.dashboard-dojo-sub {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
 .welcome-features {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));

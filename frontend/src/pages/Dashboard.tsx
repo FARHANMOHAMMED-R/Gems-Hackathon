@@ -1,3 +1,5 @@
+import { ClassDojo } from "./ClassDojo";
+
 const FEATURES = [
   { id: "classdojo", icon: "⭐", label: "Class Dojo", blurb: "Points, rewards & leaderboard" },
   { id: "students", icon: "👥", label: "Student list", blurb: "Change names, rolls & school IDs" },
@@ -54,6 +56,14 @@ export function Dashboard({
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="dashboard-dojo">
+        <h3 className="dashboard-dojo-title">Class Dojo</h3>
+        <p className="dashboard-dojo-sub">
+          Award points and view your class leaderboard without leaving the dashboard.
+        </p>
+        <ClassDojo classManaged={classManaged} onNavigate={onNavigate} embedded />
       </section>
     </div>
   );

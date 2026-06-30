@@ -13,9 +13,12 @@ const REASONS: { value: AwardReason; label: string; points: number; icon: string
 export function ClassDojo({
   classManaged,
   onNavigate,
+  embedded = false,
 }: {
   classManaged: string;
   onNavigate?: (id: string) => void;
+  /** When true, hide the hero — for inline use on the Dashboard. */
+  embedded?: boolean;
 }) {
   const toast = useToast();
   const [board, setBoard] = useState<LeaderboardEntry[] | null>(null);
@@ -86,18 +89,20 @@ export function ClassDojo({
 
   return (
     <div className="stack">
-      <section className="welcome-hero class-dojo-hero">
-        <div className="welcome-mark" aria-hidden>
-          ⭐
-        </div>
-        <div className="welcome-body">
-          <h2 className="welcome-title">Class Dojo</h2>
-          <p className="welcome-tagline">
-            Class <strong>{classManaged}</strong> — reward students in real time. Everyone starts
-            at <strong>0</strong> points.
-          </p>
-        </div>
-      </section>
+      {!embedded && (
+        <section className="welcome-hero class-dojo-hero">
+          <div className="welcome-mark" aria-hidden>
+            ⭐
+          </div>
+          <div className="welcome-body">
+            <h2 className="welcome-title">Class Dojo</h2>
+            <p className="welcome-tagline">
+              Class <strong>{classManaged}</strong> — reward students in real time. Everyone starts
+              at <strong>0</strong> points.
+            </p>
+          </div>
+        </section>
+      )}
 
       <div className="grid grid-2">
         <Card
