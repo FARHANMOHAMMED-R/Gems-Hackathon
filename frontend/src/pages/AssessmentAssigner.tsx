@@ -13,6 +13,7 @@ import {
 import { clientGenerateAssessment } from "../lib/clientAssessmentGenerator";
 import { loadAssistantAiConfig } from "../lib/assistantAiConfig";
 import {
+  defaultTextLevelerProvider,
   persistTextLevelerCredentials,
   resolveTextLevelerCredentials,
 } from "../lib/resolveTextLevelerCredentials";
@@ -22,6 +23,7 @@ import {
   TEXT_LEVELER_PROVIDER_HINTS,
   TEXT_LEVELER_PROVIDER_LABELS,
   TEXT_LEVELER_PROVIDER_PLACEHOLDERS,
+  TEXT_LEVELER_PROVIDERS,
   type TextLevelerProvider,
 } from "../lib/textLevelerAiConfig";
 import { Card, EmptyState, ErrorNote, Field, Spinner } from "../components/ui";
@@ -50,7 +52,9 @@ export function AssessmentAssigner({
   const grade = useMemo(() => parseGrade(classManaged), [classManaged]);
 
   const savedAi = loadTextLevelerAiConfig();
-  const [provider, setProvider] = useState<TextLevelerProvider>(savedAi?.provider ?? "openai");
+  const [provider, setProvider] = useState<TextLevelerProvider>(
+    savedAi?.provider ?? defaultTextLevelerProvider(),
+  );
   const [apiKey, setApiKey] = useState(savedAi?.apiKey ?? "");
   const [showApiSettings, setShowApiSettings] = useState(false);
   const [backendProviders, setBackendProviders] = useState<
@@ -205,7 +209,7 @@ export function AssessmentAssigner({
             : resolved?.provider ?? null;
         setAiProviderUsed(used);
       } else {
-        toast.info("Template questions created. Add an OpenAI key for custom AI questions.");
+        toast.info("Template questions created. Add a free Gemini key for custom AI questions.");
         setShowApiSettings(true);
       }
       await loadRecipients();
@@ -301,7 +305,7 @@ export function AssessmentAssigner({
       >
         <p className="muted" style={{ marginBottom: 12 }}>
           Teaching <strong>{classManaged}</strong> as <strong>{teacherName}</strong>. Fill chapters
-          and topics, then generate exam-ready questions with OpenAI.
+          and topics, then generate exam-ready questions with Gemini.
         </p>
 
         {aiReady && !showApiSettings && (
@@ -422,7 +426,7 @@ export function AssessmentAssigner({
               style={{ padding: 0, fontSize: "inherit" }}
               onClick={() => setShowApiSettings(true)}
             >
-              Connect OpenAI for AI questions
+              Connect Gemini for AI questions
             </button>
             {" "}(or generate a template without a key)
           </p>
@@ -437,8 +441,11 @@ export function AssessmentAssigner({
                   value={provider}
                   onChange={(e) => setProvider(e.target.value as TextLevelerProvider)}
                 >
-                  <option value="openai">{TEXT_LEVELER_PROVIDER_LABELS.openai}</option>
-                  <option value="gemini">{TEXT_LEVELER_PROVIDER_LABELS.gemini}</option>
+                  {TEXT_LEVELER_PROVIDERS.map((p) => (
+                    <option key={p} value={p}>
+                      {TEXT_LEVELER_PROVIDER_LABELS[p]}
+                    </option>
+                  ))}
                 </select>
               </Field>
               <Field label="API key" hint={TEXT_LEVELER_PROVIDER_HINTS[provider]}>
@@ -487,7 +494,7 @@ export function AssessmentAssigner({
           <div className="stack" style={{ gap: 16 }}>
             {localMode && (
               <span className="pill pill-primary">
-                📑 Template assessment — connect OpenAI for custom questions
+                📑 Template assessment — connect Gemini for custom questions
               </span>
             )}
             {aiProviderUsed && !localMode && (

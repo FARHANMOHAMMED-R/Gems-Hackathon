@@ -67,10 +67,10 @@ assessmentRouter.post(
         if (body.provider && isProviderConfigured(body.provider, browserKey)) {
           return body.provider;
         }
-        if (isProviderConfigured("openai", browserKey)) return "openai";
         if (isProviderConfigured("gemini", browserKey)) return "gemini";
+        if (isProviderConfigured("openai", browserKey)) return "openai";
         if (isProviderConfigured("claude", browserKey)) return "claude";
-        return body.provider ?? "openai";
+        return body.provider ?? "gemini";
       })();
 
       try {

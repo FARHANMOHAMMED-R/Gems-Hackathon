@@ -11,8 +11,7 @@ export function friendlyAiErrorMessage(err: unknown): string {
   if (isAiQuotaError(err)) {
     if (/openai/i.test(raw)) {
       return (
-        "OpenAI credits are used up. Use Google Gemini (free at aistudio.google.com/apikey) " +
-        "or add billing at platform.openai.com."
+        "OpenAI credits are used up. Use Google Gemini (free at aistudio.google.com/apikey) instead."
       );
     }
     return "AI rate limit or quota reached. Wait a minute or try another provider.";

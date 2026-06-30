@@ -11,6 +11,7 @@ import { levelTextWithProvider } from "../lib/clientTextLeveler";
 import { friendlyAiErrorMessage, isAiQuotaError } from "../lib/aiErrors";
 import { loadAssistantAiConfig } from "../lib/assistantAiConfig";
 import {
+  defaultTextLevelerProvider,
   persistTextLevelerCredentials,
   resolveTextLevelerCredentials,
   type TextLevelerCredentialSource,
@@ -23,6 +24,7 @@ import {
   TEXT_LEVELER_PROVIDER_HINTS,
   TEXT_LEVELER_PROVIDER_LABELS,
   TEXT_LEVELER_PROVIDER_PLACEHOLDERS,
+  TEXT_LEVELER_PROVIDERS,
   type TextLevelerProvider,
 } from "../lib/textLevelerAiConfig";
 import { ErrorNote, Field, Spinner } from "../components/ui";
@@ -70,7 +72,9 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
   const [previousHtml, setPreviousHtml] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const savedAi = loadTextLevelerAiConfig();
-  const [provider, setProvider] = useState<TextLevelerProvider>(savedAi?.provider ?? "gemini");
+  const [provider, setProvider] = useState<TextLevelerProvider>(
+    savedAi?.provider ?? defaultTextLevelerProvider(),
+  );
   const [apiKey, setApiKey] = useState(savedAi?.apiKey ?? "");
   const [showApiSettings, setShowApiSettings] = useState(false);
   const [usedProvider, setUsedProvider] = useState<TextLevelerProvider | null>(null);
@@ -195,7 +199,7 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
     const resolved = resolveTextLevelerCredentials(provider, apiKey, backendProviders);
     if (!resolved) {
       setShowApiSettings(true);
-      toast.error("Connect OpenAI or Gemini once below, then generate again.");
+      toast.error("Connect a Gemini key once below, then generate again.");
       return;
     }
 
@@ -229,7 +233,7 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
         const altCreds = resolveTextLevelerCredentials(alternate, "", backendProviders);
         if (!altCreds || altCreds.provider === activeCreds.provider) throw firstErr;
 
-        toast.info(`OpenAI limit reached — trying ${TEXT_LEVELER_PROVIDER_LABELS[alternate]}…`);
+        toast.info(`${TEXT_LEVELER_PROVIDER_LABELS[activeCreds.provider]} limit — trying ${TEXT_LEVELER_PROVIDER_LABELS[alternate]}…`);
         activeCreds = altCreds;
         persistTextLevelerCredentials(activeCreds);
         if (activeCreds.apiKey) {
@@ -414,7 +418,7 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
             ✓ AI connected
             {creds?.apiKey
               ? ` (${TEXT_LEVELER_PROVIDER_LABELS[creds.provider]})`
-              : " (server OpenAI/Gemini)"}
+              : " (server Gemini)"}
             {" — "}
             <button
               type="button"
@@ -435,7 +439,7 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
               style={{ padding: 0, fontSize: "inherit" }}
               onClick={() => setShowApiSettings(true)}
             >
-              Connect OpenAI or Gemini
+              Connect Gemini for AI
             </button>
           </p>
         )}
@@ -449,7 +453,7 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
                   value={provider}
                   onChange={(e) => setProvider(e.target.value as TextLevelerProvider)}
                 >
-                  {(Object.keys(TEXT_LEVELER_PROVIDER_LABELS) as TextLevelerProvider[]).map((p) => (
+                    {TEXT_LEVELER_PROVIDERS.map((p) => (
                     <option key={p} value={p}>
                       {TEXT_LEVELER_PROVIDER_LABELS[p]}
                     </option>

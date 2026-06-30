@@ -14,12 +14,13 @@ import {
   TEXT_LEVELER_PROVIDER_HINTS,
   TEXT_LEVELER_PROVIDER_LABELS,
   TEXT_LEVELER_PROVIDER_PLACEHOLDERS,
+  TEXT_LEVELER_PROVIDERS,
   type TextLevelerProvider,
 } from "../lib/textLevelerAiConfig";
 import { loadAssistantAiConfig } from "../lib/assistantAiConfig";
 import { buildPptxBase64, deckFileName } from "../lib/buildPptx";
 import { clientGeneratePptDeck } from "../lib/clientPptGenerator";
-import { resolveGemsApiKey, resolveSkyworkApiKey } from "../lib/resolvePptCredentials";
+import { resolveGemsApiKey, resolveSkyworkApiKey, defaultGemsProvider } from "../lib/resolvePptCredentials";
 import { Card, EmptyState, ErrorNote, Field, Spinner } from "../components/ui";
 import { useToast } from "../components/Toast";
 
@@ -57,7 +58,9 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
 
   const savedGems = loadTextLevelerAiConfig();
   const [providers, setProviders] = useState<AiProviderInfo[]>([]);
-  const [provider, setProvider] = useState<TextLevelerProvider>(savedGems?.provider ?? "gemini");
+  const [provider, setProvider] = useState<TextLevelerProvider>(
+    savedGems?.provider ?? defaultGemsProvider(),
+  );
   const [gemsApiKey, setGemsApiKey] = useState(savedGems?.apiKey ?? "");
   const [engine, setEngine] = useState<PptEngine>("gems");
   const [skyworkKey, setSkyworkKey] = useState(loadSkyworkPptApiKey);
@@ -401,7 +404,7 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
                     value={provider}
                     onChange={(e) => setProvider(e.target.value as TextLevelerProvider)}
                   >
-                    {(Object.keys(TEXT_LEVELER_PROVIDER_LABELS) as TextLevelerProvider[]).map((p) => (
+                    {TEXT_LEVELER_PROVIDERS.map((p) => (
                       <option key={p} value={p}>
                         {TEXT_LEVELER_PROVIDER_LABELS[p]}
                       </option>

@@ -247,7 +247,7 @@ export function AiAssistant({ teacherName, classManaged, onNavigate }: AiAssista
 
           {settingsOpen && (
             <div className="ai-assistant-settings">
-              <p className="ai-assistant-settings-title">Connect Gemini or OpenAI</p>
+              <p className="ai-assistant-settings-title">Connect Google Gemini</p>
               <label className="ai-assistant-settings-label">
                 Provider
                 <select

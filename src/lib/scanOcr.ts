@@ -124,7 +124,7 @@ export async function digitizeScanImages(
   const hints: string[] = [];
   if (!status.openai && !status.gemini && !status.claude && !status.gurupdf && !browserKey) {
     hints.push(
-      "Open the ✦ AI assistant (bottom-right), tap ⚙, and add a free Gemini or OpenAI key — or set keys in backend .env.",
+      "Open the ✦ AI assistant (bottom-right), tap ⚙, and add a free Gemini key — or set GEMINI_API_KEY in backend .env.",
     );
   }
   hints.push("Use a clear photo of the notebook page, or paste the note text in Scanned text.");

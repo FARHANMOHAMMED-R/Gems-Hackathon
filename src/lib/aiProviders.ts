@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { GROUNDING_GUARDRAIL } from "./prompts";
 import { safeParseJSON } from "./json";
+import { AI_PROVIDER_PRIORITY, DEFAULT_AI_PROVIDER } from "./aiProviderDefaults";
 
 export type AiProvider = "openai" | "gemini" | "claude";
 
@@ -81,23 +82,21 @@ export function getConfiguredProviders(): AiProviderInfo[] {
 
 export function resolveProvider(requested?: AiProvider): AiProvider {
   const preferred = (process.env.LLM_DEFAULT_PROVIDER?.trim() ||
-    requested) as AiProvider | undefined;
+    requested ||
+    DEFAULT_AI_PROVIDER) as AiProvider;
 
-  const order: AiProvider[] = preferred
-    ? [preferred, "openai", "gemini", "claude"]
-    : ["openai", "gemini", "claude"];
+  const order: AiProvider[] = [preferred, ...AI_PROVIDER_PRIORITY].filter(
+    (p, i, arr) => arr.indexOf(p) === i,
+  );
 
-  const seen = new Set<AiProvider>();
   for (const p of order) {
-    if (!p || seen.has(p)) continue;
-    seen.add(p);
     if (p === "openai" && isOpenAiConfigured()) return p;
     if (p === "gemini" && isGeminiConfigured()) return p;
     if (p === "claude" && isClaudeConfigured()) return p;
   }
 
   throw new LlmConfigError(
-    "No AI provider configured. Add OPENAI_API_KEY, GEMINI_API_KEY, or ANTHROPIC_API_KEY to .env.",
+    "No AI provider configured. Add GEMINI_API_KEY (recommended) or ANTHROPIC_API_KEY to .env.",
   );
 }
 

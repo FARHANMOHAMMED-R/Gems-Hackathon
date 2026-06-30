@@ -1,5 +1,9 @@
 import { loadAssistantAiConfig, type AssistantAiProvider } from "./assistantAiConfig";
 import {
+  DEFAULT_TEXT_LEVELER_PROVIDER,
+  TEXT_LEVELER_PROVIDER_ORDER,
+} from "./aiProviderDefaults";
+import {
   loadTextLevelerAiConfig,
   saveTextLevelerAiConfig,
   type TextLevelerProvider,
@@ -17,6 +21,24 @@ export function isTextLevelerProvider(id: string): id is TextLevelerProvider {
   return id === "openai" || id === "gemini";
 }
 
+function resolveGeminiCredentials(): TextLevelerCredentials | null {
+  const saved = loadTextLevelerAiConfig();
+  if (saved?.apiKey && saved.apiKey.length >= 10 && saved.provider === "gemini") {
+    return { provider: "gemini", apiKey: saved.apiKey, source: "saved" };
+  }
+
+  const assistant = loadAssistantAiConfig();
+  if (
+    assistant?.apiKey &&
+    assistant.apiKey.length >= 10 &&
+    assistant.provider === "gemini"
+  ) {
+    return { provider: "gemini", apiKey: assistant.apiKey, source: "assistant" };
+  }
+
+  return null;
+}
+
 export function resolveTextLevelerCredentials(
   formProvider: TextLevelerProvider,
   formApiKey: string,
@@ -27,8 +49,16 @@ export function resolveTextLevelerCredentials(
     return { provider: formProvider, apiKey: trimmed, source: "form" };
   }
 
+  const gemini = resolveGeminiCredentials();
+  if (gemini) return gemini;
+
   const saved = loadTextLevelerAiConfig();
-  if (saved?.apiKey && saved.apiKey.length >= 10) {
+  if (
+    saved?.apiKey &&
+    saved.apiKey.length >= 10 &&
+    saved.provider === "openai" &&
+    formProvider === "openai"
+  ) {
     return { provider: saved.provider, apiKey: saved.apiKey, source: "saved" };
   }
 
@@ -36,7 +66,8 @@ export function resolveTextLevelerCredentials(
   if (
     assistant?.apiKey &&
     assistant.apiKey.length >= 10 &&
-    isTextLevelerProvider(assistant.provider)
+    assistant.provider === "openai" &&
+    formProvider === "openai"
   ) {
     return {
       provider: assistant.provider,
@@ -45,18 +76,11 @@ export function resolveTextLevelerCredentials(
     };
   }
 
-  const backendMatch = backendProviders.find(
-    (p) => p.configured && p.id === formProvider && isTextLevelerProvider(p.id),
-  );
-  if (backendMatch) {
-    return { provider: formProvider, source: "backend" };
-  }
-
-  const anyBackend = backendProviders.find(
-    (p) => p.configured && isTextLevelerProvider(p.id),
-  );
-  if (anyBackend && isTextLevelerProvider(anyBackend.id)) {
-    return { provider: anyBackend.id, source: "backend" };
+  for (const id of TEXT_LEVELER_PROVIDER_ORDER) {
+    const backendMatch = backendProviders.find((p) => p.configured && p.id === id);
+    if (backendMatch && isTextLevelerProvider(backendMatch.id)) {
+      return { provider: backendMatch.id, source: "backend" };
+    }
   }
 
   return null;
@@ -70,4 +94,12 @@ export function persistTextLevelerCredentials(creds: TextLevelerCredentials): vo
 
 export function assistantProviderLabel(provider: AssistantAiProvider): TextLevelerProvider {
   return provider;
+}
+
+export function defaultTextLevelerProvider(): TextLevelerProvider {
+  const saved = loadTextLevelerAiConfig();
+  if (saved?.provider === "gemini") return "gemini";
+  const assistant = loadAssistantAiConfig();
+  if (assistant?.provider === "gemini") return "gemini";
+  return DEFAULT_TEXT_LEVELER_PROVIDER;
 }
