@@ -42,27 +42,71 @@ export interface PtBlueprintDocument extends PtBlueprintFormInput {
   totalMarks: number;
 }
 
-export function buildPtBlueprintDocument(form: PtBlueprintFormInput): PtBlueprintDocument {
-  const totalMarks =
-    form.sections.reduce((s, r) => s + r.totalMarks, 0) ||
-    form.chapters.reduce((s, c) => s + c.totalMarks, 0) ||
-    form.units.reduce((s, u) => s + u.chapterTotal, 0);
+function parseQuestionCount(label: string): number {
+  const trimmed = label.trim();
+  const lead = trimmed.match(/^(\d+)/);
+  if (lead) return parseInt(lead[1], 10);
+  const parts = trimmed.match(/\d+/g);
+  if (!parts?.length) return 0;
+  if (/&|\+|\band\b/i.test(trimmed) && parts.length > 1) {
+    return parts.reduce((s, p) => s + parseInt(p, 10), 0);
+  }
+  return parseInt(parts[0], 10);
+}
 
-  const totalQuestions = form.sections.reduce((s, r) => {
-    const n = parseInt(r.questionCountLabel.replace(/\D/g, ""), 10);
-    return s + (Number.isFinite(n) && n > 0 ? n : 0);
-  }, 0);
+function countQuestionsInCell(text: string): number {
+  if (!text.trim()) return 0;
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  for (const line of lines) {
+    const qMatch = line.match(/^(\d+)\s*QUEST/i);
+    if (qMatch) return parseInt(qMatch[1], 10);
+    const qnMatch = line.match(/^(\d+)\s*QN\b/i);
+    if (qnMatch) return parseInt(qnMatch[1], 10);
+  }
+  const qNos = lines.filter((l) => /Q\.?\s*NO\.?\s*\d+/i.test(l));
+  if (qNos.length) return qNos.length;
+  return 0;
+}
+
+function computeUnitChapterTotal(unit: {
+  mark1: string;
+  mark2: string;
+  mark3: string;
+  mark4CaseBased: string;
+  mark5: string;
+}): number {
+  return (
+    countQuestionsInCell(unit.mark1) * 1 +
+    countQuestionsInCell(unit.mark2) * 2 +
+    countQuestionsInCell(unit.mark3) * 3 +
+    countQuestionsInCell(unit.mark4CaseBased) * 4 +
+    countQuestionsInCell(unit.mark5) * 5
+  );
+}
+
+export function buildPtBlueprintDocument(form: PtBlueprintFormInput): PtBlueprintDocument {
+  const totalMarks = form.sections.reduce((s, r) => s + r.totalMarks, 0);
+
+  const totalQuestions = form.sections.reduce(
+    (s, r) => s + parseQuestionCount(r.questionCountLabel),
+    0,
+  );
+
+  const units = form.units.map((u, i) => {
+    const computed = computeUnitChapterTotal(u);
+    const chapterTotal = u.chapterTotal > 0 ? u.chapterTotal : computed;
+    return {
+      ...u,
+      unit: i + 1,
+      concept: u.concept || form.chapters[i]?.chapterName || "",
+      chapterTotal,
+    };
+  });
 
   const chapters = form.chapters.map((c, i) => ({
     ...c,
     serial: i + 1,
-    totalMarks: c.totalMarks || form.units[i]?.chapterTotal || 0,
-  }));
-
-  const units = form.units.map((u, i) => ({
-    ...u,
-    unit: i + 1,
-    chapterTotal: u.chapterTotal || chapters[i]?.totalMarks || 0,
+    totalMarks: c.totalMarks > 0 ? c.totalMarks : units[i]?.chapterTotal || 0,
   }));
 
   return { ...form, chapters, units, totalMarks, totalQuestions };

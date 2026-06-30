@@ -7,6 +7,7 @@ import {
   DEFAULT_PT_SECTIONS,
   emptyUnitRow,
 } from "../lib/ptBlueprintDefaults";
+import { parseQuestionCount } from "../lib/ptBlueprintUtils";
 import type { PtBlueprintDocument, PtBlueprintForm, PtSectionRow } from "../lib/ptBlueprintTypes";
 import { ErrorNote, Field, Spinner } from "../components/ui";
 import { useToast } from "../components/Toast";
@@ -28,7 +29,7 @@ function SectionEditor({
     const next = sections.map((row, idx) => {
       if (idx !== i) return row;
       const merged = { ...row, ...patch };
-      const count = parseInt(merged.questionCountLabel.replace(/\D/g, ""), 10) || 0;
+      const count = parseQuestionCount(merged.questionCountLabel);
       merged.totalMarks = count * merged.marksPerQuestion;
       return merged;
     });
@@ -245,7 +246,7 @@ export function BlueprintGenerator({ classManaged }: { classManaged: string }) {
             <span className="field-label">Unit question matrix *</span>
             <span className="field-hint">
               For each mark column, list question numbers. Use (K/U), (APP), HOT, (INTERNAL CHOICE)
-              tags — one per line.
+              tags — one per line. Chapter totals auto-calculate from the matrix if left blank.
             </span>
             {form.units.map((u, i) => (
               <details key={i} className="gems-bp-unit-block" open={i === 0}>

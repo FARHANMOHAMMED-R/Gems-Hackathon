@@ -1,23 +1,16 @@
 import type { PtBlueprintDocument } from "../lib/ptBlueprintTypes";
+import { lineTagClass, parseQuestionCount } from "../lib/ptBlueprintUtils";
 
 function renderCell(text: string) {
   if (!text.trim()) return null;
   const lines = text.split("\n").filter((l) => l.trim());
   return (
     <div className="gems-bp-cell">
-      {lines.map((line, i) => {
-        const trimmed = line.trim();
-        let cls = "gems-bp-line";
-        if (/\(K\/U\)/i.test(trimmed)) cls += " tag-ku";
-        else if (/\(APP\)/i.test(trimmed)) cls += " tag-app";
-        else if (/^HOT$/i.test(trimmed) || /\(HOT\)/i.test(trimmed)) cls += " tag-hot";
-        else if (/INTERNAL CHOICE/i.test(trimmed)) cls += " tag-choice";
-        return (
-          <div key={i} className={cls}>
-            {trimmed}
+      {lines.map((line, i) => (
+          <div key={i} className={lineTagClass(line)}>
+            {line.trim()}
           </div>
-        );
-      })}
+        ))}
     </div>
   );
 }
@@ -25,7 +18,7 @@ function renderCell(text: string) {
 export function GemsPtBlueprintView({ doc }: { doc: PtBlueprintDocument }) {
   const sectionTotals = doc.sections.reduce(
     (acc, s) => {
-      acc.count += parseInt(s.questionCountLabel.replace(/\D/g, ""), 10) || 0;
+      acc.count += parseQuestionCount(s.questionCountLabel);
       acc.marks += s.totalMarks;
       return acc;
     },
