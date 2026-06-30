@@ -38,6 +38,9 @@ export interface AnalyzeScanRequest {
   markingScheme?: string;
   images?: string[];
   rawScannedText?: string;
+  provider?: AiProvider;
+  /** Browser-stored API key for AI handwriting OCR on localhost. */
+  apiKey?: string;
 }
 
 export interface AnalyzeScanResponse {

@@ -17,6 +17,8 @@ const schema = z
     markingScheme: z.string().optional(),
     images: z.array(z.string()).min(1).optional(),
     rawScannedText: z.string().min(1).optional(),
+    provider: z.enum(["openai", "gemini", "claude"]).optional(),
+    apiKey: z.string().trim().min(10).max(512).optional(),
   })
   .refine((d) => d.images || d.rawScannedText, {
     message: "Provide either `images` (base64) or `rawScannedText`.",
@@ -45,7 +47,10 @@ analyzeScanRouter.post(
     let ocrMode: OcrMode = "pasted";
 
     if (!rawText && body.images?.length) {
-      const digitized = await digitizeScanImages(body.images, body.mode);
+      const digitized = await digitizeScanImages(body.images, body.mode, {
+        provider: body.provider,
+        apiKey: body.apiKey,
+      });
       rawText = digitized.rawText;
       ocrMode = digitized.ocrMode;
     }

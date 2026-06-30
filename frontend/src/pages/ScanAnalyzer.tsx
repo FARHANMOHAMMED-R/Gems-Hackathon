@@ -4,6 +4,8 @@ import { fetchClassStudents } from "../api/classData";
 import type { AnalyzeScanResponse, ScanMode, ScanOcrStatusResponse, StudentRosterEntry } from "../api/types";
 import { Card, EmptyState, ErrorNote, Field, Spinner } from "../components/ui";
 import { useToast } from "../components/Toast";
+import { loadAssistantAiConfig } from "../lib/assistantAiConfig";
+import { clientVisionOcr } from "../lib/clientOcr";
 
 const MODES: ScanMode[] = ["Exam Paper", "Notebook"];
 
@@ -85,12 +87,31 @@ export function ScanAnalyzer({ classManaged }: { classManaged: string }) {
     setLlmDown(false);
     setError(null);
     try {
+      const aiConfig = loadAssistantAiConfig();
+      let scannedText = rawText.trim();
+
+      if (!scannedText && images.length && aiConfig) {
+        try {
+          scannedText = await clientVisionOcr(
+            aiConfig.provider,
+            aiConfig.apiKey,
+            images.map((i) => i.dataUrl),
+          );
+          if (scannedText) setRawText(scannedText);
+        } catch {
+          /* backend will retry OCR with the same key */
+        }
+      }
+
       const res = await api.analyzeScan({
         mode,
         studentId,
         markingScheme: mode === "Exam Paper" ? markingScheme || undefined : undefined,
-        images: images.length ? images.map((i) => i.dataUrl) : undefined,
-        rawScannedText: rawText.trim() || undefined,
+        images: scannedText ? undefined : images.length ? images.map((i) => i.dataUrl) : undefined,
+        rawScannedText: scannedText || undefined,
+        ...(aiConfig
+          ? { provider: aiConfig.provider, apiKey: aiConfig.apiKey }
+          : {}),
       });
       setResult(res);
       if (res.analysisMode === "local") {
@@ -111,12 +132,14 @@ export function ScanAnalyzer({ classManaged }: { classManaged: string }) {
   }
 
   const selected = students.find((s) => s.id === studentId);
+  const savedAiKey = loadAssistantAiConfig();
   const noAiOcr =
     ocrStatus &&
     !ocrStatus.openai &&
     !ocrStatus.gemini &&
     !ocrStatus.claude &&
-    !ocrStatus.gurupdf;
+    !ocrStatus.gurupdf &&
+    !savedAiKey;
 
   return (
     <div className="grid grid-2">
@@ -137,20 +160,26 @@ export function ScanAnalyzer({ classManaged }: { classManaged: string }) {
           </div>
           {mode === "Notebook" && (
             <span className="field-hint">
-              Upload a clear photo of the notebook page (not a screen screenshot). Uses offline
-              Tesseract by default; AI OCR is optional for better handwriting.
+              Upload a clear photo of the notebook page. Uses offline Tesseract first; add a Gemini
+              or OpenAI key in the ✦ AI assistant (⚙) for handwriting OCR.
+            </span>
+          )}
+          {savedAiKey && (
+            <span className="field-hint" style={{ color: "#059669" }}>
+              ✓ {savedAiKey.provider === "gemini" ? "Gemini" : "OpenAI"} key connected — AI OCR
+              enabled for scans.
             </span>
           )}
           {noAiOcr && (
             <details className="ppt-ai-setup">
               <summary>Enable AI handwriting OCR (optional)</summary>
               <p className="muted">
-                Add free <code>GEMINI_API_KEY</code> from{" "}
+                Open the <strong>✦ AI assistant</strong> (bottom-right) → tap <strong>⚙</strong> →
+                paste a free <code>GEMINI_API_KEY</code> from{" "}
                 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
                   Google AI Studio
                 </a>
-                , or <code>OPENAI_API_KEY</code> / <code>ANTHROPIC_API_KEY</code> to backend{" "}
-                <code>.env</code>, then restart the server.
+                , or an OpenAI key. Same key works for scans automatically.
               </p>
             </details>
           )}

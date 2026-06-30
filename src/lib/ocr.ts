@@ -13,18 +13,22 @@ async function getWorker() {
   if (!workerPromise) {
     workerPromise = (async () => {
       const worker = await Tesseract.createWorker("eng", 1, { logger: () => {} });
-      await worker.setParameters({
-        tessedit_pageseg_mode: Tesseract.PSM.AUTO,
-      });
       return worker;
     })();
   }
   return workerPromise;
 }
 
+const PSM_MODES = [
+  Tesseract.PSM.AUTO,
+  Tesseract.PSM.SINGLE_BLOCK,
+  Tesseract.PSM.SPARSE_TEXT,
+  Tesseract.PSM.SINGLE_COLUMN,
+] as const;
+
 /**
  * Extract text from scanned notebook/exam images using local Tesseract OCR.
- * Uses a reused worker and auto page segmentation for photos & screenshots.
+ * Tries several page layouts — works better on photos and screenshots.
  */
 export async function ocrImages(dataUrls: string[]): Promise<string> {
   const worker = await getWorker();
@@ -32,9 +36,17 @@ export async function ocrImages(dataUrls: string[]): Promise<string> {
 
   for (let i = 0; i < dataUrls.length; i++) {
     const buffer = dataUrlToBuffer(dataUrls[i]);
-    const { data } = await worker.recognize(buffer);
-    const text = data.text?.trim();
-    if (text) parts.push(text);
+    let best = "";
+
+    for (const psm of PSM_MODES) {
+      await worker.setParameters({ tessedit_pageseg_mode: psm });
+      const { data } = await worker.recognize(buffer);
+      const text = data.text?.trim() ?? "";
+      if (text.length > best.length) best = text;
+      if (best.length >= 40) break;
+    }
+
+    if (best) parts.push(best);
   }
 
   return parts.join("\n\n--- page break ---\n\n");

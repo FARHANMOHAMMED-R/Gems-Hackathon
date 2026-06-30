@@ -6,6 +6,8 @@ import {
   isClaudeConfigured,
   isGeminiConfigured,
   isOpenAiConfigured,
+  isProviderConfigured,
+  type AiProvider,
 } from "./aiProviders";
 import { ocrImages } from "./ocr";
 import { VISION_TRANSCRIBE_SYSTEM_PROMPT } from "./prompts";
@@ -31,7 +33,8 @@ async function tryProvider(
 ): Promise<{ text: string; mode: OcrMode } | null> {
   try {
     const text = (await fn()).trim();
-    if (text.length >= 8) return { text, mode: name };
+    const minLen = name === "tesseract" ? 2 : 8;
+    if (text.length >= minLen) return { text, mode: name };
     return null;
   } catch (err) {
     // eslint-disable-next-line no-console
@@ -46,33 +49,70 @@ async function tryProvider(
 export async function digitizeScanImages(
   dataUrls: string[],
   _mode: "Exam Paper" | "Notebook",
+  opts?: { provider?: AiProvider; apiKey?: string },
 ): Promise<{ rawText: string; ocrMode: OcrMode }> {
+  const browserKey = opts?.apiKey?.trim();
+  const browserProvider = opts?.provider;
+
   const attempts: { name: OcrMode; fn: () => Promise<string> }[] = [];
+
+  const addAiAttempts = (apiKey?: string, provider?: AiProvider) => {
+    const useProvider = (p: AiProvider) =>
+      isProviderConfigured(p, apiKey) &&
+      (!provider || provider === p);
+
+    if (useProvider("gemini")) {
+      attempts.push({
+        name: "gemini",
+        fn: async () =>
+          (
+            await aiTranscribeImages(
+              VISION_TRANSCRIBE_SYSTEM_PROMPT,
+              dataUrls,
+              "gemini",
+              apiKey,
+            )
+          ).text,
+      });
+    }
+    if (useProvider("openai")) {
+      attempts.push({
+        name: "openai",
+        fn: async () =>
+          (
+            await aiTranscribeImages(
+              VISION_TRANSCRIBE_SYSTEM_PROMPT,
+              dataUrls,
+              "openai",
+              apiKey,
+            )
+          ).text,
+      });
+    }
+    if (useProvider("claude")) {
+      attempts.push({
+        name: "claude",
+        fn: async () =>
+          (
+            await aiTranscribeImages(
+              VISION_TRANSCRIBE_SYSTEM_PROMPT,
+              dataUrls,
+              "claude",
+              apiKey,
+            )
+          ).text,
+      });
+    }
+  };
+
+  if (browserKey && browserProvider) {
+    addAiAttempts(browserKey, browserProvider);
+  }
 
   if (isGuruPdfConfigured()) {
     attempts.push({ name: "gurupdf", fn: () => guruPdfOcrImages(dataUrls) });
   }
-  if (isOpenAiConfigured()) {
-    attempts.push({
-      name: "openai",
-      fn: async () =>
-        (await aiTranscribeImages(VISION_TRANSCRIBE_SYSTEM_PROMPT, dataUrls, "openai")).text,
-    });
-  }
-  if (isGeminiConfigured()) {
-    attempts.push({
-      name: "gemini",
-      fn: async () =>
-        (await aiTranscribeImages(VISION_TRANSCRIBE_SYSTEM_PROMPT, dataUrls, "gemini")).text,
-    });
-  }
-  if (isClaudeConfigured()) {
-    attempts.push({
-      name: "claude",
-      fn: async () =>
-        (await aiTranscribeImages(VISION_TRANSCRIBE_SYSTEM_PROMPT, dataUrls, "claude")).text,
-    });
-  }
+  addAiAttempts();
   attempts.push({ name: "tesseract", fn: () => ocrImages(dataUrls) });
 
   for (const attempt of attempts) {
@@ -82,13 +122,12 @@ export async function digitizeScanImages(
 
   const status = getOcrStatus();
   const hints: string[] = [];
-  if (!status.openai && !status.gemini && !status.claude && !status.gurupdf) {
+  if (!status.openai && !status.gemini && !status.claude && !status.gurupdf && !browserKey) {
     hints.push(
-      "Add OPENAI_API_KEY, GEMINI_API_KEY, or ANTHROPIC_API_KEY to .env for handwriting OCR.",
+      "Open the ✦ AI assistant (bottom-right), tap ⚙, and add a free Gemini or OpenAI key — or set keys in backend .env.",
     );
   }
-  hints.push("Use a clear photo of the notebook page (not a screen screenshot).");
-  hints.push("Or paste the note text in the Scanned text box.");
+  hints.push("Use a clear photo of the notebook page, or paste the note text in Scanned text.");
 
   throw new ApiError(
     422,

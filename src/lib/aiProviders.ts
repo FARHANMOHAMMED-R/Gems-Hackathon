@@ -271,11 +271,21 @@ export async function aiTranscribeImages(
   systemPrompt: string,
   dataUrls: string[],
   provider?: AiProvider,
+  apiKeyOverride?: string,
 ): Promise<{ text: string; provider: AiProvider }> {
-  const resolved = resolveProvider(provider);
+  const resolved =
+    apiKeyOverride?.trim() && provider ? provider : resolveProvider(provider);
 
   if (resolved === "openai") {
-    const res = await getOpenAiClient().chat.completions.create({
+    const apiKey = resolveApiKey("openai", apiKeyOverride);
+    const client =
+      apiKeyOverride?.trim()
+        ? new OpenAI({
+            apiKey,
+            baseURL: process.env.OPENAI_BASE_URL || undefined,
+          })
+        : getOpenAiClient();
+    const res = await client.chat.completions.create({
       model: openAiVisionModel(),
       temperature: 0,
       messages: [
@@ -299,7 +309,7 @@ export async function aiTranscribeImages(
   }
 
   if (resolved === "gemini") {
-    const apiKey = process.env.GEMINI_API_KEY!.trim();
+    const apiKey = resolveApiKey("gemini", apiKeyOverride);
     const parts: { text?: string; inline_data?: { mime_type: string; data: string } }[] = [
       { text: systemPrompt + "\n\nTranscribe the following document page(s)." },
     ];
@@ -327,7 +337,7 @@ export async function aiTranscribeImages(
   }
 
   // Claude vision
-  const apiKey = process.env.ANTHROPIC_API_KEY!.trim();
+  const apiKey = resolveApiKey("claude", apiKeyOverride);
   const content: { type: string; text?: string; source?: object }[] = [
     { type: "text", text: "Transcribe the following document page(s)." },
   ];
