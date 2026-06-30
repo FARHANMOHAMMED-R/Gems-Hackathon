@@ -1,4 +1,5 @@
 import type { GradeLevel, ReadingProfile } from "../api/types";
+import { friendlyAiErrorMessage } from "./aiErrors";
 
 const SYSTEM_PROMPT =
   "You are an expert K-12 reading specialist. REWRITE the text for the target grade level. " +
@@ -95,7 +96,8 @@ export async function clientOpenAiLevelText(
   };
 
   if (!res.ok) {
-    throw new Error(parseApiError(body, `OpenAI error (${res.status})`));
+    const msg = parseApiError(body, `OpenAI error (${res.status})`);
+    throw new Error(friendlyAiErrorMessage(msg, "openai"));
   }
 
   const text = body.choices?.[0]?.message?.content?.trim();
@@ -127,7 +129,8 @@ async function callGeminiModel(
   };
 
   if (!res.ok) {
-    throw new Error(parseApiError(body, `Gemini error (${res.status})`));
+    const msg = parseApiError(body, `Gemini error (${res.status})`);
+    throw new Error(friendlyAiErrorMessage(msg, "gemini"));
   }
 
   const text = body.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("").trim();

@@ -6,6 +6,7 @@ import {
   isProviderConfigured,
   type AiProvider,
 } from "../lib/aiProviders";
+import { isAiQuotaError } from "../lib/aiErrors";
 import { GRADE_LEVELS } from "../lib/gradeLevels";
 import { levelTextLocally } from "../lib/localTextLeveler";
 import { READING_PROFILES } from "../lib/readingProfiles";
@@ -23,6 +24,15 @@ const schema = z.object({
   provider: z.enum(["openai", "gemini", "claude"]).optional(),
   apiKey: z.string().trim().min(10).max(512).optional(),
 });
+
+function providersToTry(requested: AiProvider | undefined, apiKey?: string): AiProvider[] {
+  const order: AiProvider[] = [];
+  if (requested && isProviderConfigured(requested, apiKey)) order.push(requested);
+  for (const p of ["gemini", "openai", "claude"] as AiProvider[]) {
+    if (isProviderConfigured(p, apiKey) && !order.includes(p)) order.push(p);
+  }
+  return order;
+}
 
 differentiateContentRouter.post(
   "/differentiate-content",
@@ -45,30 +55,33 @@ differentiateContentRouter.post(
       });
     }
 
-    const provider: AiProvider = (() => {
-      if (body.provider && isProviderConfigured(body.provider, body.apiKey)) {
-        return body.provider;
+    const candidates = providersToTry(body.provider, body.apiKey);
+    let lastError: unknown;
+
+    for (const provider of candidates) {
+      try {
+        const output = await aiComplete({
+          systemPrompt: TEXT_LEVELER_SYSTEM_PROMPT,
+          userContent: buildTextLevelerUserPrompt(body.content, body.gradeLevel, profile),
+          temperature: 0.35,
+          provider,
+          apiKeyOverride: body.apiKey,
+        });
+
+        return res.json({
+          gradeLevel: body.gradeLevel,
+          readingProfile: profile,
+          content: output,
+          analysisMode: "ai" as const,
+          providerUsed: provider,
+        });
+      } catch (err) {
+        lastError = err;
+        if (isAiQuotaError(err) && candidates.length > 1) continue;
+        throw err;
       }
-      if (isProviderConfigured("openai", body.apiKey)) return "openai";
-      if (isProviderConfigured("gemini", body.apiKey)) return "gemini";
-      if (isProviderConfigured("claude", body.apiKey)) return "claude";
-      return "openai";
-    })();
+    }
 
-    const output = await aiComplete({
-      systemPrompt: TEXT_LEVELER_SYSTEM_PROMPT,
-      userContent: buildTextLevelerUserPrompt(body.content, body.gradeLevel, profile),
-      temperature: 0.35,
-      provider,
-      apiKeyOverride: body.apiKey,
-    });
-
-    res.json({
-      gradeLevel: body.gradeLevel,
-      readingProfile: profile,
-      content: output,
-      analysisMode: "ai" as const,
-      providerUsed: provider,
-    });
+    throw lastError ?? new Error("AI request failed.");
   }),
 );

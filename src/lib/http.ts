@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { LlmConfigError } from "./llm";
 import { GuruPdfConfigError } from "./gurupdfOcr";
 import { MailConfigError } from "./emailSend";
+import { isAiQuotaError, friendlyAiErrorMessage } from "./aiErrors";
 
 /** Wrap an async route handler so rejected promises hit the error middleware. */
 export function asyncHandler(
@@ -46,6 +47,12 @@ export function errorMiddleware(
   }
   if (err instanceof MailConfigError) {
     return res.status(503).json({ error: err.message, code: "MAIL_NOT_CONFIGURED" });
+  }
+  if (err instanceof Error && isAiQuotaError(err)) {
+    return res.status(429).json({
+      error: friendlyAiErrorMessage(err),
+      code: "AI_QUOTA_EXCEEDED",
+    });
   }
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === "P2002") {

@@ -8,11 +8,13 @@ import {
   READING_PROFILE_LABELS,
 } from "../data/readingProfiles";
 import { levelTextWithProvider } from "../lib/clientTextLeveler";
+import { friendlyAiErrorMessage, isAiQuotaError } from "../lib/aiErrors";
 import { loadAssistantAiConfig } from "../lib/assistantAiConfig";
 import {
   persistTextLevelerCredentials,
   resolveTextLevelerCredentials,
   type TextLevelerCredentialSource,
+  type TextLevelerCredentials,
 } from "../lib/resolveTextLevelerCredentials";
 import {
   clearTextLevelerAiConfig,
@@ -70,6 +72,7 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
   const savedAi = loadTextLevelerAiConfig();
   const [provider, setProvider] = useState<TextLevelerProvider>(savedAi?.provider ?? "gemini");
   const [apiKey, setApiKey] = useState(savedAi?.apiKey ?? "");
+  const [showApiSettings, setShowApiSettings] = useState(false);
   const [usedProvider, setUsedProvider] = useState<TextLevelerProvider | null>(null);
   const [credentialSource, setCredentialSource] = useState<TextLevelerCredentialSource | null>(null);
   const [backendProviders, setBackendProviders] = useState<
@@ -78,12 +81,11 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
 
   const combinedText = [content, fileContext].filter(Boolean).join("\n\n");
   const totalWords = countWords(content, fileContext);
-  const backendAiReady = backendProviders.some((p) => p.configured);
-  const formKeyReady = apiKey.trim().length >= 10;
+  const creds = resolveTextLevelerCredentials(provider, apiKey, backendProviders);
+  const aiReady = Boolean(creds);
   const assistantKey = loadAssistantAiConfig();
   const assistantKeyReady =
     Boolean(assistantKey?.apiKey && assistantKey.apiKey.length >= 10);
-  const canGenerateAi = formKeyReady || Boolean(savedAi) || assistantKeyReady || backendAiReady;
 
   useEffect(() => {
     api
@@ -94,6 +96,19 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
         ),
       )
       .catch(() => setBackendProviders([]));
+  }, []);
+
+  useEffect(() => {
+    const resolved = resolveTextLevelerCredentials(provider, apiKey, []);
+    if (resolved?.apiKey && !apiKey.trim()) {
+      setProvider(resolved.provider);
+      setApiKey(resolved.apiKey);
+      persistTextLevelerCredentials(resolved);
+    } else if (!apiKey.trim() && assistantKeyReady && assistantKey) {
+      setProvider(assistantKey.provider);
+      setApiKey(assistantKey.apiKey);
+      saveTextLevelerAiConfig({ provider: assistantKey.provider, apiKey: assistantKey.apiKey });
+    }
   }, []);
 
   async function onFilePick(e: React.ChangeEvent<HTMLInputElement>) {
@@ -138,6 +153,35 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
     toast.success("Restored previous version.");
   }
 
+  async function levelTextWithCreds(
+    creds: TextLevelerCredentials,
+    text: string,
+  ): Promise<{ markdown: string; mode: "ai" | "local" }> {
+    if (creds.apiKey) {
+      const markdown = await levelTextWithProvider(
+        creds.provider,
+        creds.apiKey,
+        text,
+        gradeLevel,
+        readingProfile,
+      );
+      return { markdown, mode: "ai" };
+    }
+
+    const res = await api.differentiate({
+      content: text,
+      gradeLevel,
+      readingProfile,
+      provider: creds.provider,
+    });
+    if (res.analysisMode === "local") {
+      throw new Error(
+        "Server could not reach AI — paste a free Gemini key from aistudio.google.com/apikey below.",
+      );
+    }
+    return { markdown: res.content, mode: res.analysisMode ?? "ai" };
+  }
+
   async function generate() {
     if (!combinedText.trim()) {
       toast.error("Paste the original text first.");
@@ -148,14 +192,10 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
       return;
     }
 
-    if (!canGenerateAi) {
-      toast.error("Add a Gemini or OpenAI API key below (free Gemini key works).");
-      return;
-    }
-
-    const creds = resolveTextLevelerCredentials(provider, apiKey, backendProviders);
-    if (!creds) {
-      toast.error("Add a Gemini or OpenAI API key below.");
+    const resolved = resolveTextLevelerCredentials(provider, apiKey, backendProviders);
+    if (!resolved) {
+      setShowApiSettings(true);
+      toast.error("Connect OpenAI or Gemini once below, then generate again.");
       return;
     }
 
@@ -167,84 +207,53 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
     setError(null);
 
     const text = combinedText.trim();
-    persistTextLevelerCredentials(creds);
-    if (creds.apiKey) {
-      setProvider(creds.provider);
-      setApiKey(creds.apiKey);
+    persistTextLevelerCredentials(resolved);
+    if (resolved.apiKey) {
+      setProvider(resolved.provider);
+      setApiKey(resolved.apiKey);
+      setShowApiSettings(false);
     }
 
-    try {
-      let markdown: string;
-      let mode: "ai" | "local" = "ai";
+    let activeCreds = resolved;
 
-      if (creds.apiKey) {
-        markdown = await levelTextWithProvider(
-          creds.provider,
-          creds.apiKey,
-          text,
-          gradeLevel,
-          readingProfile,
-        );
-      } else {
-        const res = await api.differentiate({
-          content: text,
-          gradeLevel,
-          readingProfile,
-          provider: creds.provider,
-        });
-        markdown = res.content;
-        mode = res.analysisMode ?? "ai";
-        if (mode === "local") {
-          throw new Error(
-            "Server could not reach AI — paste a free Gemini key from aistudio.google.com/apikey below.",
-          );
+    try {
+      let result: { markdown: string; mode: "ai" | "local" };
+
+      try {
+        result = await levelTextWithCreds(activeCreds, text);
+      } catch (firstErr) {
+        if (!isAiQuotaError(firstErr)) throw firstErr;
+
+        const alternate: TextLevelerProvider =
+          activeCreds.provider === "openai" ? "gemini" : "openai";
+        const altCreds = resolveTextLevelerCredentials(alternate, "", backendProviders);
+        if (!altCreds || altCreds.provider === activeCreds.provider) throw firstErr;
+
+        toast.info(`OpenAI limit reached — trying ${TEXT_LEVELER_PROVIDER_LABELS[alternate]}…`);
+        activeCreds = altCreds;
+        persistTextLevelerCredentials(activeCreds);
+        if (activeCreds.apiKey) {
+          setProvider(activeCreds.provider);
+          setApiKey(activeCreds.apiKey);
         }
+        result = await levelTextWithCreds(activeCreds, text);
       }
 
-      const rendered = await marked.parse(markdown);
+      const rendered = await marked.parse(result.markdown);
       setPreviousHtml(html);
       setHtml(rendered);
       setResultGrade(gradeLevel);
-      setAnalysisMode(mode);
-      setUsedProvider(creds.provider);
-      setCredentialSource(creds.source);
+      setAnalysisMode(result.mode);
+      setUsedProvider(activeCreds.provider);
+      setCredentialSource(activeCreds.source);
       toast.success(
-        `Leveled for ${gradeLevel} with ${TEXT_LEVELER_PROVIDER_LABELS[creds.provider]}.`,
+        `Leveled for ${gradeLevel} with ${TEXT_LEVELER_PROVIDER_LABELS[activeCreds.provider]}.`,
       );
     } catch (err) {
-      try {
-        const res = await api.differentiate({
-          content: text,
-          gradeLevel,
-          readingProfile,
-          provider: creds.provider,
-          apiKey: creds.apiKey,
-        });
-        if (res.analysisMode === "local") {
-          throw new Error(
-            creds.apiKey
-              ? `Invalid ${TEXT_LEVELER_PROVIDER_LABELS[creds.provider]} key — check and try again.`
-              : "Add a free Gemini key from aistudio.google.com/apikey to level text with AI.",
-          );
-        }
-        const rendered = await marked.parse(res.content);
-        setPreviousHtml(html);
-        setHtml(rendered);
-        setResultGrade(gradeLevel);
-        setAnalysisMode(res.analysisMode ?? "ai");
-        setUsedProvider(creds.provider);
-        setCredentialSource(creds.source);
-        toast.success(`Leveled for ${gradeLevel}.`);
-      } catch (fallbackErr) {
-        const msg =
-          fallbackErr instanceof Error
-            ? fallbackErr.message
-            : err instanceof Error
-              ? err.message
-              : "Generation failed.";
-        setError(msg);
-        toast.error(msg);
-      }
+      const msg = friendlyAiErrorMessage(err, resolved.provider);
+      setError(msg);
+      setShowApiSettings(true);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -263,6 +272,7 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
     setProvider(assistant.provider);
     setApiKey(assistant.apiKey);
     saveTextLevelerAiConfig({ provider: assistant.provider, apiKey: assistant.apiKey });
+    setShowApiSettings(false);
     toast.success(`Using ${TEXT_LEVELER_PROVIDER_LABELS[assistant.provider]} from AI assistant.`);
   }
 
@@ -273,6 +283,7 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
       return;
     }
     saveTextLevelerAiConfig({ provider, apiKey: trimmed });
+    setShowApiSettings(false);
     toast.success(`${TEXT_LEVELER_PROVIDER_LABELS[provider]} connected for Text Leveler.`);
   }
 
@@ -398,76 +409,93 @@ export function ContentDifferentiator({ classManaged }: { classManaged: string }
           </span>
         </div>
 
-        <div className="text-leveler-key-box">
-          <Field label="AI provider *">
-            <select
-              value={provider}
-              onChange={(e) => setProvider(e.target.value as TextLevelerProvider)}
-            >
-              {(Object.keys(TEXT_LEVELER_PROVIDER_LABELS) as TextLevelerProvider[]).map((p) => (
-                <option key={p} value={p}>
-                  {TEXT_LEVELER_PROVIDER_LABELS[p]}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="API key *" hint={TEXT_LEVELER_PROVIDER_HINTS[provider]}>
-            <input
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder={TEXT_LEVELER_PROVIDER_PLACEHOLDERS[provider]}
-              autoComplete="off"
-            />
-          </Field>
-          <div className="text-leveler-key-actions">
+        {aiReady && !showApiSettings && (
+          <p className="field-hint" style={{ color: "#059669", marginBottom: 12 }}>
+            ✓ AI connected
+            {creds?.apiKey
+              ? ` (${TEXT_LEVELER_PROVIDER_LABELS[creds.provider]})`
+              : " (server OpenAI/Gemini)"}
+            {" — "}
             <button
               type="button"
-              className="pro-email-generate"
-              style={{ marginTop: 0, flex: 1 }}
-              onClick={saveAiKey}
-              disabled={apiKey.trim().length < 10}
+              className="pro-email-link-btn"
+              style={{ padding: 0, fontSize: "inherit" }}
+              onClick={() => setShowApiSettings(true)}
             >
-              Save API key
+              Change key
             </button>
-            {assistantKeyReady && (
-              <button type="button" className="btn btn-ghost btn-sm" onClick={useAssistantKey}>
-                Use assistant key
-              </button>
-            )}
-            {(formKeyReady || savedAi) && (
-              <button
-                type="button"
-                className="pro-email-link-btn"
-                onClick={() => {
-                  clearTextLevelerAiConfig();
-                  setApiKey("");
-                }}
-              >
-                Remove
-              </button>
-            )}
-          </div>
-          {backendAiReady && (
-            <p className="field-hint" style={{ marginTop: 8, marginBottom: 0 }}>
-              Server AI is also available — a browser key gives the most reliable results.
-            </p>
-          )}
-        </div>
-
-        {canGenerateAi && (
-          <p className="field-hint" style={{ color: "#059669" }}>
-            ✓ Ready to level with AI
-            {savedAi ? ` · ${TEXT_LEVELER_PROVIDER_LABELS[savedAi.provider]} saved` : ""}
-            {backendAiReady && !savedAi ? " · server AI available" : ""}
           </p>
+        )}
+
+        {!aiReady && !showApiSettings && (
+          <p className="field-hint" style={{ marginBottom: 12 }}>
+            <button
+              type="button"
+              className="pro-email-link-btn"
+              style={{ padding: 0, fontSize: "inherit" }}
+              onClick={() => setShowApiSettings(true)}
+            >
+              Connect OpenAI or Gemini
+            </button>
+          </p>
+        )}
+
+        {showApiSettings && (
+          <details className="ppt-ai-setup" open>
+            <summary>AI API (one-time setup)</summary>
+            <div className="text-leveler-key-box" style={{ marginTop: 10 }}>
+              <Field label="AI provider">
+                <select
+                  value={provider}
+                  onChange={(e) => setProvider(e.target.value as TextLevelerProvider)}
+                >
+                  {(Object.keys(TEXT_LEVELER_PROVIDER_LABELS) as TextLevelerProvider[]).map((p) => (
+                    <option key={p} value={p}>
+                      {TEXT_LEVELER_PROVIDER_LABELS[p]}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="API key" hint={TEXT_LEVELER_PROVIDER_HINTS[provider]}>
+                <input
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder={TEXT_LEVELER_PROVIDER_PLACEHOLDERS[provider]}
+                  autoComplete="off"
+                />
+              </Field>
+              <div className="text-leveler-key-actions">
+                <button type="button" className="btn btn-primary btn-sm" onClick={saveAiKey}>
+                  Save key
+                </button>
+                {assistantKeyReady && (
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={useAssistantKey}>
+                    Use assistant key
+                  </button>
+                )}
+                {apiKey.trim().length >= 10 && (
+                  <button
+                    type="button"
+                    className="pro-email-link-btn"
+                    onClick={() => {
+                      clearTextLevelerAiConfig();
+                      setApiKey("");
+                    }}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          </details>
         )}
 
         <button
           type="button"
           className="pro-email-generate"
           onClick={() => void generate()}
-          disabled={loading || !combinedText.trim() || !canGenerateAi}
+          disabled={loading || !combinedText.trim()}
         >
           {loading ? "Generating…" : "✦ Generate with AI"}
         </button>

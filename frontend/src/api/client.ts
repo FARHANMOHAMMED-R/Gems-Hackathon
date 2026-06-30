@@ -106,6 +106,11 @@ export class ApiError extends Error {
   get isMailNotConfigured(): boolean {
     return this.code === "MAIL_NOT_CONFIGURED";
   }
+
+  /** True when the AI provider quota or rate limit was exceeded. */
+  get isAiQuotaExceeded(): boolean {
+    return this.code === "AI_QUOTA_EXCEEDED" || this.status === 429;
+  }
 }
 
 interface RequestOptions {
@@ -150,17 +155,23 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
       data && typeof data === "object" && "error" in data
         ? String((data as { error: unknown }).error)
         : undefined;
-    let message =
-      serverMessage ?? `Request failed with status ${res.status}`;
-    if (res.status >= 500) {
-      message = serverMessage
-        ? `Server error (${res.status}): ${serverMessage}. Check that the backend is running on http://localhost:4000 (npm run dev).`
-        : `Server error (${res.status}). The backend may be offline — start it with npm run dev on http://localhost:4000.`;
-    }
     const code =
       data && typeof data === "object" && "code" in data
         ? (data as { code?: string }).code
         : undefined;
+    let message =
+      serverMessage ?? `Request failed with status ${res.status}`;
+    const isAiProviderError =
+      res.status === 429 ||
+      code === "AI_QUOTA_EXCEEDED" ||
+      (serverMessage && /quota|429|billing|rate.?limit|exceeded your current/i.test(serverMessage));
+    if (isAiProviderError) {
+      message = serverMessage ?? "AI quota or rate limit exceeded.";
+    } else if (res.status >= 500) {
+      message = serverMessage
+        ? `Server error (${res.status}): ${serverMessage}. Check that the backend is running on http://localhost:4000 (npm run dev).`
+        : `Server error (${res.status}). The backend may be offline — start it with npm run dev on http://localhost:4000.`;
+    }
     throw new ApiError(res.status, message, code);
   }
 
