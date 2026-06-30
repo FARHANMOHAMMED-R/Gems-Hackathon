@@ -11,7 +11,7 @@ import {
 import { generatePptLocally } from "../lib/localPptGenerator";
 import { buildPptxBuffer, deckFileName, type PptDeck } from "../lib/pptBuilder";
 import { deckFromSkyworkOutline, placeholderSkyworkDeck } from "../lib/skyworkPptDeck";
-import { buildSkyworkQuery, generateSkyworkPpt } from "../lib/skyworkPpt";
+import { buildSkyworkQuery, buildSkyworkReference, generateSkyworkPpt } from "../lib/skyworkPpt";
 import { PPT_SYSTEM_PROMPT } from "../lib/prompts";
 
 export const pptRouter = Router();
@@ -59,8 +59,10 @@ pptRouter.post(
       }
 
       const query = buildSkyworkQuery(body);
+      const reference = buildSkyworkReference(body);
       const skywork = await generateSkyworkPpt({
         query,
+        reference,
         apiKey: skyworkKey,
         language: "English",
       });
@@ -111,37 +113,49 @@ pptRouter.post(
         return body.provider ?? "gemini";
       })();
 
-      const { data, provider } = await aiCompleteJSON<PptDeck>({
-        provider: chosen,
-        systemPrompt: PPT_SYSTEM_PROMPT,
-        userContent: [
-          `Class: ${body.classManaged} (Grade ${body.grade})`,
-          `Subject: ${body.subject}`,
-          `Lesson topic: ${body.topic}`,
-          `Chapters: ${body.chapters}`,
-          `Target slide count: ${body.slideCount}`,
-          `Audience: ${body.audience}`,
-          body.additionalNotes ? `Teacher notes: ${body.additionalNotes}` : "",
-        ]
-          .filter(Boolean)
-          .join("\n"),
-        temperature: 0.4,
-        apiKeyOverride: browserKey,
-      });
+      try {
+        const { data, provider } = await aiCompleteJSON<PptDeck>({
+          provider: chosen,
+          systemPrompt: PPT_SYSTEM_PROMPT,
+          userContent: [
+            `Class: ${body.classManaged} (Grade ${body.grade})`,
+            `Subject: ${body.subject}`,
+            `Lesson topic: ${body.topic}`,
+            `Chapters: ${body.chapters}`,
+            `Target slide count: ${body.slideCount}`,
+            `Audience: ${body.audience}`,
+            body.additionalNotes ? `Teacher notes: ${body.additionalNotes}` : "",
+          ]
+            .filter(Boolean)
+            .join("\n"),
+          temperature: 0.4,
+          apiKeyOverride: browserKey,
+        });
 
-      if (!data.slides?.length) {
-        throw new ApiError(422, "AI did not return any slides. Try again.");
+        if (!data.slides?.length) {
+          throw new ApiError(422, "AI did not return any slides. Try again.");
+        }
+
+        deck = {
+          title: data.title || body.topic,
+          subtitle: data.subtitle || `${body.subject} · Grade ${body.grade}`,
+          subject: data.subject || body.subject,
+          grade: data.grade || body.grade,
+          slides: data.slides,
+        };
+        analysisMode = "ai";
+        providerUsed = provider;
+      } catch (err) {
+        if (hasBrowserKey) {
+          throw new ApiError(
+            422,
+            err instanceof Error
+              ? err.message
+              : "AI slide generation failed. Check your API key and try again.",
+          );
+        }
+        throw err;
       }
-
-      deck = {
-        title: data.title || body.topic,
-        subtitle: data.subtitle || `${body.subject} · Grade ${body.grade}`,
-        subject: data.subject || body.subject,
-        grade: data.grade || body.grade,
-        slides: data.slides,
-      };
-      analysisMode = "ai";
-      providerUsed = provider;
     } else {
       deck = generatePptLocally({
         classManaged: body.classManaged,

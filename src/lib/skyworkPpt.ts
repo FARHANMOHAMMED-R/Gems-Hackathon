@@ -132,6 +132,7 @@ export async function generateSkyworkPpt(input: SkyworkPptInput): Promise<Skywor
 
   let outline = "";
   let downloadUrl = "";
+  let streamError: Error | null = null;
 
   await parseSseStream(res.body, (eventType, data) => {
     if (eventType === "phase") {
@@ -143,14 +144,18 @@ export async function generateSkyworkPpt(input: SkyworkPptInput): Promise<Skywor
       }
     }
 
-    if (eventType === "completionEvent" && data.phase === "done") {
-      if (typeof data.download_url === "string") downloadUrl = data.download_url;
+    if (eventType === "completionEvent") {
+      if (data.phase === "done" && typeof data.download_url === "string") {
+        downloadUrl = data.download_url;
+      }
     }
 
     if (eventType === "error") {
-      throw new Error(String(data.message ?? "Skywork generation failed."));
+      streamError = new Error(String(data.message ?? data.msg ?? "Skywork generation failed."));
     }
   });
+
+  if (streamError) throw streamError;
 
   if (!downloadUrl) {
     throw new Error("Skywork finished without a download link. Try again.");
@@ -180,14 +185,34 @@ export function buildSkyworkQuery(input: {
   additionalNotes?: string;
 }): string {
   return [
-    `Create a professional ${input.slideCount}-slide lesson PowerPoint.`,
+    `Create a professional, visually polished ${input.slideCount}-slide educational PowerPoint for CBSE Indian school students.`,
     `Grade: ${input.grade}`,
     `Subject: ${input.subject}`,
-    `Class: ${input.classManaged}`,
-    `Topic: ${input.topic}`,
-    `Chapters / units to cover:\n${input.chapters}`,
-    input.additionalNotes ? `Teacher notes: ${input.additionalNotes}` : "",
-    "Use clear headings, bullet points, examples for students, and a recap slide.",
+    `Class section: ${input.classManaged}`,
+    `Lesson topic: ${input.topic}`,
+    `Chapters / syllabus content to cover:\n${input.chapters}`,
+    input.additionalNotes ? `Teacher instructions: ${input.additionalNotes}` : "",
+    "Requirements: modern layout, clear headings, concise bullet points, real-world examples, diagrams where helpful, recap slide, and homework/next-steps slide.",
+    "Tone: professional teacher presentation suitable for classroom projection.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+export function buildSkyworkReference(input: {
+  subject: string;
+  topic: string;
+  chapters: string;
+  grade: string;
+  additionalNotes?: string;
+}): string {
+  return [
+    `# ${input.subject}: ${input.topic}`,
+    `Grade ${input.grade}`,
+    "",
+    "## Chapters",
+    input.chapters,
+    input.additionalNotes ? `\n## Teacher notes\n${input.additionalNotes}` : "",
   ]
     .filter(Boolean)
     .join("\n");

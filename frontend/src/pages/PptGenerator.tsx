@@ -17,6 +17,8 @@ import {
   type TextLevelerProvider,
 } from "../lib/textLevelerAiConfig";
 import { loadAssistantAiConfig } from "../lib/assistantAiConfig";
+import { buildPptxBase64, deckFileName } from "../lib/buildPptx";
+import { clientGeneratePptDeck } from "../lib/clientPptGenerator";
 import { Card, EmptyState, ErrorNote, Field, Spinner } from "../components/ui";
 import { useToast } from "../components/Toast";
 
@@ -82,8 +84,7 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
   const skyworkReady = skyworkKey.trim().length >= 10;
   const backendAiReady = configured.length > 0;
   const canUseGems = gemsKeyReady || backendAiReady;
-  const canGenerate =
-    engine === "skywork" ? skyworkReady : canUseGems;
+  const canGenerate = engine === "skywork" ? skyworkReady : canUseGems;
 
   function saveGemsKey() {
     const trimmed = gemsApiKey.trim();
@@ -149,8 +150,41 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
     );
 
     try {
+      const trimmedGemsKey = gemsApiKey.trim();
+      const trimmedSkyworkKey = skyworkKey.trim();
+
       if (engine === "gems" && gemsKeyReady) {
-        saveTextLevelerAiConfig({ provider, apiKey: gemsApiKey.trim() });
+        saveTextLevelerAiConfig({ provider, apiKey: trimmedGemsKey });
+        setProgress(`Calling ${TEXT_LEVELER_PROVIDER_LABELS[provider]}…`);
+
+        const deck = await clientGeneratePptDeck(provider, trimmedGemsKey, {
+          classManaged,
+          grade,
+          subject,
+          topic: topic.trim(),
+          chapters: chapters.trim(),
+          slideCount,
+          additionalNotes: additionalNotes.trim() || undefined,
+        });
+
+        setProgress("Building PowerPoint file…");
+        const pptxBase64 = await buildPptxBase64(deck);
+        const fileName = deckFileName(deck, classManaged);
+
+        setResult({
+          deck,
+          fileName,
+          pptxBase64,
+          analysisMode: "ai",
+          providerUsed: provider,
+          slideCount: deck.slides.length,
+        });
+        toast.success(`Created ${deck.slides.length} AI slides with ${TEXT_LEVELER_PROVIDER_LABELS[provider]}.`);
+        return;
+      }
+
+      if (engine === "skywork") {
+        saveSkyworkPptApiKey(trimmedSkyworkKey);
       }
 
       const res = await api.generatePpt(
@@ -164,14 +198,14 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
           additionalNotes: additionalNotes.trim() || undefined,
           provider: engine === "gems" ? provider : undefined,
           engine,
-          skyworkApiKey: engine === "skywork" ? skyworkKey.trim() : undefined,
-          apiKey: engine === "gems" && gemsKeyReady ? gemsApiKey.trim() : undefined,
+          skyworkApiKey: engine === "skywork" ? trimmedSkyworkKey : undefined,
+          apiKey: engine === "gems" && gemsKeyReady ? trimmedGemsKey : undefined,
         },
         controller.signal,
       );
       setResult(res);
       if (engine === "skywork") {
-        saveSkyworkPptApiKey(skyworkKey.trim());
+        saveSkyworkPptApiKey(trimmedSkyworkKey);
       }
       toast.success(
         res.analysisMode === "skywork"
@@ -182,13 +216,18 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
       );
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
-        setError("Skywork timed out after 12 minutes. Try fewer slides or try again.");
+        setError(
+          engine === "skywork"
+            ? "Skywork timed out after 12 minutes. Try again with fewer slides."
+            : "Request timed out. Check your API key and try again.",
+        );
       } else if (err instanceof ApiError && err.isLlmNotConfigured) {
-        setError("No AI key configured. Add OPENAI_API_KEY, GEMINI_API_KEY, or use Skywork AI.");
+        setError("Add a Gemini or OpenAI API key below, or use Skywork AI for professional decks.");
       } else {
-        setError(err instanceof Error ? err.message : "Generation failed.");
+        const msg = err instanceof Error ? err.message : "Generation failed.";
+        setError(msg);
       }
-      toast.error("Could not generate PPT.");
+      toast.error(err instanceof Error ? err.message : "Could not generate PPT.");
     } finally {
       window.clearTimeout(timeout);
       setLoading(false);
@@ -274,6 +313,11 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
                 Use assistant key
               </button>
             </div>
+            {gemsKeyReady && (
+              <p className="field-hint" style={{ color: "#059669", marginTop: 8, marginBottom: 0 }}>
+                ✓ {TEXT_LEVELER_PROVIDER_LABELS[provider]} ready — click Generate (no backend needed)
+              </p>
+            )}
             {backendAiReady && !gemsKeyReady && (
               <p className="field-hint" style={{ marginTop: 8, marginBottom: 0 }}>
                 Server AI is available — a browser key still gives the fastest setup.
@@ -327,6 +371,11 @@ export function PptGenerator({ classManaged }: { classManaged: string }) {
                 </button>
               )}
             </div>
+            {skyworkReady && (
+              <p className="field-hint" style={{ color: "#059669", marginTop: 8, marginBottom: 0 }}>
+                ✓ Skywork key ready — professional deck in 5–10 min
+              </p>
+            )}
             <p className="field-hint" style={{ marginTop: 8, marginBottom: 0 }}>
               Powered by{" "}
               <a href={SKYWORK_PPT_PRODUCT_URL} target="_blank" rel="noreferrer">
